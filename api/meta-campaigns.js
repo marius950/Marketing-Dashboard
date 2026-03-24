@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
 
   try {
           const campRes = await fetch(
-      `https://graph.facebook.com/v19.0/${accountId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,insights.time_range({"since":"${from}","until":"${to}"}){${fields}}&limit=50&access_token=${token}`
+      `https://graph.facebook.com/v19.0/${adset.id}/ads?fields=id,name,status,creative{id,thumbnail_url,image_url,effective_instagram_media_id,object_story_spec{link_data{image_hash},video_data{image_url}}}&insights...`
     );
     const campData = await campRes.json();
     if (campData.error) return res.status(500).json({ error: campData.error });
