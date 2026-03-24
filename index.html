@@ -297,7 +297,6 @@ async function loadAll() {
     range === 'last_365d' ? 'LAST_365_DAYS' : 'LAST_30_DAYS';
 
   const metaRange = isCustom ? `custom&from=${from}&to=${to}` :
-    range === 'last_180d' ? 'last_180d' :
     range === 'last_365d' ? 'last_year' : range;
 
   const [gRes, mRes] = await Promise.allSettled([
