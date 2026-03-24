@@ -1,4 +1,4 @@
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -28,16 +28,19 @@ module.exports = async function handler(req, res) {
       {
         method: 'POST',
         headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'developer-token': process.env.GOOGLE_DEVELOPER_TOKEN,
-        'login-customer-id': process.env.GOOGLE_LOGIN_CUSTOMER_ID,
-        'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+          'developer-token': process.env.GOOGLE_DEVELOPER_TOKEN,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ query }),
       }
     );
 
-    const data = await response.json();
+    const rawText = await response.text();
+    let data;
+    try { data = JSON.parse(rawText); } catch(e) {
+      return res.status(500).json({ error: 'Google Ads raw response', raw: rawText.slice(0, 500) });
+    }
     if (!response.ok) return res.status(500).json({ error: data });
 
     const rows = data.results || [];
