@@ -14,9 +14,7 @@ export default async function handler(req, res) {
   };
   const preset = datePresets[dateRange] || 'last_30_days';
 
-  try {
-    const fields = 'spend,impressions,clicks,actions,action_values,ctr,cpc';
-    const summaryUrl = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&date_preset=${preset}&access_token=${token}`;
+  try { = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&date_preset=${preset}&access_token=${token}`;
     const dailyUrl   = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&date_preset=${preset}&time_increment=1&access_token=${token}`;
 
     const [summaryRes, dailyRes] = await Promise.all([
