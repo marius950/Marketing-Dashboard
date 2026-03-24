@@ -13,11 +13,13 @@ module.exports = async function handler(req, res) {
   const fields = 'spend,impressions,clicks,ctr,cpc,actions,action_values';
 
   try {
-    const campRes = await fetch(
+          const campRes = await fetch(
       `https://graph.facebook.com/v19.0/${accountId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,insights.time_range({"since":"${from}","until":"${to}"}){${fields}}&limit=50&access_token=${token}`
     );
     const campData = await campRes.json();
     if (campData.error) return res.status(500).json({ error: campData.error });
+
+    const fixThumb = url => url ? url.replace('p64x64', 'p320x320') : null;
 
     const campaigns = await Promise.all((campData.data || []).map(async (camp) => {
       const ins = camp.insights?.data?.[0] || {};
@@ -54,7 +56,7 @@ module.exports = async function handler(req, res) {
             id:           ad.id,
             name:         ad.name,
             status:       ad.status,
-            thumbnail:    ad.creative?.thumbnail_url || null,
+            thumbnail:    ad.creative?.thumbnail_url ? fixThumb(ad.creative.thumbnail_url) : null,
             title:        ad.creative?.title || null,
             body:         ad.creative?.body || null,
             spend:        Math.round(parseFloat(di.spend || 0) * 100) / 100,
