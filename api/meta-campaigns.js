@@ -10,27 +10,30 @@ module.exports = async function handler(req, res) {
   if (!from || !to) return res.status(400).json({ error: 'from and to required' });
 
   const fields = 'spend,impressions,clicks,ctr,cpc,actions,action_values';
+  const timeRange = `{"since":"${from}","until":"${to}"}`;
+  const fixThumb = url => url ? url.replace('p64x64', 'p320x320') : null;
+
+  const getAction = (actions, type) =>
+    parseFloat(actions?.find(a => a.action_type === type)?.value || 0);
 
   try {
+    // Nur ACTIVE Kampagnen laden
     const campRes = await fetch(
-      `https://graph.facebook.com/v19.0/${accountId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,insights.time_range({"since":"${from}","until":"${to}"}){${fields}}&limit=50&access_token=${token}`
+      `https://graph.facebook.com/v19.0/${accountId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,insights.time_range(${timeRange}){${fields}}&filtering=[{"field":"effective_status","operator":"IN","value":["ACTIVE"]}]&limit=25&access_token=${token}`
     );
     const campData = await campRes.json();
     if (campData.error) return res.status(500).json({ error: campData.error });
 
-    const fixThumb = url => url ? url.replace('p64x64', 'p320x320') : null;
-
+    // Alle Kampagnen parallel verarbeiten
     const campaigns = await Promise.all((campData.data || []).map(async (camp) => {
       const ins = camp.insights?.data?.[0] || {};
-      const getAction = (actions, type) =>
-        parseFloat(actions?.find(a => a.action_type === type)?.value || 0);
       const conv = getAction(ins.actions, 'lead') ||
                    getAction(ins.actions, 'complete_registration') ||
                    getAction(ins.actions, 'purchase');
       const spend = parseFloat(ins.spend || 0);
 
       const adsetRes = await fetch(
-        `https://graph.facebook.com/v19.0/${camp.id}/adsets?fields=id,name,status,daily_budget,insights.time_range({"since":"${from}","until":"${to}"}){${fields}}&limit=20&access_token=${token}`
+        `https://graph.facebook.com/v19.0/${camp.id}/adsets?fields=id,name,status,daily_budget,insights.time_range(${timeRange}){${fields}}&filtering=[{"field":"effective_status","operator":"IN","value":["ACTIVE"]}]&limit=10&access_token=${token}`
       );
       const adsetData = await adsetRes.json();
 
@@ -42,7 +45,7 @@ module.exports = async function handler(req, res) {
         const aSpend = parseFloat(ai.spend || 0);
 
         const adsRes = await fetch(
-          `https://graph.facebook.com/v19.0/${adset.id}/ads?fields=id,name,status,creative{id,thumbnail_url,image_url,object_story_spec{video_data{image_url},link_data{image_hash}}}&insights.time_range({"since":"${from}","until":"${to}"}){${fields}}&limit=10&access_token=${token}`
+          `https://graph.facebook.com/v19.0/${adset.id}/ads?fields=id,name,status,creative{id,thumbnail_url,image_url,object_story_spec{video_data{image_url}}}&insights.time_range(${timeRange}){${fields}}&filtering=[{"field":"effective_status","operator":"IN","value":["ACTIVE"]}]&limit=5&access_token=${token}`
         );
         const adsData = await adsRes.json();
 
