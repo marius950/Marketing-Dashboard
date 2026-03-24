@@ -211,4 +211,104 @@ function buildChart(id, labels, datasets) {
     data: { labels, datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { leg
+      plugins: { legend: { display: datasets.length > 1, position: 'top', labels: { font: { size: 12 }, boxWidth: 12 } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 }, maxTicksLimit: 12 } },
+        y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+function setKPI(id, value, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('loading');
+  el.textContent = fmt(value, type);
+}
+
+function renderGoogle(d) {
+  const s = d.summary;
+  setKPI('g-spend', s.spend, 'currency');
+  setKPI('g-impressions', s.impressions);
+  setKPI('g-clicks', s.clicks);
+  setKPI('g-conversions', s.conversions);
+  setKPI('g-cpl', s.cpl, 'currency');
+  setKPI('g-ctr', s.ctr, 'pct');
+  buildChart('chart-g-spend', d.daily.map(r => r.date?.slice(5)), [{
+    label: 'Spend (€)', data: d.daily.map(r => r.spend),
+    backgroundColor: '#4f6ef7', borderRadius: 4
+  }]);
+}
+
+function renderMeta(d) {
+  const s = d.summary;
+  setKPI('m-spend', s.spend, 'currency');
+  setKPI('m-impressions', s.impressions);
+  setKPI('m-clicks', s.clicks);
+  setKPI('m-conversions', s.conversions);
+  setKPI('m-cpl', s.cpl, 'currency');
+  setKPI('m-ctr', s.ctr, 'pct');
+  buildChart('chart-m-spend', d.daily.map(r => r.date?.slice(5)), [{
+    label: 'Spend (€)', data: d.daily.map(r => r.spend),
+    backgroundColor: '#0866ff', borderRadius: 4
+  }]);
+}
+
+function renderOverview() {
+  if (!gData && !mData) return;
+  const gs = gData?.summary || {spend:0,impressions:0,clicks:0,conversions:0,roas:0};
+  const ms = mData?.summary || {spend:0,impressions:0,clicks:0,conversions:0,roas:0};
+  setKPI('ov-spend', Math.round((gs.spend + ms.spend) * 100) / 100, 'currency');
+  setKPI('ov-impressions', gs.impressions + ms.impressions);
+  setKPI('ov-clicks', gs.clicks + ms.clicks);
+  const totalConv = Math.round((gs.conversions + ms.conversions) * 10) / 10;
+  setKPI('ov-conversions', totalConv);
+  const totalSpend = gs.spend + ms.spend;
+  setKPI('ov-cpl', totalConv > 0 ? Math.round(totalSpend / totalConv * 100) / 100 : 0, 'currency');
+  setKPI('ov-roas', gs.roas && ms.roas ? Math.round((gs.roas + ms.roas) / 2 * 100) / 100 : (gs.roas || ms.roas), 'x');
+
+  const gDaily = gData?.daily || [];
+  const mDaily = mData?.daily || [];
+  const allDates = [...new Set([...gDaily.map(d=>d.date), ...mDaily.map(d=>d.date)])].sort();
+  const gMap  = Object.fromEntries(gDaily.map(d=>[d.date, d.spend]));
+  const mMap  = Object.fromEntries(mDaily.map(d=>[d.date, d.spend]));
+  const gcMap = Object.fromEntries(gDaily.map(d=>[d.date, d.conversions]));
+  const mcMap = Object.fromEntries(mDaily.map(d=>[d.date, d.conversions]));
+  const labels = allDates.map(d => d.slice(5));
+
+  buildChart('chart-ov-spend', labels, [
+    { label: 'Google (€)', data: allDates.map(d=>gMap[d]||0), backgroundColor: '#4f6ef7', borderRadius: 4 },
+    { label: 'Meta (€)',   data: allDates.map(d=>mMap[d]||0), backgroundColor: '#0866ff', borderRadius: 4 }
+  ]);
+  buildChart('chart-ov-conv', labels, [
+    { label: 'Google', data: allDates.map(d=>gcMap[d]||0), backgroundColor: '#4f6ef7', borderRadius: 4 },
+    { label: 'Meta',   data: allDates.map(d=>mcMap[d]||0), backgroundColor: '#0866ff', borderRadius: 4 }
+  ]);
+}
+
+let gData = null, mData = null;
+
+async function loadAll() {
+  const from = document.getElementById('date-from').value;
+  const to   = document.getElementById('date-to').value;
+  if (!from || !to) return;
+
+  gData = null; mData = null;
+  ['g-spend','g-impressions','g-clicks','g-conversions','g-cpl','g-ctr',
+   'm-spend','m-impressions','m-clicks','m-conversions','m-cpl','m-ctr',
+   'ov-spend','ov-impressions','ov-clicks','ov-conversions','ov-cpl','ov-roas']
+    .forEach(id => { const el = document.getElementById(id); if(el){el.textContent='–';el.classList.add('loading');} });
+
+  const [gRes, mRes] = await Promise.allSettled([
+    fetch(`/api/google?dateRange=custom&from=${from}&to=${to}`).then(r=>r.json()),
+    fetch(`/api/meta?dateRange=custom&from=${from}&to=${to}`).then(r=>r.json())
+  ]);
+
+  if (gRes.status === 'fulfilled' && !gRes.value.error) { gData = gRes.value; renderGoogle(gData); }
+  if (mRes.status === 'fulfilled' && !mRes.value.error) { mData = mRes.value; renderMeta(mData); }
+  renderOverview();
+}
+</script>
+</body>
+</html>
