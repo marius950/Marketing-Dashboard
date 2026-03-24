@@ -36,11 +36,12 @@ module.exports = async function handler(req, res) {
     const chunks = [];
     let cur = new Date(sinceDate);
     while (cur <= untilDate) {
+      const chunkStart = cur.toISOString().slice(0, 10);
       const chunkEnd = new Date(cur);
-      chunkEnd.setDate(chunkEnd.getDate() + 29);
+      chunkEnd.setDate(chunkEnd.getDate() + 24);
       if (chunkEnd > untilDate) chunkEnd.setTime(untilDate.getTime());
       chunks.push({
-        since: cur.toISOString().slice(0, 10),
+        since: chunkStart,
         until: chunkEnd.toISOString().slice(0, 10),
       });
       cur = new Date(chunkEnd);
