@@ -1,22 +1,33 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { dateRange = 'last_30d' } = req.query;
+  const { dateRange = 'last_30d', from, to } = req.query;
   const token     = process.env.META_ACCESS_TOKEN;
   const accountId = process.env.META_AD_ACCOUNT_ID;
+  const fields    = 'spend,impressions,clicks,actions,action_values,ctr,cpc';
 
-  const datePresets = {
-    last_7d:  'last_7d',
-    last_30d: 'last_30d',
-    last_90d: 'last_90d',
-  };
-  const preset = datePresets[dateRange] || 'last_30_days';
+  let summaryUrl, dailyUrl;
 
-  try { = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&date_preset=${preset}&access_token=${token}`;
-    const dailyUrl   = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&date_preset=${preset}&time_increment=1&access_token=${token}`;
+  if (dateRange === 'custom' && from && to) {
+    const timeRange = encodeURIComponent(JSON.stringify({ since: from, until: to }));
+    summaryUrl = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&time_range=${timeRange}&access_token=${token}`;
+    dailyUrl   = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&time_range=${timeRange}&time_increment=1&access_token=${token}`;
+  } else {
+    const presets = {
+      last_7d:   'last_7d',
+      last_30d:  'last_30d',
+      last_90d:  'last_90d',
+      last_180d: 'last_180d',
+      last_year: 'last_year',
+    };
+    const preset = presets[dateRange] || 'last_30d';
+    summaryUrl = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&date_preset=${preset}&access_token=${token}`;
+    dailyUrl   = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&date_preset=${preset}&time_increment=1&access_token=${token}`;
+  }
 
+  try {
     const [summaryRes, dailyRes] = await Promise.all([
       fetch(summaryUrl),
       fetch(dailyUrl),
