@@ -10,21 +10,33 @@ module.exports = async function handler(req, res) {
 
   let summaryUrl, dailyUrl;
 
+  const toDate = new Date();
+  toDate.setDate(toDate.getDate() - 1);
+  const toStr = toDate.toISOString().slice(0, 10);
+
+  const getDaysAgo = (days) => {
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const dynamicPresets = {
+    last_7d:   { since: getDaysAgo(7),   until: toStr },
+    last_30d:  { since: getDaysAgo(30),  until: toStr },
+    last_90d:  { since: getDaysAgo(90),  until: toStr },
+    last_180d: { since: getDaysAgo(180), until: toStr },
+    last_year: { since: getDaysAgo(365), until: toStr },
+  };
+
   if (dateRange === 'custom' && from && to) {
     const timeRange = encodeURIComponent(JSON.stringify({ since: from, until: to }));
     summaryUrl = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&time_range=${timeRange}&access_token=${token}`;
     dailyUrl   = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&time_range=${timeRange}&time_increment=1&access_token=${token}`;
   } else {
-    const presets = {
-      last_7d:   'last_7d',
-      last_30d:  'last_30d',
-      last_90d:  'last_90d',
-      last_180d: 'last_180d',
-      last_year: 'last_year',
-    };
-    const preset = presets[dateRange] || 'last_30d';
-    summaryUrl = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&date_preset=${preset}&access_token=${token}`;
-    dailyUrl   = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&date_preset=${preset}&time_increment=1&access_token=${token}`;
+    const range = dynamicPresets[dateRange] || dynamicPresets.last_30d;
+    const timeRange = encodeURIComponent(JSON.stringify(range));
+    summaryUrl = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&time_range=${timeRange}&access_token=${token}`;
+    dailyUrl   = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&time_range=${timeRange}&time_increment=1&access_token=${token}`;
   }
 
   try {
