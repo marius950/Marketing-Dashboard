@@ -9,12 +9,11 @@ module.exports = async function handler(req, res) {
 
   if (!from || !to) return res.status(400).json({ error: 'from and to required' });
 
-  const tr = encodeURIComponent(JSON.stringify({ since: from, until: to }));
   const fields = 'spend,impressions,clicks,ctr,cpc,actions,action_values';
 
   try {
-          const campRes = await fetch(
-      `https://graph.facebook.com/v19.0/${adset.id}/ads?fields=id,name,status,creative{id,thumbnail_url,image_url,effective_instagram_media_id,object_story_spec{link_data{image_hash},video_data{image_url}}}&insights...`
+    const campRes = await fetch(
+      `https://graph.facebook.com/v19.0/${accountId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,insights.time_range({"since":"${from}","until":"${to}"}){${fields}}&limit=50&access_token=${token}`
     );
     const campData = await campRes.json();
     if (campData.error) return res.status(500).json({ error: campData.error });
@@ -43,7 +42,7 @@ module.exports = async function handler(req, res) {
         const aSpend = parseFloat(ai.spend || 0);
 
         const adsRes = await fetch(
-          `https://graph.facebook.com/v19.0/${adset.id}/ads?fields=id,name,status,creative{id,thumbnail_url,title,body}&insights.time_range({"since":"${from}","until":"${to}"}){${fields}}&limit=10&access_token=${token}`
+          `https://graph.facebook.com/v19.0/${adset.id}/ads?fields=id,name,status,creative{id,thumbnail_url,image_url,object_story_spec{video_data{image_url},link_data{image_hash}}}&insights.time_range({"since":"${from}","until":"${to}"}){${fields}}&limit=10&access_token=${token}`
         );
         const adsData = await adsRes.json();
 
@@ -52,20 +51,20 @@ module.exports = async function handler(req, res) {
           const dConv = getAction(di.actions, 'lead') ||
                         getAction(di.actions, 'complete_registration') ||
                         getAction(di.actions, 'purchase');
+          const thumb =
+            ad.creative?.image_url ||
+            ad.creative?.object_story_spec?.video_data?.image_url ||
+            (ad.creative?.thumbnail_url ? fixThumb(ad.creative.thumbnail_url) : null);
           return {
-            id:           ad.id,
-            name:         ad.name,
-            status:       ad.status,
-           thumbnail: ad.creative?.image_url || 
-           ad.creative?.object_story_spec?.video_data?.image_url ||
-           (ad.creative?.thumbnail_url ? fixThumb(ad.creative.thumbnail_url) : null),
-            title:        ad.creative?.title || null,
-            body:         ad.creative?.body || null,
-            spend:        Math.round(parseFloat(di.spend || 0) * 100) / 100,
-            impressions:  parseInt(di.impressions || 0),
-            clicks:       parseInt(di.clicks || 0),
-            ctr:          Math.round(parseFloat(di.ctr || 0) * 100) / 100,
-            conversions:  Math.round(dConv * 10) / 10,
+            id:          ad.id,
+            name:        ad.name,
+            status:      ad.status,
+            thumbnail:   thumb,
+            spend:       Math.round(parseFloat(di.spend || 0) * 100) / 100,
+            impressions: parseInt(di.impressions || 0),
+            clicks:      parseInt(di.clicks || 0),
+            ctr:         Math.round(parseFloat(di.ctr || 0) * 100) / 100,
+            conversions: Math.round(dConv * 10) / 10,
           };
         });
 
