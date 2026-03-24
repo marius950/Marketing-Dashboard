@@ -8,9 +8,9 @@ export default async function handler(req, res) {
   const accountId = process.env.META_AD_ACCOUNT_ID;
 
   const datePresets = {
-    last_7d:  'last_7_days',
-    last_30d: 'last_30_days',
-    last_90d: 'last_90_days',
+    last_7d:  'last_7d',
+    last_30d: 'last_30d',
+    last_90d: 'last_90d',
   };
   const preset = datePresets[dateRange] || 'last_30_days';
 
