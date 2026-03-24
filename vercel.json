@@ -1,6 +1,11 @@
 {
+  "functions": {
+    "api/google.js": { "memory": 512 },
+    "api/meta.js": { "memory": 512 }
+  },
   "rewrites": [
     { "source": "/api/google", "destination": "/api/google.js" },
-    { "source": "/api/meta", "destination": "/api/meta.js" }
+    { "source": "/api/meta", "destination": "/api/meta.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
