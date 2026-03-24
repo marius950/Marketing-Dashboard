@@ -1,12 +1,14 @@
 {
   "functions": {
     "api/google.js": { "memory": 512 },
-    "api/meta.js": { "memory": 512 }
+    "api/meta.js": { "memory": 512 },
+    "api/meta-campaigns.js": { "memory": 512 }
   },
   "rewrites": [
     { "source": "/api/google", "destination": "/api/google.js" },
     { "source": "/api/meta-campaigns", "destination": "/api/meta-campaigns.js" },
     { "source": "/api/meta", "destination": "/api/meta.js" },
+    { "source": "/api/thumbnail", "destination": "/api/thumbnail.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
