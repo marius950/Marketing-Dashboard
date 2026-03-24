@@ -56,7 +56,9 @@ module.exports = async function handler(req, res) {
             id:           ad.id,
             name:         ad.name,
             status:       ad.status,
-            thumbnail:    ad.creative?.thumbnail_url ? fixThumb(ad.creative.thumbnail_url) : null,
+           thumbnail: ad.creative?.image_url || 
+           ad.creative?.object_story_spec?.video_data?.image_url ||
+           (ad.creative?.thumbnail_url ? fixThumb(ad.creative.thumbnail_url) : null),
             title:        ad.creative?.title || null,
             body:         ad.creative?.body || null,
             spend:        Math.round(parseFloat(di.spend || 0) * 100) / 100,
