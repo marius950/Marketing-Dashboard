@@ -19,10 +19,15 @@
   header { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
   .logo { font-size: 20px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.5px; }
   .logo span { color: #4f6ef7; }
-  .controls { display: flex; align-items: center; gap: 12px; }
-  select { padding: 7px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; background: #fff; cursor: pointer; }
-  .refresh-btn { padding: 7px 14px; background: #4f6ef7; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  .controls { display: flex; align-items: center; gap: 10px; }
+  .controls label { font-size: 13px; color: #6b7280; }
+  .controls input[type=date] { padding: 6px 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; background: #fff; }
+  .refresh-btn { padding: 7px 16px; background: #4f6ef7; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 500; }
   .refresh-btn:hover { background: #3d5ce8; }
+  .quick-btns { display: flex; gap: 4px; }
+  .qbtn { padding: 5px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; cursor: pointer; background: #fff; color: #374151; }
+  .qbtn:hover { background: #f3f4f6; }
+  .qbtn.active { background: #4f6ef7; color: #fff; border-color: #4f6ef7; }
   main { padding: 28px 32px; max-width: 1280px; margin: 0 auto; }
   .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #fff; padding: 4px; border-radius: 10px; width: fit-content; border: 1px solid #e5e7eb; }
   .tab { padding: 7px 18px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all .15s; }
@@ -42,6 +47,7 @@
   .source-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
   .badge-google { background: #e8f0fe; color: #1a73e8; }
   .badge-meta { background: #e7f3ff; color: #0866ff; }
+  @media (max-width: 1100px) { .controls { flex-wrap: wrap; } }
   @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(3,1fr); } .combined-grid { grid-template-columns: 1fr; } }
   @media (max-width: 600px) { main { padding: 16px; } .kpi-grid { grid-template-columns: repeat(2,1fr); } }
 </style>
@@ -62,24 +68,19 @@
   <header>
     <div class="logo">effi<span>.</span></div>
     <div class="controls">
-      <select id="dateRange" onchange="loadAll()">
-          <option value="last_7d">Letzte 7 Tage</option>
-        <option value="last_30d">Letzte 30 Tage</option>
-        <option value="last_90d" selected>Letzte 90 Tage</option>
-        <option value="last_180d">Letzte 180 Tage</option>
-        <option value="last_365d">Letztes Jahr</option>
-        <option value="custom">Benutzerdefiniert...</option>
-      </select>
-      <button class="refresh-btn" onclick="loadAll()">Aktualisieren</button>
+      <div class="quick-btns">
+        <button class="qbtn" onclick="setQuick(7)">7T</button>
+        <button class="qbtn active" onclick="setQuick(30)">30T</button>
+        <button class="qbtn" onclick="setQuick(90)">90T</button>
+        <button class="qbtn" onclick="setQuick(180)">180T</button>
+      </div>
+      <label>Von</label>
+      <input type="date" id="date-from">
+      <label>Bis</label>
+      <input type="date" id="date-to">
+      <button class="refresh-btn" onclick="loadAll()">Anwenden</button>
     </div>
   </header>
-  <div id="custom-date-bar" style="display:none; background:#fff; border-bottom:1px solid #e5e7eb; padding:10px 32px; display:none; align-items:center; gap:12px;">
-    <label style="font-size:13px; color:#6b7280;">Von</label>
-    <input type="date" id="date-from" style="padding:6px 10px; border:1px solid #e5e7eb; border-radius:8px; font-size:13px;">
-    <label style="font-size:13px; color:#6b7280;">Bis</label>
-    <input type="date" id="date-to" style="padding:6px 10px; border:1px solid #e5e7eb; border-radius:8px; font-size:13px;">
-    <button class="refresh-btn" onclick="loadAll()">Anwenden</button>
-  </div>
 
   <main>
     <div class="tabs">
@@ -150,6 +151,7 @@ function checkLogin() {
     sessionStorage.setItem('effi_auth', '1');
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
+    initDates();
     loadAll();
   } else {
     document.getElementById('login-error').style.display = 'block';
@@ -159,6 +161,28 @@ function checkLogin() {
 if (sessionStorage.getItem('effi_auth') === '1') {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  initDates();
+  loadAll();
+}
+
+function initDates() {
+  const to = new Date();
+  to.setDate(to.getDate() - 1);
+  const from = new Date();
+  from.setDate(from.getDate() - 30);
+  document.getElementById('date-to').value   = to.toISOString().slice(0,10);
+  document.getElementById('date-from').value = from.toISOString().slice(0,10);
+}
+
+function setQuick(days) {
+  document.querySelectorAll('.qbtn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const to = new Date();
+  to.setDate(to.getDate() - 1);
+  const from = new Date();
+  from.setDate(from.getDate() - days);
+  document.getElementById('date-to').value   = to.toISOString().slice(0,10);
+  document.getElementById('date-from').value = from.toISOString().slice(0,10);
   loadAll();
 }
 
@@ -178,142 +202,13 @@ function switchTab(name) {
   document.getElementById('panel-' + name).classList.add('active');
 }
 
-function buildChart(id, labels, datasets, type = 'bar') {
+function buildChart(id, labels, datasets) {
   if (charts[id]) charts[id].destroy();
   const ctx = document.getElementById(id)?.getContext('2d');
   if (!ctx) return;
   charts[id] = new Chart(ctx, {
-    type,
+    type: 'bar',
     data: { labels, datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: datasets.length > 1, position: 'top', labels: { font: { size: 12 }, boxWidth: 12 } } },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 11 }, maxTicksLimit: 10 } },
-        y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 } } }
-      }
-    }
-  });
-}
-
-function setKPI(id, value, type) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.remove('loading');
-  el.textContent = fmt(value, type);
-}
-
-function renderGoogle(d) {
-  const s = d.summary;
-  setKPI('g-spend', s.spend, 'currency');
-  setKPI('g-impressions', s.impressions);
-  setKPI('g-clicks', s.clicks);
-  setKPI('g-conversions', s.conversions);
-  setKPI('g-cpl', s.cpl, 'currency');
-  setKPI('g-ctr', s.ctr, 'pct');
-  const labels = d.daily.map(r => r.date?.slice(5));
-  buildChart('chart-g-spend', labels, [{
-    label: 'Spend (€)', data: d.daily.map(r => r.spend),
-    backgroundColor: '#4f6ef7', borderRadius: 4
-  }]);
-}
-
-function renderMeta(d) {
-  const s = d.summary;
-  setKPI('m-spend', s.spend, 'currency');
-  setKPI('m-impressions', s.impressions);
-  setKPI('m-clicks', s.clicks);
-  setKPI('m-conversions', s.conversions);
-  setKPI('m-cpl', s.cpl, 'currency');
-  setKPI('m-ctr', s.ctr, 'pct');
-  const labels = d.daily.map(r => r.date?.slice(5));
-  buildChart('chart-m-spend', labels, [{
-    label: 'Spend (€)', data: d.daily.map(r => r.spend),
-    backgroundColor: '#0866ff', borderRadius: 4
-  }]);
-}
-
-function renderOverview() {
-  if (!gData && !mData) return;
-  const gs = gData?.summary || {spend:0,impressions:0,clicks:0,conversions:0,roas:0};
-  const ms = mData?.summary || {spend:0,impressions:0,clicks:0,conversions:0,roas:0};
-  setKPI('ov-spend', Math.round((gs.spend + ms.spend) * 100) / 100, 'currency');
-  setKPI('ov-impressions', gs.impressions + ms.impressions);
-  setKPI('ov-clicks', gs.clicks + ms.clicks);
-  const totalConv = Math.round((gs.conversions + ms.conversions) * 10) / 10;
-  setKPI('ov-conversions', totalConv);
-  const totalSpend = gs.spend + ms.spend;
-  setKPI('ov-cpl', totalConv > 0 ? Math.round(totalSpend / totalConv * 100) / 100 : 0, 'currency');
-  setKPI('ov-roas', gs.roas && ms.roas ? Math.round((gs.roas + ms.roas) / 2 * 100) / 100 : (gs.roas || ms.roas), 'x');
-
-  const gDaily = gData?.daily || [];
-  const mDaily = mData?.daily || [];
-  const allDates = [...new Set([...gDaily.map(d=>d.date), ...mDaily.map(d=>d.date)])].sort();
-  const gMap  = Object.fromEntries(gDaily.map(d=>[d.date, d.spend]));
-  const mMap  = Object.fromEntries(mDaily.map(d=>[d.date, d.spend]));
-  const gcMap = Object.fromEntries(gDaily.map(d=>[d.date, d.conversions]));
-  const mcMap = Object.fromEntries(mDaily.map(d=>[d.date, d.conversions]));
-  const labels = allDates.map(d => d.slice(5));
-
-  buildChart('chart-ov-spend', labels, [
-    { label: 'Google (€)', data: allDates.map(d=>gMap[d]||0), backgroundColor: '#4f6ef7', borderRadius: 4 },
-    { label: 'Meta (€)',   data: allDates.map(d=>mMap[d]||0), backgroundColor: '#0866ff', borderRadius: 4 }
-  ]);
-  buildChart('chart-ov-conv', labels, [
-    { label: 'Google', data: allDates.map(d=>gcMap[d]||0), backgroundColor: '#4f6ef7', borderRadius: 4 },
-    { label: 'Meta',   data: allDates.map(d=>mcMap[d]||0), backgroundColor: '#0866ff', borderRadius: 4 }
-  ]);
-}
-
-let gData = null, mData = null;
-
-async function loadAll() {
-  const range = document.getElementById('dateRange').value;
-  const bar = document.getElementById('custom-date-bar');
-
-  if (range === 'custom') {
-    bar.style.display = 'flex';
-    const from = document.getElementById('date-from').value;
-    const to = document.getElementById('date-to').value;
-    if (!from || !to) return;
-  } else {
-    bar.style.display = 'none';
-  }
-  gData = null; mData = null;
-
-  ['g-spend','g-impressions','g-clicks','g-conversions','g-cpl','g-ctr',
-   'm-spend','m-impressions','m-clicks','m-conversions','m-cpl','m-ctr',
-   'ov-spend','ov-impressions','ov-clicks','ov-conversions','ov-cpl','ov-roas']
-    .forEach(id => { const el = document.getElementById(id); if(el){el.textContent='–';el.classList.add('loading');} });
-
-  const from = document.getElementById('date-from').value;
-  const to = document.getElementById('date-to').value;
-  const isCustom = range === 'custom' && from && to;
-
-  const googleRange = isCustom ? `custom&from=${from}&to=${to}` :
-    range === 'last_7d' ? 'LAST_7_DAYS' :
-    range === 'last_90d' ? 'LAST_90_DAYS' :
-    range === 'last_180d' ? 'LAST_180_DAYS' :
-    range === 'last_365d' ? 'LAST_365_DAYS' : 'LAST_30_DAYS';
-
-  const metaRange = isCustom ? `custom&from=${from}&to=${to}` :
-    range === 'last_365d' ? 'last_year' : range;
-
-  const [gRes, mRes] = await Promise.allSettled([
-    fetch(`/api/google?dateRange=${googleRange}`).then(r=>r.json()),
-    fetch(`/api/meta?dateRange=${metaRange}`).then(r=>r.json())
-  ]);
-
-  if (gRes.status === 'fulfilled' && !gRes.value.error) {
-    gData = gRes.value;
-    renderGoogle(gData);
-  }
-  if (mRes.status === 'fulfilled' && !mRes.value.error) {
-    mData = mRes.value;
-    renderMeta(mData);
-  }
-  renderOverview();
-}
-</script>
-</body>
-</html>
+      plugins: { leg
