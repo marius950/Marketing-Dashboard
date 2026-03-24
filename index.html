@@ -355,7 +355,7 @@ async function loadCampaigns() {
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:8px">
                   ${a.ads.map(ad => `
                     <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:#fafafa">
-                      ${ad.thumbnail ? `<img src="${ad.thumbnail}" style="width:100%;height:100px;object-fit:cover;display:block" onerror="this.style.display='none'">` : '<div style="height:100px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9ca3af">Kein Bild</div>'}
+                      ${ad.thumbnail ? `<img src="${ad.thumbnail}" style="width:100%;height:160px;object-fit:cover;display:block" onerror="this.style.display='none'">` : '<div style="height:160px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9ca3af">Kein Bild</div>'}
                       <div style="padding:8px">
                         <div style="font-size:11px;font-weight:500;color:#374151;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ad.name}</div>
                         <div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280">
