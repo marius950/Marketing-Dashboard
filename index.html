@@ -7,7 +7,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  #login-screen { position: absolute; inset: 0; background: #f4f5f7; display: flex; align-items: center; justify-content: center; z-index: 999; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f5f7; color: #1a1a2e; min-height: 100vh; }
+  #login-screen { position: fixed; inset: 0; background: #f4f5f7; display: flex; align-items: center; justify-content: center; z-index: 999; }
   #login-box { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 40px 36px; width: 340px; }
   #login-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
   #login-box p { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
@@ -15,7 +16,6 @@
   #login-box button { width: 100%; padding: 10px; background: #4f6ef7; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
   #login-box button:hover { background: #3d5ce8; }
   #login-error { font-size: 12px; color: #ef4444; margin-top: 8px; display: none; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f5f7; color: #1a1a2e; min-height: 100vh; }
   header { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
   .logo { font-size: 20px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.5px; }
   .logo span { color: #4f6ef7; }
@@ -42,86 +42,98 @@
   .source-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
   .badge-google { background: #e8f0fe; color: #1a73e8; }
   .badge-meta { background: #e7f3ff; color: #0866ff; }
-  .error-msg { font-size: 12px; color: #ef4444; margin-top: 4px; }
   @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(3,1fr); } .combined-grid { grid-template-columns: 1fr; } }
   @media (max-width: 600px) { main { padding: 16px; } .kpi-grid { grid-template-columns: repeat(2,1fr); } }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">effi<span>.</span></div>
-  <div class="controls">
-    <select id="dateRange" onchange="loadAll()">
-      <option value="last_7d">Letzte 7 Tage</option>
-      <option value="last_30d">Letzte 30 Tage</option>
-      <option value="last_90d" selected>Letzte 90 Tage</option>
-    </select>
-    <button class="refresh-btn" onclick="loadAll()">Aktualisieren</button>
+<div id="login-screen">
+  <div id="login-box">
+    <h2>effi<span style="color:#4f6ef7">.</span></h2>
+    <p>KPI Dashboard – nur für interne Nutzung</p>
+    <input type="password" id="pw-input" placeholder="Passwort" onkeydown="if(event.key==='Enter')checkLogin()">
+    <button onclick="checkLogin()">Anmelden</button>
+    <div id="login-error">Falsches Passwort</div>
   </div>
-</header>
+</div>
 
-<main>
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('overview')">Gesamt</button>
-    <button class="tab" onclick="switchTab('google')">Google Ads</button>
-    <button class="tab" onclick="switchTab('meta')">Meta Ads</button>
-  </div>
-
-  <div id="panel-overview" class="panel active">
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-label">Spend gesamt</div><div class="kpi-value loading" id="ov-spend">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">Impressionen</div><div class="kpi-value loading" id="ov-impressions">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">Klicks</div><div class="kpi-value loading" id="ov-clicks">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">Conversions</div><div class="kpi-value loading" id="ov-conversions">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">Ø CPL</div><div class="kpi-value loading" id="ov-cpl">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">Ø ROAS</div><div class="kpi-value loading" id="ov-roas">–</div></div>
+<div id="app" style="display:none">
+  <header>
+    <div class="logo">effi<span>.</span></div>
+    <div class="controls">
+      <select id="dateRange" onchange="loadAll()">
+        <option value="last_7d">Letzte 7 Tage</option>
+        <option value="last_30d">Letzte 30 Tage</option>
+        <option value="last_90d" selected>Letzte 90 Tage</option>
+      </select>
+      <button class="refresh-btn" onclick="loadAll()">Aktualisieren</button>
     </div>
-    <div class="combined-grid">
-      <div class="chart-card">
-        <div class="chart-title">Spend <span class="source-badge badge-google">Google</span><span class="source-badge badge-meta">Meta</span></div>
-        <div class="chart-wrap"><canvas id="chart-ov-spend"></canvas></div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('overview')">Gesamt</button>
+      <button class="tab" onclick="switchTab('google')">Google Ads</button>
+      <button class="tab" onclick="switchTab('meta')">Meta Ads</button>
+    </div>
+
+    <div id="panel-overview" class="panel active">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Spend gesamt</div><div class="kpi-value loading" id="ov-spend">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">Impressionen</div><div class="kpi-value loading" id="ov-impressions">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">Klicks</div><div class="kpi-value loading" id="ov-clicks">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">Conversions</div><div class="kpi-value loading" id="ov-conversions">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">Ø CPL</div><div class="kpi-value loading" id="ov-cpl">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">Ø ROAS</div><div class="kpi-value loading" id="ov-roas">–</div></div>
+      </div>
+      <div class="combined-grid">
+        <div class="chart-card">
+          <div class="chart-title">Spend <span class="source-badge badge-google">Google</span><span class="source-badge badge-meta">Meta</span></div>
+          <div class="chart-wrap"><canvas id="chart-ov-spend"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Conversions <span class="source-badge badge-google">Google</span><span class="source-badge badge-meta">Meta</span></div>
+          <div class="chart-wrap"><canvas id="chart-ov-conv"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-google" class="panel">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Spend</div><div class="kpi-value loading" id="g-spend">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">Impressionen</div><div class="kpi-value loading" id="g-impressions">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">Klicks</div><div class="kpi-value loading" id="g-clicks">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">Conversions</div><div class="kpi-value loading" id="g-conversions">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">CPL</div><div class="kpi-value loading" id="g-cpl">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">CTR</div><div class="kpi-value loading" id="g-ctr">–</div></div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">Conversions <span class="source-badge badge-google">Google</span><span class="source-badge badge-meta">Meta</span></div>
-        <div class="chart-wrap"><canvas id="chart-ov-conv"></canvas></div>
+        <div class="chart-title">Täglicher Spend – Google Ads</div>
+        <div class="chart-wrap"><canvas id="chart-g-spend"></canvas></div>
       </div>
     </div>
-  </div>
 
-  <div id="panel-google" class="panel">
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-label">Spend</div><div class="kpi-value loading" id="g-spend">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">Impressionen</div><div class="kpi-value loading" id="g-impressions">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">Klicks</div><div class="kpi-value loading" id="g-clicks">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">Conversions</div><div class="kpi-value loading" id="g-conversions">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">CPL</div><div class="kpi-value loading" id="g-cpl">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">CTR</div><div class="kpi-value loading" id="g-ctr">–</div></div>
+    <div id="panel-meta" class="panel">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Spend</div><div class="kpi-value loading" id="m-spend">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">Impressionen</div><div class="kpi-value loading" id="m-impressions">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">Klicks</div><div class="kpi-value loading" id="m-clicks">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">Conversions</div><div class="kpi-value loading" id="m-conversions">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">CPL</div><div class="kpi-value loading" id="m-cpl">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">CTR</div><div class="kpi-value loading" id="m-ctr">–</div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Täglicher Spend – Meta Ads</div>
+        <div class="chart-wrap"><canvas id="chart-m-spend"></canvas></div>
+      </div>
     </div>
-    <div class="chart-card">
-      <div class="chart-title">Täglicher Spend – Google Ads</div>
-      <div class="chart-wrap"><canvas id="chart-g-spend"></canvas></div>
-    </div>
-  </div>
-
-  <div id="panel-meta" class="panel">
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-label">Spend</div><div class="kpi-value loading" id="m-spend">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">Impressionen</div><div class="kpi-value loading" id="m-impressions">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">Klicks</div><div class="kpi-value loading" id="m-clicks">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">Conversions</div><div class="kpi-value loading" id="m-conversions">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">CPL</div><div class="kpi-value loading" id="m-cpl">–</div></div>
-      <div class="kpi-card"><div class="kpi-label">CTR</div><div class="kpi-value loading" id="m-ctr">–</div></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Täglicher Spend – Meta Ads</div>
-      <div class="chart-wrap"><canvas id="chart-m-spend"></canvas></div>
-    </div>
-  </div>
-</main>
+  </main>
+</div>
 
 <script>
 const PW = 'Ueberseehub';
+
 function checkLogin() {
   const v = document.getElementById('pw-input').value;
   if (v === PW) {
@@ -133,11 +145,12 @@ function checkLogin() {
     document.getElementById('login-error').style.display = 'block';
   }
 }
+
 if (sessionStorage.getItem('effi_auth') === '1') {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  loadAll();
 }
-
 
 const charts = {};
 
@@ -211,8 +224,9 @@ function renderMeta(d) {
 }
 
 function renderOverview() {
-  if (!gData || !mData) return;
-  const gs = gData.summary, ms = mData.summary;
+  if (!gData && !mData) return;
+  const gs = gData?.summary || {spend:0,impressions:0,clicks:0,conversions:0,roas:0};
+  const ms = mData?.summary || {spend:0,impressions:0,clicks:0,conversions:0,roas:0};
   setKPI('ov-spend', Math.round((gs.spend + ms.spend) * 100) / 100, 'currency');
   setKPI('ov-impressions', gs.impressions + ms.impressions);
   setKPI('ov-clicks', gs.clicks + ms.clicks);
@@ -222,11 +236,13 @@ function renderOverview() {
   setKPI('ov-cpl', totalConv > 0 ? Math.round(totalSpend / totalConv * 100) / 100 : 0, 'currency');
   setKPI('ov-roas', gs.roas && ms.roas ? Math.round((gs.roas + ms.roas) / 2 * 100) / 100 : (gs.roas || ms.roas), 'x');
 
-  const allDates = [...new Set([...gData.daily.map(d=>d.date), ...mData.daily.map(d=>d.date)])].sort();
-  const gMap = Object.fromEntries(gData.daily.map(d=>[d.date, d.spend]));
-  const mMap = Object.fromEntries(mData.daily.map(d=>[d.date, d.spend]));
-  const gcMap = Object.fromEntries(gData.daily.map(d=>[d.date, d.conversions]));
-  const mcMap = Object.fromEntries(mData.daily.map(d=>[d.date, d.conversions]));
+  const gDaily = gData?.daily || [];
+  const mDaily = mData?.daily || [];
+  const allDates = [...new Set([...gDaily.map(d=>d.date), ...mDaily.map(d=>d.date)])].sort();
+  const gMap  = Object.fromEntries(gDaily.map(d=>[d.date, d.spend]));
+  const mMap  = Object.fromEntries(mDaily.map(d=>[d.date, d.spend]));
+  const gcMap = Object.fromEntries(gDaily.map(d=>[d.date, d.conversions]));
+  const mcMap = Object.fromEntries(mDaily.map(d=>[d.date, d.conversions]));
   const labels = allDates.map(d => d.slice(5));
 
   buildChart('chart-ov-spend', labels, [
@@ -238,6 +254,8 @@ function renderOverview() {
     { label: 'Meta',   data: allDates.map(d=>mcMap[d]||0), backgroundColor: '#0866ff', borderRadius: 4 }
   ]);
 }
+
+let gData = null, mData = null;
 
 async function loadAll() {
   const range = document.getElementById('dateRange').value;
@@ -263,8 +281,6 @@ async function loadAll() {
   }
   renderOverview();
 }
-
-loadAll();
 </script>
 </body>
 </html>
