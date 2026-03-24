@@ -63,13 +63,23 @@
     <div class="logo">effi<span>.</span></div>
     <div class="controls">
       <select id="dateRange" onchange="loadAll()">
-        <option value="last_7d">Letzte 7 Tage</option>
+          <option value="last_7d">Letzte 7 Tage</option>
         <option value="last_30d">Letzte 30 Tage</option>
         <option value="last_90d" selected>Letzte 90 Tage</option>
+        <option value="last_180d">Letzte 180 Tage</option>
+        <option value="last_365d">Letztes Jahr</option>
+        <option value="custom">Benutzerdefiniert...</option>
       </select>
       <button class="refresh-btn" onclick="loadAll()">Aktualisieren</button>
     </div>
   </header>
+  <div id="custom-date-bar" style="display:none; background:#fff; border-bottom:1px solid #e5e7eb; padding:10px 32px; display:none; align-items:center; gap:12px;">
+    <label style="font-size:13px; color:#6b7280;">Von</label>
+    <input type="date" id="date-from" style="padding:6px 10px; border:1px solid #e5e7eb; border-radius:8px; font-size:13px;">
+    <label style="font-size:13px; color:#6b7280;">Bis</label>
+    <input type="date" id="date-to" style="padding:6px 10px; border:1px solid #e5e7eb; border-radius:8px; font-size:13px;">
+    <button class="refresh-btn" onclick="loadAll()">Anwenden</button>
+  </div>
 
   <main>
     <div class="tabs">
@@ -259,6 +269,16 @@ let gData = null, mData = null;
 
 async function loadAll() {
   const range = document.getElementById('dateRange').value;
+  const bar = document.getElementById('custom-date-bar');
+
+  if (range === 'custom') {
+    bar.style.display = 'flex';
+    const from = document.getElementById('date-from').value;
+    const to = document.getElementById('date-to').value;
+    if (!from || !to) return;
+  } else {
+    bar.style.display = 'none';
+  }
   gData = null; mData = null;
 
   ['g-spend','g-impressions','g-clicks','g-conversions','g-cpl','g-ctr',
@@ -266,9 +286,23 @@ async function loadAll() {
    'ov-spend','ov-impressions','ov-clicks','ov-conversions','ov-cpl','ov-roas']
     .forEach(id => { const el = document.getElementById(id); if(el){el.textContent='–';el.classList.add('loading');} });
 
+  const from = document.getElementById('date-from').value;
+  const to = document.getElementById('date-to').value;
+  const isCustom = range === 'custom' && from && to;
+
+  const googleRange = isCustom ? `custom&from=${from}&to=${to}` :
+    range === 'last_7d' ? 'LAST_7_DAYS' :
+    range === 'last_90d' ? 'LAST_90_DAYS' :
+    range === 'last_180d' ? 'LAST_180_DAYS' :
+    range === 'last_365d' ? 'LAST_365_DAYS' : 'LAST_30_DAYS';
+
+  const metaRange = isCustom ? `custom&from=${from}&to=${to}` :
+    range === 'last_180d' ? 'last_180d' :
+    range === 'last_365d' ? 'last_year' : range;
+
   const [gRes, mRes] = await Promise.allSettled([
-    fetch(`/api/google?dateRange=${range === 'last_7d' ? 'LAST_7_DAYS' : range === 'last_90d' ? 'LAST_90_DAYS' : 'LAST_30_DAYS'}`).then(r=>r.json()),
-    fetch(`/api/meta?dateRange=${range}`).then(r=>r.json())
+    fetch(`/api/google?dateRange=${googleRange}`).then(r=>r.json()),
+    fetch(`/api/meta?dateRange=${metaRange}`).then(r=>r.json())
   ]);
 
   if (gRes.status === 'fulfilled' && !gRes.value.error) {
