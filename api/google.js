@@ -28,9 +28,10 @@ module.exports = async function handler(req, res) {
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'developer-token': process.env.GOOGLE_DEVELOPER_TOKEN,
-          'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        'developer-token': process.env.GOOGLE_DEVELOPER_TOKEN,
+        'login-customer-id': process.env.GOOGLE_LOGIN_CUSTOMER_ID,
+        'Content-Type': 'application/json',
         },
         body: JSON.stringify({ query }),
       }
