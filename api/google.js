@@ -91,7 +91,7 @@ export default async function handler(req, res) {
           method: 'POST', headers,
           body: JSON.stringify({ query: `SELECT campaign.id FROM campaign LIMIT 1` }),
         }),
-        fetch(`https://googleads.googleapis.com/v19/customers/${customerId}/googleAds:search`, {
+        fetch(`https://googleads.googleapis.com/v23/customers/${customerId}/googleAds:search`, {
           method: 'POST', headers,
           body: JSON.stringify({ query: `SELECT campaign.id FROM campaign LIMIT 1` }),
         }),
@@ -99,7 +99,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         v17: { status: r17.status, body: (await r17.text()).slice(0, 300) },
         v18: { status: r18.status, body: (await r18.text()).slice(0, 300) },
-        v19: { status: r19.status, body: (await r19.text()).slice(0, 300) },
+        v23: { status: r19.status, body: (await r19.text()).slice(0, 300) },
       });
     } catch(e) {
       return res.status(500).json({ debug2_error: e.message });
@@ -142,7 +142,7 @@ export default async function handler(req, res) {
     `;
 
     const summaryRes = await fetch(
-      `https://googleads.googleapis.com/v19/customers/${customerId}/googleAds:search`,
+      `https://googleads.googleapis.com/v23/customers/${customerId}/googleAds:search`,
       { method: 'POST', headers, body: JSON.stringify({ query: summaryQuery }) }
     );
     const summaryText = await summaryRes.text();
@@ -195,7 +195,7 @@ export default async function handler(req, res) {
     `;
 
     const campRes = await fetch(
-      `https://googleads.googleapis.com/v19/customers/${customerId}/googleAds:search`,
+      `https://googleads.googleapis.com/v23/customers/${customerId}/googleAds:search`,
       { method: 'POST', headers, body: JSON.stringify({ query: campQuery }) }
     );
     const campData = campRes.ok ? await campRes.json() : { results: [] };
