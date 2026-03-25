@@ -33,7 +33,7 @@ module.exports = async function handler(req, res) {
   const fields = 'spend,impressions,clicks,ctr,cpc,actions,action_values';
   const timeRange = `{"since":"${from}","until":"${to}"}`;
 
-  // Thumbnail-URL sicher machen – p64x64 auf p320x320 nur wenn vorhanden
+  // Thumbnail-URL: p64x64 → p320x320 nur wenn vorhanden, sonst unverändert
   const fixThumb = url => {
     if (!url) return null;
     if (url.includes('p64x64')) return url.replace('p64x64', 'p320x320');
@@ -44,7 +44,7 @@ module.exports = async function handler(req, res) {
     parseFloat(actions?.find(a => a.action_type === type)?.value || 0);
 
   try {
-    // Alle Kampagnen laden – Filterung nach Spend > 0 machen wir selbst
+    // Alle Kampagnen laden – wir filtern selbst nach Spend > 0
     const campRes = await fetch(
       `https://graph.facebook.com/v19.0/${accountId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,insights.time_range(${timeRange}){${fields}}&limit=50&access_token=${token}`
     );
@@ -79,8 +79,13 @@ module.exports = async function handler(req, res) {
                       getAction(ai.actions, 'purchase');
         const aSpend = parseFloat(ai.spend || 0);
 
+        // Ads mit erweiterten Creative-Feldern:
+        // - video_data.image_url  → Thumbnail für Reels/Videos
+        // - link_data.picture     → direkte Bild-URL für Static Ads
+        // - image_url             → fallback
+        // - thumbnail_url         → letzter fallback (p64 → p320)
         const adsRes = await fetch(
-          `https://graph.facebook.com/v19.0/${adset.id}/ads?fields=id,name,status,creative{id,thumbnail_url,image_url,object_story_spec{video_data{image_url}}}&insights.time_range(${timeRange}){${fields}}&limit=5&access_token=${token}`
+          `https://graph.facebook.com/v19.0/${adset.id}/ads?fields=id,name,status,creative{id,thumbnail_url,image_url,object_story_spec{video_data{image_url},link_data{picture,image_hash}}}&insights.time_range(${timeRange}){${fields}}&limit=5&access_token=${token}`
         );
         const adsData = await adsRes.json();
 
@@ -89,10 +94,14 @@ module.exports = async function handler(req, res) {
           const dConv = getAction(di.actions, 'lead') ||
                         getAction(di.actions, 'complete_registration') ||
                         getAction(di.actions, 'purchase');
+
+          // Reihenfolge: Video-Thumbnail → Static-Bild → image_url → thumbnail_url
           const thumb =
-            ad.creative?.image_url ||
             ad.creative?.object_story_spec?.video_data?.image_url ||
+            ad.creative?.object_story_spec?.link_data?.picture ||
+            ad.creative?.image_url ||
             fixThumb(ad.creative?.thumbnail_url);
+
           return {
             id:          ad.id,
             name:        ad.name,
