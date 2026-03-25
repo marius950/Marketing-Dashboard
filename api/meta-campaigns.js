@@ -33,8 +33,20 @@ module.exports = async function handler(req, res) {
   const fields = 'spend,impressions,clicks,ctr,cpc,actions,action_values';
   const timeRange = `{"since":"${from}","until":"${to}"}`;
 
+  const fixThumb = url => {
+    if (!url) return null;
+    if (url.includes('p64x64')) return url.replace('p64x64', 'p320x320');
+    return url;
+  };
+
   const getAction = (actions, type) =>
     parseFloat(actions?.find(a => a.action_type === type)?.value || 0);
+
+  // App-Install als primäre Conversion (mobile_app_install)
+  const getConversions = (actions) =>
+    getAction(actions, 'mobile_app_install') ||
+    getAction(actions, 'app_install') ||
+    getAction(actions, 'omni_app_install');
 
   try {
     const campRes = await fetch(
@@ -45,15 +57,14 @@ module.exports = async function handler(req, res) {
 
     const allCampaigns = await Promise.all((campData.data || []).map(async (camp) => {
       const ins = camp.insights?.data?.[0] || {};
-      const conv = getAction(ins.actions, 'lead') ||
-                   getAction(ins.actions, 'complete_registration') ||
-                   getAction(ins.actions, 'purchase');
+      const conv  = getConversions(ins.actions);
       const spend = parseFloat(ins.spend || 0);
 
       if (spend === 0) {
         return {
           id: camp.id, name: camp.name, status: camp.status,
           budget: parseInt(camp.daily_budget || camp.lifetime_budget || 0) / 100,
+          dailyBudget: parseInt(camp.daily_budget || 0) / 100,
           spend: 0, impressions: 0, clicks: 0, ctr: 0, conversions: 0, adsets: [],
         };
       }
@@ -64,28 +75,23 @@ module.exports = async function handler(req, res) {
       const adsetData = await adsetRes.json();
 
       const adsets = await Promise.all((adsetData.data || []).map(async (adset) => {
-        const ai = adset.insights?.data?.[0] || {};
-        const aConv = getAction(ai.actions, 'lead') ||
-                      getAction(ai.actions, 'complete_registration') ||
-                      getAction(ai.actions, 'purchase');
+        const ai    = adset.insights?.data?.[0] || {};
+        const aConv = getConversions(ai.actions);
         const aSpend = parseFloat(ai.spend || 0);
 
-        // Direkte thumbnail_url – unverändert, wie in der ersten Version
         const adsRes = await fetch(
           `https://graph.facebook.com/v19.0/${adset.id}/ads?fields=id,name,status,creative{id,thumbnail_url}&insights.time_range(${timeRange}){${fields}}&limit=5&access_token=${token}`
         );
         const adsData = await adsRes.json();
 
         const ads = (adsData.data || []).map(ad => {
-          const di = ad.insights?.data?.[0] || {};
-          const dConv = getAction(di.actions, 'lead') ||
-                        getAction(di.actions, 'complete_registration') ||
-                        getAction(di.actions, 'purchase');
+          const di   = ad.insights?.data?.[0] || {};
+          const dConv = getConversions(di.actions);
           return {
             id:          ad.id,
             name:        ad.name,
             status:      ad.status,
-            thumbnail:   ad.creative?.thumbnail_url || null,
+            thumbnail:   ad.creative?.thumbnail_url ? fixThumb(ad.creative.thumbnail_url) : null,
             spend:       Math.round(parseFloat(di.spend || 0) * 100) / 100,
             impressions: parseInt(di.impressions || 0),
             clicks:      parseInt(di.clicks || 0),
@@ -113,6 +119,7 @@ module.exports = async function handler(req, res) {
         name:        camp.name,
         status:      camp.status,
         budget:      parseInt(camp.daily_budget || camp.lifetime_budget || 0) / 100,
+        dailyBudget: parseInt(camp.daily_budget || 0) / 100,
         spend:       Math.round(spend * 100) / 100,
         impressions: parseInt(ins.impressions || 0),
         clicks:      parseInt(ins.clicks || 0),
@@ -126,9 +133,17 @@ module.exports = async function handler(req, res) {
       .filter(c => c.spend > 0)
       .sort((a, b) => b.spend - a.spend);
 
-    const result = { campaigns, cachedAt: new Date().toISOString() };
-    setCache(cacheKey, result);
+    // Tagesbudget aktiver Kampagnen summieren
+    const activeDailyBudget = allCampaigns
+      .filter(c => c.status === 'ACTIVE' && c.dailyBudget > 0)
+      .reduce((sum, c) => sum + c.dailyBudget, 0);
 
+    const result = {
+      campaigns,
+      activeDailyBudget: Math.round(activeDailyBudget * 100) / 100,
+      cachedAt: new Date().toISOString(),
+    };
+    setCache(cacheKey, result);
     res.setHeader('X-Cache', 'MISS');
     res.status(200).json(result);
   } catch (err) {
