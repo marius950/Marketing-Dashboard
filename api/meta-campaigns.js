@@ -1,24 +1,17 @@
 // In-Memory Cache – 30 Minuten TTL
 const cache = new Map();
-const CACHE_TTL = 30 * 60 * 1000; // 30 Minuten
+const CACHE_TTL = 30 * 60 * 1000;
 
-function getCacheKey(from, to) {
-  return `campaigns_${from}_${to}`;
-}
+function getCacheKey(from, to) { return `campaigns_${from}_${to}`; }
 
 function getFromCache(key) {
   const entry = cache.get(key);
   if (!entry) return null;
-  if (Date.now() - entry.timestamp > CACHE_TTL) {
-    cache.delete(key);
-    return null;
-  }
+  if (Date.now() - entry.timestamp > CACHE_TTL) { cache.delete(key); return null; }
   return entry.data;
 }
 
-function setCache(key, data) {
-  cache.set(key, { data, timestamp: Date.now() });
-}
+function setCache(key, data) { cache.set(key, { data, timestamp: Date.now() }); }
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -31,41 +24,45 @@ module.exports = async function handler(req, res) {
 
   if (!from || !to) return res.status(400).json({ error: 'from and to required' });
 
-  // Cache prüfen (außer bei ?refresh=1)
   const cacheKey = getCacheKey(from, to);
   if (refresh !== '1') {
     const cached = getFromCache(cacheKey);
-    if (cached) {
-      res.setHeader('X-Cache', 'HIT');
-      return res.status(200).json(cached);
-    }
+    if (cached) { res.setHeader('X-Cache', 'HIT'); return res.status(200).json(cached); }
   }
 
   const fields = 'spend,impressions,clicks,ctr,cpc,actions,action_values';
   const timeRange = `{"since":"${from}","until":"${to}"}`;
   const fixThumb = url => url ? url.replace('p64x64', 'p320x320') : null;
-
   const getAction = (actions, type) =>
     parseFloat(actions?.find(a => a.action_type === type)?.value || 0);
 
   try {
-    // Nur ACTIVE Kampagnen laden
+    // ALLE Kampagnen laden (aktiv + pausiert) – wir filtern selbst nach Spend > 0
     const campRes = await fetch(
-      `https://graph.facebook.com/v19.0/${accountId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,insights.time_range(${timeRange}){${fields}}&filtering=[{"field":"effective_status","operator":"IN","value":["ACTIVE"]}]&limit=25&access_token=${token}`
+      `https://graph.facebook.com/v19.0/${accountId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,insights.time_range(${timeRange}){${fields}}&limit=50&access_token=${token}`
     );
     const campData = await campRes.json();
     if (campData.error) return res.status(500).json({ error: campData.error });
 
-    // Alle Kampagnen parallel verarbeiten
-    const campaigns = await Promise.all((campData.data || []).map(async (camp) => {
+    const allCampaigns = await Promise.all((campData.data || []).map(async (camp) => {
       const ins = camp.insights?.data?.[0] || {};
       const conv = getAction(ins.actions, 'lead') ||
                    getAction(ins.actions, 'complete_registration') ||
                    getAction(ins.actions, 'purchase');
       const spend = parseFloat(ins.spend || 0);
 
+      // Nur Adsets laden wenn die Kampagne Spend hatte
+      if (spend === 0) {
+        return {
+          id: camp.id, name: camp.name, status: camp.status,
+          budget: parseInt(camp.daily_budget || camp.lifetime_budget || 0) / 100,
+          spend: 0, impressions: 0, clicks: 0, ctr: 0, conversions: 0,
+          adsets: [],
+        };
+      }
+
       const adsetRes = await fetch(
-        `https://graph.facebook.com/v19.0/${camp.id}/adsets?fields=id,name,status,daily_budget,insights.time_range(${timeRange}){${fields}}&filtering=[{"field":"effective_status","operator":"IN","value":["ACTIVE"]}]&limit=10&access_token=${token}`
+        `https://graph.facebook.com/v19.0/${camp.id}/adsets?fields=id,name,status,daily_budget,insights.time_range(${timeRange}){${fields}}&limit=10&access_token=${token}`
       );
       const adsetData = await adsetRes.json();
 
@@ -77,7 +74,7 @@ module.exports = async function handler(req, res) {
         const aSpend = parseFloat(ai.spend || 0);
 
         const adsRes = await fetch(
-          `https://graph.facebook.com/v19.0/${adset.id}/ads?fields=id,name,status,creative{id,thumbnail_url,image_url,object_story_spec{video_data{image_url}}}&insights.time_range(${timeRange}){${fields}}&filtering=[{"field":"effective_status","operator":"IN","value":["ACTIVE"]}]&limit=5&access_token=${token}`
+          `https://graph.facebook.com/v19.0/${adset.id}/ads?fields=id,name,status,creative{id,thumbnail_url,image_url,object_story_spec{video_data{image_url}}}&insights.time_range(${timeRange}){${fields}}&limit=5&access_token=${token}`
         );
         const adsData = await adsRes.json();
 
@@ -131,7 +128,10 @@ module.exports = async function handler(req, res) {
       };
     }));
 
-    campaigns.sort((a, b) => b.spend - a.spend);
+    // Nur Kampagnen mit Spend > 0 anzeigen, sortiert nach Spend
+    const campaigns = allCampaigns
+      .filter(c => c.spend > 0)
+      .sort((a, b) => b.spend - a.spend);
 
     const result = { campaigns, cachedAt: new Date().toISOString() };
     setCache(cacheKey, result);
