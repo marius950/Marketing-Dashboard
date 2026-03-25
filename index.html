@@ -832,32 +832,35 @@ function renderOverview() {
   wowBadge('ov-leads-wow',gData?.wow?.conversions);
 
   // Budget-Karte:
-  // Hauptwert = aktueller Ø Tagesausgabe aus echtem API-Spend
-  // Balken + Monatsschätzung = aus Budget-Tab (b-total)
-  const budgetTotal  = parseFloat(document.getElementById('b-total')?.value || 15000);
+  // Hauptwert  = aktivesTagsbudget aus API (Google activeDailyBudget + Meta activeDailyBudget)
+  // Balken     = tatsächlicher Spend bisher vs. Monatsplan aus Budget-Tab (b-total)
+  // Monatswert = Monatsplan aus Budget-Tab
 
-  const totalSpend   = (gs.spend||0) + (ms.spend||0);
-  const from         = document.getElementById('date-from').value;
-  const to           = document.getElementById('date-to').value;
-  const periodDays   = (from && to)
-    ? Math.max(1, Math.round((new Date(to) - new Date(from)) / (1000*60*60*24)) + 1)
-    : 30;
-  const actualDaily  = totalSpend > 0 ? Math.round(totalSpend / periodDays * 100) / 100 : 0;
+  const budgetTotal   = parseFloat(document.getElementById('b-total')?.value || 15000);
+  const totalSpend    = (gs.spend||0) + (ms.spend||0);
+
+  // Aktives Tagesbudget direkt aus den API-Responses
+  const gActiveBudget = gData?.activeDailyBudget || 0;
+  const mActiveBudget = mCampData?.activeDailyBudget || 0;
+  const activeDailyTotal = gActiveBudget + mActiveBudget;
 
   const budgetEl = document.getElementById('ov-daily-budget');
-  if (budgetEl) { budgetEl.textContent = fmt(actualDaily, 'currency') + ' ' + t('per-day'); }
+  if (budgetEl) {
+    budgetEl.textContent = activeDailyTotal > 0
+      ? fmt(activeDailyTotal, 'currency') + ' ' + t('per-day')
+      : '–';
+  }
 
-  // Balken: tatsächlicher Spend vs. geplantem Monatsbudget
+  // Balken: wie viel vom Monatsplan ist schon ausgegeben
   const pct = budgetTotal > 0 ? Math.min(Math.round(totalSpend / budgetTotal * 100), 100) : 0;
   const pw  = document.getElementById('pace-wrap');
-  if (pw) {
+  if (pw && totalSpend > 0) {
     pw.style.display = 'block';
     document.getElementById('pace-spent').textContent = fmt(totalSpend, 'currency') + ' ' + t('spent');
     document.getElementById('pace-pct').textContent   = pct + '%';
     const bar = document.getElementById('pace-bar');
     bar.style.width      = pct + '%';
     bar.style.background = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#34a853';
-    // Monatsschätzung aus Budget-Tab-Planung
     document.getElementById('pace-monthly').textContent =
       fmt(budgetTotal, 'currency') + ' ' + t('per-month');
   }
