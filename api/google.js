@@ -34,6 +34,41 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // ── Debug: Token-Refresh testen ──────────────────────────────────────────
+  if (req.query.debug === '1') {
+    try {
+      const r = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id:     process.env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+          grant_type:    'refresh_token',
+        }),
+      });
+      const d = await r.json();
+      return res.status(200).json({
+        token_status: r.status,
+        has_access_token: !!d.access_token,
+        error: d.error || null,
+        error_description: d.error_description || null,
+        env_check: {
+          has_client_id:     !!process.env.GOOGLE_CLIENT_ID,
+          has_client_secret: !!process.env.GOOGLE_CLIENT_SECRET,
+          has_refresh_token: !!process.env.GOOGLE_REFRESH_TOKEN,
+          has_dev_token:     !!process.env.GOOGLE_DEVELOPER_TOKEN,
+          has_customer_id:   !!process.env.GOOGLE_ADS_CUSTOMER_ID,
+          has_login_id:      !!process.env.GOOGLE_LOGIN_CUSTOMER_ID,
+          customer_id:       process.env.GOOGLE_ADS_CUSTOMER_ID,
+          login_id:          process.env.GOOGLE_LOGIN_CUSTOMER_ID,
+        }
+      });
+    } catch(e) {
+      return res.status(500).json({ debug_error: e.message });
+    }
+  }
+
   const { from, to, refresh } = req.query;
   if (!from || !to) return res.status(400).json({ error: 'from and to required' });
 
@@ -49,10 +84,9 @@ export default async function handler(req, res) {
     const loginId     = process.env.GOOGLE_LOGIN_CUSTOMER_ID?.replace(/-/g, '');
 
     const headers = {
-      'Authorization':       `Bearer ${accessToken}`,
-      'developer-token':     process.env.GOOGLE_DEVELOPER_TOKEN,
-      'Content-Type':        'application/json',
-      // Login Customer ID für Manager Account Zugriff
+      'Authorization':     `Bearer ${accessToken}`,
+      'developer-token':   process.env.GOOGLE_DEVELOPER_TOKEN,
+      'Content-Type':      'application/json',
       ...(loginId && { 'login-customer-id': loginId }),
     };
 
@@ -77,7 +111,7 @@ export default async function handler(req, res) {
     const summaryText = await summaryRes.text();
     let summaryData;
     try { summaryData = JSON.parse(summaryText); }
-    catch(e) { return res.status(500).json({ error: 'Invalid JSON from Google', raw: summaryText.slice(0, 300) }); }
+    catch(e) { return res.status(500).json({ error: 'Invalid JSON from Google', raw: summaryText.slice(0, 500) }); }
 
     if (!summaryRes.ok) return res.status(500).json({ error: summaryData });
 
