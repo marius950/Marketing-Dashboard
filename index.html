@@ -7,39 +7,64 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f5f7; color: #1a1a2e; min-height: 100vh; }
-  :root { --google: #34a853; --google-light: #e6f4ea; --meta: #0866ff; --meta-light: #e7f3ff; --san: #16a34a; --baufi: #2563eb; }
+  body { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--effi-surface); color: var(--effi-black); min-height: 100vh; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--effi-surface); }
+  ::-webkit-scrollbar-thumb { background: var(--effi-primary); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--effi-accent); }
+  :root {
+    /* effi Figma Design Tokens */
+    --effi-primary:   #156949;   /* brand/primary/500 */
+    --effi-accent:    #C6F35F;   /* brand/accent/500  */
+    --effi-black:     #010D0A;   /* effi Black        */
+    --effi-neutral:   #727E79;   /* neutral/500       */
+    --effi-text-sec:  #4D5B57;   /* text-secondary    */
+    --effi-border:    #E6EDEB;   /* border-primary    */
+    --effi-surface:   #F4F7F5;   /* light bg          */
+    --effi-surface2:  #EBF0EC;   /* slightly darker   */
+    /* Kanal-Farben */
+    --google: #34a853; --google-light: var(--san-light);
+    --meta:   #0866ff; --meta-light:   var(--baufi-light);
+    /* Segment */
+    --san:   #156949;  --san-light:   var(--san-light);
+    --baufi: #2563eb;  --baufi-light: var(--baufi-light);
+  }
 
-  #login-screen { position: fixed; inset: 0; background: #f4f5f7; display: flex; align-items: center; justify-content: center; z-index: 999; }
-  #login-box { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 40px 36px; width: 340px; }
-  #login-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-  #login-box p { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
-  #login-box input { width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
-  #login-box button { width: 100%; padding: 10px; background: #4f6ef7; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
-  #login-error { font-size: 12px; color: #ef4444; margin-top: 8px; display: none; }
+  #login-screen { position: fixed; inset: 0; background: var(--effi-surface); display: flex; align-items: center; justify-content: center; z-index: 999; }
+  #login-screen { background: var(--effi-black) !important; }
+  #login-box { background: #0d1f14; border: 1px solid rgba(198,243,95,.15); border-radius: 16px; padding: 40px 36px; width: 360px; box-shadow: 0 24px 60px rgba(0,0,0,.4); }
+  #login-logo { margin-bottom: 24px; }
+  #login-box p { font-size: 13px; color: var(--effi-neutral); margin-bottom: 24px; }
+  #login-box input { width: 100%; padding: 10px 12px; border: 1px solid rgba(255,255,255,.15); border-radius: 8px; font-size: 14px; margin-bottom: 12px; background: rgba(255,255,255,.07); color: #fff; }
+  #login-box input::placeholder { color: rgba(255,255,255,.3); }
+  #login-box input:focus { outline: none; border-color: var(--effi-green); }
+  #login-box button { width: 100%; padding: 11px; background: #aad048; color: var(--effi-dark); border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 700; transition: background .15s; }
+  #login-box button:hover { background: var(--effi-accent); }
+  #login-error { font-size: 12px; color: #ff8080; margin-top: 8px; display: none; }
 
-  header { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 60px; gap: 12px; }
-  .logo { font-size: 20px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.5px; flex-shrink: 0; }
-  .logo span { color: #4f6ef7; }
+  header { background: var(--effi-black); border-bottom: none; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.25); }
+  .logo { display: flex; align-items: center; flex-shrink: 0; }
   .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .controls label { font-size: 13px; color: #6b7280; }
-  .controls input[type=date] { padding: 6px 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; background: #fff; }
-  .refresh-btn { padding: 7px 16px; background: #4f6ef7; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 500; }
+  .controls label { font-size: 13px; color: rgba(255,255,255,.6); }
+  .controls input[type=date] { padding: 6px 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; font-size: 13px; background: rgba(255,255,255,.08); color: #fff; }
+  .refresh-btn { padding: 7px 16px; background: var(--effi-green); color: var(--effi-dark); border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 700; transition: background .15s; }
+  .refresh-btn:hover { background: var(--effi-accent); }
   .quick-btns { display: flex; gap: 4px; }
-  .qbtn { padding: 5px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; cursor: pointer; background: #fff; color: #374151; }
-  .qbtn.active { background: #4f6ef7; color: #fff; border-color: #4f6ef7; }
+  .qbtn { padding: 5px 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 6px; font-size: 12px; cursor: pointer; background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); }
+  .qbtn.active { background: var(--effi-accent); color: var(--effi-black); border-color: var(--effi-accent); font-weight: 700; }
 
   /* Language Toggle */
-  .lang-toggle { display: flex; background: #f3f4f6; border-radius: 8px; padding: 2px; gap: 2px; flex-shrink: 0; }
-  .lang-btn { padding: 4px 10px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: #6b7280; transition: all .15s; }
-  .lang-btn.active { background: #fff; color: #1a1a2e; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .lang-toggle { display: flex; background: rgba(255,255,255,.1); border-radius: 8px; padding: 2px; gap: 2px; flex-shrink: 0; }
+  .lang-btn { padding: 4px 10px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: rgba(255,255,255,.6); transition: all .15s; }
+  .lang-btn.active { background: var(--effi-accent); color: var(--effi-black); }
 
   main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
-  .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #fff; padding: 4px; border-radius: 10px; width: fit-content; border: 1px solid #e5e7eb; }
-  .tab { padding: 7px 18px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all .15s; }
-  .tab.active { background: #4f6ef7; color: #fff; }
-  .tab.google.active { background: var(--google); }
-  .tab.meta.active { background: var(--meta); }
+  .chart-card, .kpi-card, .budget-section, .top-ads-card { box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #fff; padding: 4px; border-radius: 10px; width: fit-content; border: 1px solid var(--effi-border); box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .tab { padding: 7px 18px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--effi-text-sec); transition: all .15s; }
+  .tab.active { background: var(--effi-primary); color: var(--effi-accent); font-weight: 600; letter-spacing: 0.01em; }
+  .tab.google.active { background: var(--google); color: #fff; }
+  .tab.meta.active { background: var(--meta); color: #fff; }
 
   .panel { display: none; }
   .panel.active { display: block; }
@@ -49,28 +74,28 @@
   .kpi-grid-7  { grid-template-columns: repeat(7,1fr); }
   .kpi-grid-8  { grid-template-columns: repeat(8,1fr); }
 
-  .kpi-card { background: #fff; border-radius: 12px; padding: 16px 14px; border: 1px solid #e5e7eb; }
+  .kpi-card { background: #fff; border-radius: 12px; padding: 16px 14px; border: 1px solid var(--effi-border); }
   .kpi-card.google { border-top: 3px solid var(--google); }
   .kpi-card.meta   { border-top: 3px solid var(--meta); }
   .kpi-card.budget { border-top: 3px solid #f59e0b; background: #fffbeb; }
-  .kpi-card.san    { border-top: 3px solid var(--san);   background: #f0fdf4; }
-  .kpi-card.baufi  { border-top: 3px solid var(--baufi); background: #eff6ff; }
-  .kpi-label { font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-  .kpi-value { font-size: 20px; font-weight: 700; color: #1a1a2e; line-height: 1.2; }
-  .kpi-value.loading { color: #d1d5db; }
-  .kpi-sub { font-size: 11px; color: #6b7280; margin-top: 4px; }
-  .kpi-sub-sm { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+  .kpi-card.san    { border-top: 3px solid var(--san);   background: var(--san-light); }
+  .kpi-card.baufi  { border-top: 3px solid var(--baufi); background: var(--baufi-light); }
+  .kpi-label { font-size: 10px; font-weight: 600; color: var(--effi-text-sec); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .kpi-value { font-size: 20px; font-weight: 700; color: var(--effi-black); line-height: 1.2; }
+  .kpi-value.loading { color: rgba(0,0,0,0.12); }
+  .kpi-sub { font-size: 11px; color: var(--effi-neutral); margin-top: 4px; }
+  .kpi-sub-sm { font-size: 10px; color: var(--effi-neutral); margin-top: 2px; }
 
   .wow-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 4px; margin-top: 4px; }
-  .wow-up   { background: #dcfce7; color: #16a34a; }
+  .wow-up   { background: var(--san-light); color: var(--effi-primary); }
   .wow-down { background: #fee2e2; color: #dc2626; }
 
   .pace-wrap { margin-top: 6px; }
-  .pace-bar-bg { background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden; margin-top: 4px; }
+  .pace-bar-bg { background: var(--effi-border); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 4px; }
   .pace-bar-fill { height: 100%; border-radius: 4px; transition: width .4s; }
 
-  .chart-card { background: #fff; border-radius: 12px; padding: 20px 24px; border: 1px solid #e5e7eb; margin-bottom: 16px; }
-  .chart-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: #374151; }
+  .chart-card { background: #fff; border-radius: 12px; padding: 20px 24px; border: 1px solid var(--effi-border); margin-bottom: 16px; }
+  .chart-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; color: var(--effi-black); }
   .chart-wrap { position: relative; height: 220px; }
   .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 
@@ -79,54 +104,54 @@
   .badge-meta   { background: var(--meta-light);   color: var(--meta); }
 
   .seg-pill { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }
-  .seg-san   { background: #dcfce7; color: #15803d; }
-  .seg-baufi { background: #dbeafe; color: #1d4ed8; }
+  .seg-san   { background: var(--san-light); color: var(--effi-primary); }
+  .seg-baufi { background: var(--baufi-light); color: #1d4ed8; }
 
   .top-ads-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-  .top-ads-card { background: #fff; border-radius: 12px; padding: 16px 18px; border: 1px solid #e5e7eb; }
-  .top-ads-card h4 { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 12px; }
-  .ad-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
+  .top-ads-card { background: #fff; border-radius: 12px; padding: 16px 18px; border: 1px solid var(--effi-border); }
+  .top-ads-card h4 { font-size: 12px; font-weight: 600; color: var(--effi-black); margin-bottom: 12px; }
+  .ad-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--effi-surface); }
   .ad-row:last-child { border-bottom: none; }
-  .ad-thumb-sm { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; background: #f3f4f6; flex-shrink: 0; }
+  .ad-thumb-sm { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; background: var(--effi-surface); flex-shrink: 0; }
   .ad-info { flex: 1; min-width: 0; }
-  .ad-name-sm { font-size: 11px; font-weight: 500; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ad-metric { font-size: 11px; color: #6b7280; }
+  .ad-name-sm { font-size: 11px; font-weight: 500; color: var(--effi-black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ad-metric { font-size: 11px; color: var(--effi-text-sec); }
 
-  .camp-row { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
+  .camp-row { background: #fff; border: 1px solid var(--effi-border); border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
   .camp-row.google { border-left: 4px solid var(--google); }
   .camp-row.meta   { border-left: 4px solid var(--meta); }
 
-  .ad-thumb-wrap { width: 100%; aspect-ratio: 1/1; background: #f3f4f6; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .ad-thumb-wrap { width: 100%; aspect-ratio: 1/1; background: var(--effi-surface); display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .ad-thumb-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
   /* Budget-Tab */
-  .budget-section { background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #e5e7eb; margin-bottom: 16px; }
-  .budget-section h3 { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .budget-section { background: #fff; border-radius: 12px; padding: 24px; border: 1px solid var(--effi-border); margin-bottom: 16px; }
+  .budget-section h3 { font-size: 14px; font-weight: 600; color: var(--effi-black); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
   .budget-input-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
-  .budget-input-item label { display: block; font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-  .budget-input-item input { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-weight: 600; color: #1a1a2e; background: #f9fafb; }
-  .budget-input-item input:focus { outline: none; border-color: #4f6ef7; background: #fff; }
+  .budget-input-item label { display: block; font-size: 10px; font-weight: 600; color: var(--effi-neutral); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .budget-input-item input { width: 100%; padding: 8px 10px; border: 1px solid var(--effi-border); border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--effi-black); background: var(--effi-surface); }
+  .budget-input-item input:focus { outline: none; border-color: var(--effi-primary); background: #fff; }
   .budget-bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-  .budget-bar-label { font-size: 12px; color: #374151; font-weight: 500; width: 140px; flex-shrink: 0; }
-  .budget-bar-track { flex: 1; background: #f3f4f6; border-radius: 6px; height: 12px; overflow: hidden; }
+  .budget-bar-label { font-size: 12px; color: var(--effi-black); font-weight: 500; width: 140px; flex-shrink: 0; }
+  .budget-bar-track { flex: 1; background: var(--effi-surface2); border-radius: 6px; height: 12px; overflow: hidden; }
   .budget-bar-inner { height: 100%; border-radius: 6px; transition: width .4s; }
-  .budget-bar-value { font-size: 12px; font-weight: 600; color: #374151; width: 80px; text-align: right; flex-shrink: 0; }
-  .budget-bar-pct { font-size: 11px; color: #9ca3af; width: 38px; text-align: right; flex-shrink: 0; }
+  .budget-bar-value { font-size: 12px; font-weight: 600; color: var(--effi-black); width: 80px; text-align: right; flex-shrink: 0; }
+  .budget-bar-pct { font-size: 11px; color: var(--effi-neutral); width: 38px; text-align: right; flex-shrink: 0; }
   .budget-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 16px; }
-  .budget-stat { background: #f9fafb; border-radius: 8px; padding: 12px 14px; border: 1px solid #f3f4f6; }
-  .budget-stat-label { font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
-  .budget-stat-value { font-size: 18px; font-weight: 700; color: #1a1a2e; }
-  .budget-stat-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .budget-stat { background: var(--effi-surface); border-radius: 8px; padding: 12px 14px; border: 1px solid var(--effi-border); }
+  .budget-stat-label { font-size: 10px; font-weight: 600; color: var(--effi-neutral); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .budget-stat-value { font-size: 18px; font-weight: 700; color: var(--effi-black); }
+  .budget-stat-sub { font-size: 11px; color: var(--effi-text-sec); margin-top: 2px; }
   .budget-ok   { color: #16a34a; }
   .budget-warn { color: #d97706; }
   .budget-over { color: #dc2626; }
 
   /* Ziel vs. Ist */
   .target-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
-  .target-val { font-size: 11px; color: #9ca3af; }
-  .target-delta-good { font-size: 10px; font-weight: 600; background: #dcfce7; color: #16a34a; padding: 1px 5px; border-radius: 4px; }
+  .target-val { font-size: 11px; color: var(--effi-neutral); }
+  .target-delta-good { font-size: 10px; font-weight: 600; background: var(--san-light); color: var(--effi-primary); padding: 1px 5px; border-radius: 4px; }
   .target-delta-bad  { font-size: 10px; font-weight: 600; background: #fee2e2; color: #dc2626; padding: 1px 5px; border-radius: 4px; }
-  .target-delta-neu  { font-size: 10px; font-weight: 600; background: #f3f4f6; color: #6b7280; padding: 1px 5px; border-radius: 4px; }
+  .target-delta-neu  { font-size: 10px; font-weight: 600; background: var(--effi-surface); color: var(--effi-text-sec); padding: 1px 5px; border-radius: 4px; }
 
   @media (max-width: 1200px) { .kpi-grid-8 { grid-template-columns: repeat(4,1fr); } .kpi-grid-7 { grid-template-columns: repeat(4,1fr); } }
   @media (max-width: 900px) { .kpi-grid-6,.kpi-grid-7,.kpi-grid-8 { grid-template-columns: repeat(3,1fr); } .charts-row,.top-ads-grid { grid-template-columns: 1fr; } }
@@ -137,7 +162,10 @@
 
 <div id="login-screen">
   <div id="login-box">
-    <h2>effi<span style="color:#4f6ef7">.</span></h2>
+    <div id="login-logo"><svg width="88" height="54" viewBox="0 0 198 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M197 24.7019C197 32.731 190.489 39.2399 182.456 39.2399C174.424 39.2399 167.913 32.731 167.913 24.7019C167.913 16.6729 174.424 10.164 182.456 10.164C190.489 10.164 197 16.6729 197 24.7019Z" fill="#C6F35F"/>
+<path d="M155.917 0C161.143 1.18041e-06 166.078 1.00223 169.853 2.14746C172.869 3.06289 175.31 4.73375 176.854 6.54785C171.106 9.0408 166.767 14.1087 165.341 20.2715C163.652 20.0233 162.045 19.8985 160.562 19.8984C154.059 19.8984 149.029 22.6422 149.304 31.3887V43.0771H195.461V120H170.836V61.5391H149.289V120H126.159V61.5391H110.812V120H87.2725V62.1289H78.2725V43.5186H87.2725V40.9424C87.2725 17.4652 102.659 10.5938 115.578 10.5938C119.933 10.5938 122.944 11.1984 125.434 12.168C127.441 12.9498 128.603 13.3899 129.759 13.9922C135.153 3.6283 145.787 0 155.917 0ZM39.6279 41.5391C62.8532 41.5391 80.4171 56.2839 79.2559 87.9209H24.2412C25.1123 94.9353 32.2256 100.231 41.0801 100.231C48.483 100.231 54.1438 97.2253 57.0469 91.9287L78.0947 94.0762C74.0303 109.107 58.6438 119.844 40.9346 119.844C16.9835 119.844 0 104.24 0 81.0488C0.000160767 58.2876 16.4029 41.5392 39.6279 41.5391ZM39.6279 60.5781C31.0639 60.5782 24.5324 65.0159 24.0967 72.3164H55.1602C54.5793 65.3021 48.1921 60.5781 39.6279 60.5781ZM125.434 30.7783C117.885 28.4879 109.917 29.6208 111.224 43.0771H126.159V30.957L125.434 30.7783Z" fill="white"/>
+</svg></div>
     <p id="login-subtitle">KPI Dashboard – nur für interne Nutzung</p>
     <input type="password" id="pw-input" placeholder="Passwort" onkeydown="if(event.key==='Enter')checkLogin()">
     <button onclick="checkLogin()" id="login-btn">Anmelden</button>
@@ -147,7 +175,10 @@
 
 <div id="app" style="display:none">
   <header>
-    <div class="logo">effi<span>.</span></div>
+    <div class="logo"><svg width="66" height="40" viewBox="0 0 198 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M197 24.7019C197 32.731 190.489 39.2399 182.456 39.2399C174.424 39.2399 167.913 32.731 167.913 24.7019C167.913 16.6729 174.424 10.164 182.456 10.164C190.489 10.164 197 16.6729 197 24.7019Z" fill="#C6F35F"/>
+<path d="M155.917 0C161.143 1.18041e-06 166.078 1.00223 169.853 2.14746C172.869 3.06289 175.31 4.73375 176.854 6.54785C171.106 9.0408 166.767 14.1087 165.341 20.2715C163.652 20.0233 162.045 19.8985 160.562 19.8984C154.059 19.8984 149.029 22.6422 149.304 31.3887V43.0771H195.461V120H170.836V61.5391H149.289V120H126.159V61.5391H110.812V120H87.2725V62.1289H78.2725V43.5186H87.2725V40.9424C87.2725 17.4652 102.659 10.5938 115.578 10.5938C119.933 10.5938 122.944 11.1984 125.434 12.168C127.441 12.9498 128.603 13.3899 129.759 13.9922C135.153 3.6283 145.787 0 155.917 0ZM39.6279 41.5391C62.8532 41.5391 80.4171 56.2839 79.2559 87.9209H24.2412C25.1123 94.9353 32.2256 100.231 41.0801 100.231C48.483 100.231 54.1438 97.2253 57.0469 91.9287L78.0947 94.0762C74.0303 109.107 58.6438 119.844 40.9346 119.844C16.9835 119.844 0 104.24 0 81.0488C0.000160767 58.2876 16.4029 41.5392 39.6279 41.5391ZM39.6279 60.5781C31.0639 60.5782 24.5324 65.0159 24.0967 72.3164H55.1602C54.5793 65.3021 48.1921 60.5781 39.6279 60.5781ZM125.434 30.7783C117.885 28.4879 109.917 29.6208 111.224 43.0771H126.159V30.957L125.434 30.7783Z" fill="white"/>
+</svg></div>
     <div class="controls">
       <div class="quick-btns">
         <button class="qbtn" onclick="setQuick(7)" data-t="7d">7T</button>
@@ -192,7 +223,7 @@
               <span id="pace-spent">–</span><span id="pace-pct">–%</span>
             </div>
             <div class="pace-bar-bg"><div class="pace-bar-fill" id="pace-bar" style="width:0%"></div></div>
-            <div style="font-size:10px;color:#6b7280;margin-top:3px" id="pace-monthly"></div>
+            <div style="font-size:10px;color:var(--effi-text-sec);margin-top:3px" id="pace-monthly"></div>
           </div>
         </div>
       </div>
@@ -218,7 +249,7 @@
         <div class="kpi-card" style="border-top:3px solid #8b5cf6">
           <div class="kpi-label">ROAS (Gesamt)</div>
           <div class="kpi-value" id="ov-roas-calc">–</div>
-          <div class="kpi-sub" id="ov-roas-sub" style="font-size:10px;color:#9ca3af"></div>
+          <div class="kpi-sub" id="ov-roas-sub" style="font-size:10px;color:var(--effi-neutral)"></div>
         </div>
         <div class="kpi-card san">
           <div class="kpi-label">CPL Sanierung – Ziel vs. Ist</div>
@@ -233,7 +264,7 @@
         <div class="kpi-card" style="border-top:3px solid #16a34a;background:#f0fdf4">
           <div class="kpi-label">Revenue-Prognose</div>
           <div class="kpi-value" id="ov-rev-forecast">–</div>
-          <div class="kpi-sub" id="ov-rev-sub" style="font-size:10px;color:#9ca3af"></div>
+          <div class="kpi-sub" id="ov-rev-sub" style="font-size:10px;color:var(--effi-neutral)"></div>
         </div>
       </div>
 
@@ -350,7 +381,7 @@
             <input type="number" id="b-provision" value="3000" oninput="recalcBudget()" min="0" step="100">
           </div>
         </div>
-        <p style="font-size:11px;color:#9ca3af;margin-bottom:16px" data-t="budget-edit-hint">Werte direkt editierbar – Änderungen werden sofort berechnet</p>
+        <p style="font-size:11px;color:var(--effi-neutral);margin-bottom:16px" data-t="budget-edit-hint">Werte direkt editierbar – Änderungen werden sofort berechnet</p>
 
         <!-- Spend vs. Budget Balken -->
         <h3 style="margin-top:4px"><span data-t="budget-actual-title">Aktueller Spend im Zeitraum</span></h3>
@@ -364,14 +395,14 @@
       <div class="budget-section">
         <h3>📈 <span data-t="budget-forecast-title">Monats-Hochrechnung</span></h3>
         <div class="budget-summary" id="budget-forecast"></div>
-        <p style="font-size:11px;color:#9ca3af;margin-top:12px" data-t="budget-forecast-hint">Hochrechnung basiert auf Tagesschnitt im gewählten Zeitraum</p>
+        <p style="font-size:11px;color:var(--effi-neutral);margin-top:12px" data-t="budget-forecast-hint">Hochrechnung basiert auf Tagesschnitt im gewählten Zeitraum</p>
       </div>
 
       <!-- Revenue-Rechner -->
       <div class="budget-section">
-        <h3>💰 Revenue-Prognose <span style="font-size:11px;font-weight:400;color:#9ca3af;margin-left:6px">basierend auf Leads × Conversion</span></h3>
+        <h3>💰 Revenue-Prognose <span style="font-size:11px;font-weight:400;color:var(--effi-neutral);margin-left:6px">basierend auf Leads × Conversion</span></h3>
         <div class="budget-summary" id="revenue-calc"></div>
-        <p style="font-size:11px;color:#9ca3af;margin-top:12px">Sanierung: Leads × WVQ% × VK-Preis · Baufi: Leads × Abschlussquote% × Provision</p>
+        <p style="font-size:11px;color:var(--effi-neutral);margin-top:12px">Sanierung: Leads × WVQ% × VK-Preis · Baufi: Leads × Abschlussquote% × Provision</p>
       </div>
 
       <!-- CPL Ziel vs. Ist -->
@@ -719,7 +750,7 @@ function buildChart(id,labels,datasets) {
   charts[id]=new Chart(ctx,{type:'bar',data:{labels,datasets},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:datasets.length>1,position:'top',labels:{font:{size:11},boxWidth:10}}},
-      scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:12}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}}}});
+      scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:12}},y:{grid:{color:'var(--effi-surface)'},ticks:{font:{size:10}}}}}});
 }
 function buildLineChart(id,labels,datasets) {
   if (charts[id]) charts[id].destroy();
@@ -727,7 +758,7 @@ function buildLineChart(id,labels,datasets) {
   charts[id]=new Chart(ctx,{type:'line',data:{labels,datasets},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:10}}},
-      scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:12}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}}}});
+      scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:12}},y:{grid:{color:'var(--effi-surface)'},ticks:{font:{size:10}}}}}});
 }
 
 // ── Segment-Logik ─────────────────────────────────────────────────────────────
@@ -800,25 +831,35 @@ function renderOverview() {
   wowBadge('ov-installs-wow',mData?.wow?.installs);
   wowBadge('ov-leads-wow',gData?.wow?.conversions);
 
-  // Budget-Karte: Wert aus Budget-Tab (b-total) statt aus API
-  const budgetTotal   = parseFloat(document.getElementById('b-total')?.value || 15000);
-  const budgetMeta    = parseFloat(document.getElementById('b-meta')?.value   || 10000);
-  const budgetGoogle  = parseFloat(document.getElementById('b-google')?.value || 5000);
-  const totalDaily    = Math.round(budgetTotal / 30 * 100) / 100;
+  // Budget-Karte:
+  // Hauptwert = aktueller Ø Tagesausgabe aus echtem API-Spend
+  // Balken + Monatsschätzung = aus Budget-Tab (b-total)
+  const budgetTotal  = parseFloat(document.getElementById('b-total')?.value || 15000);
 
-  const budgetEl=document.getElementById('ov-daily-budget');
-  if(budgetEl){budgetEl.textContent=fmt(totalDaily,'currency')+' '+t('per-day');}
+  const totalSpend   = (gs.spend||0) + (ms.spend||0);
+  const from         = document.getElementById('date-from').value;
+  const to           = document.getElementById('date-to').value;
+  const periodDays   = (from && to)
+    ? Math.max(1, Math.round((new Date(to) - new Date(from)) / (1000*60*60*24)) + 1)
+    : 30;
+  const actualDaily  = totalSpend > 0 ? Math.round(totalSpend / periodDays * 100) / 100 : 0;
 
-  const totalSpend=(gs.spend||0)+(ms.spend||0);
-  const pct=Math.min(Math.round(totalSpend/budgetTotal*100),100);
-  const pw=document.getElementById('pace-wrap');
-  if(pw){
-    pw.style.display='block';
-    document.getElementById('pace-spent').textContent=fmt(totalSpend,'currency')+' '+t('spent');
-    document.getElementById('pace-pct').textContent=pct+'%';
-    const bar=document.getElementById('pace-bar');
-    bar.style.width=pct+'%'; bar.style.background=pct>90?'#ef4444':pct>70?'#f59e0b':'#34a853';
-    document.getElementById('pace-monthly').textContent=fmt(budgetTotal,'currency')+' '+t('per-month');
+  const budgetEl = document.getElementById('ov-daily-budget');
+  if (budgetEl) { budgetEl.textContent = fmt(actualDaily, 'currency') + ' ' + t('per-day'); }
+
+  // Balken: tatsächlicher Spend vs. geplantem Monatsbudget
+  const pct = budgetTotal > 0 ? Math.min(Math.round(totalSpend / budgetTotal * 100), 100) : 0;
+  const pw  = document.getElementById('pace-wrap');
+  if (pw) {
+    pw.style.display = 'block';
+    document.getElementById('pace-spent').textContent = fmt(totalSpend, 'currency') + ' ' + t('spent');
+    document.getElementById('pace-pct').textContent   = pct + '%';
+    const bar = document.getElementById('pace-bar');
+    bar.style.width      = pct + '%';
+    bar.style.background = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#34a853';
+    // Monatsschätzung aus Budget-Tab-Planung
+    document.getElementById('pace-monthly').textContent =
+      fmt(budgetTotal, 'currency') + ' ' + t('per-month');
   }
 
   // Revenue + CPL-Ziele in Overview aktualisieren (falls Daten vorhanden)
@@ -859,11 +900,11 @@ function renderTopAds(campaigns) {
     </div>`;
   wrap.innerHTML=`
     <div class="top-ads-card">
-      <h4>${t('top3')} <span style="font-weight:400;color:#9ca3af">${t('by-ctr')}</span></h4>
+      <h4>${t('top3')} <span style="font-weight:400;color:var(--effi-neutral)">${t('by-ctr')}</span></h4>
       ${top3.map(ad=>adRow(ad,`${ad.ctr.toFixed(2)}% CTR · ${eur(ad.spend)} Spend`)).join('')}
     </div>
     <div class="top-ads-card">
-      <h4>${t('worst3')} <span style="font-weight:400;color:#9ca3af">${t('by-ctr')}</span></h4>
+      <h4>${t('worst3')} <span style="font-weight:400;color:var(--effi-neutral)">${t('by-ctr')}</span></h4>
       ${worst3.map(ad=>adRow(ad,`${ad.ctr.toFixed(2)}% CTR · ${ad.impressions.toLocaleString('de-DE')} ${t('imp')}`)).join('')}
     </div>`;
 }
@@ -871,24 +912,24 @@ function renderTopAds(campaigns) {
 // ── Google Kampagnen ──────────────────────────────────────────────────────────
 function renderGoogleCampaigns() {
   const wrap=document.getElementById('google-campaigns-wrap'); if(!wrap) return;
-  if(!gData?.campaigns?.length){wrap.innerHTML=`<div style="font-size:13px;color:#6b7280;padding:12px 0">${t('no-campaigns')}</div>`;return;}
+  if(!gData?.campaigns?.length){wrap.innerHTML=`<div style="font-size:13px;color:var(--effi-text-sec);padding:12px 0">${t('no-campaigns')}</div>`;return;}
   const eur=n=>'€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const sColor=s=>s==='ENABLED'?'#16a34a':s==='PAUSED'?'#d97706':'#9ca3af';
+  const sColor=s=>s==='ENABLED'?'#16a34a':s==='PAUSED'?'#d97706':'var(--effi-neutral)';
   const sLabel=s=>s==='ENABLED'?t('active'):s==='PAUSED'?t('paused'):s;
   wrap.innerHTML=`
-    <div style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:8px">${gData.campaigns.length} ${t('campaigns-count')}</div>
+    <div style="font-size:13px;font-weight:500;color:var(--effi-text-sec);margin-bottom:8px">${gData.campaigns.length} ${t('campaigns-count')}</div>
     ${gData.campaigns.map(c=>{
       const seg=isSanierung(c.name)?'san':'baufi';
       return `<div class="camp-row google">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;flex-wrap:wrap">
           <span style="width:8px;height:8px;border-radius:50%;background:${sColor(c.status)};flex-shrink:0"></span>
-          <span style="font-size:13px;font-weight:500;flex:1;color:#1a1a2e">${c.name}</span>
+          <span style="font-size:13px;font-weight:500;flex:1;color:var(--effi-black)">${c.name}</span>
           <span class="seg-pill seg-${seg}">${seg==='san'?t('seg-san-short'):t('seg-baufi-short')}</span>
           <span style="font-size:11px;color:${sColor(c.status)};font-weight:500">${sLabel(c.status)}</span>
-          <span style="font-size:13px;font-weight:600;color:#1a1a2e">${eur(c.spend)}</span>
-          <span style="font-size:12px;color:#9ca3af">${c.impressions.toLocaleString('de-DE')} ${t('imp')}</span>
-          <span style="font-size:12px;color:#9ca3af">${c.ctr.toFixed(2)}% CTR</span>
-          <span style="font-size:12px;color:#9ca3af">€${c.cpm.toFixed(2)} CPM</span>
+          <span style="font-size:13px;font-weight:600;color:var(--effi-black)">${eur(c.spend)}</span>
+          <span style="font-size:12px;color:var(--effi-neutral)">${c.impressions.toLocaleString('de-DE')} ${t('imp')}</span>
+          <span style="font-size:12px;color:var(--effi-neutral)">${c.ctr.toFixed(2)}% CTR</span>
+          <span style="font-size:12px;color:var(--effi-neutral)">€${c.cpm.toFixed(2)} CPM</span>
           ${c.conversions>0?`<span style="font-size:12px;color:var(--google);font-weight:500">${c.conversions} ${t('leads-label')}</span>`:''}
         </div>
       </div>`;
@@ -901,7 +942,7 @@ async function loadCampaigns() {
   const from=document.getElementById('date-from').value;
   const to  =document.getElementById('date-to').value;
   const wrap=document.getElementById('campaigns-wrap');
-  wrap.innerHTML=`<div style="font-size:13px;color:#6b7280;padding:12px 0">${t('campaigns-loading')}</div>`;
+  wrap.innerHTML=`<div style="font-size:13px;color:var(--effi-text-sec);padding:12px 0">${t('campaigns-loading')}</div>`;
   const res=await fetch(`/api/meta-campaigns?from=${from}&to=${to}`).then(r=>r.json());
   if(res.error){wrap.innerHTML=`<div style="color:#ef4444;font-size:13px">${t('campaigns-error')}: ${res.error}</div>`;return;}
   mCampData=res;
@@ -911,49 +952,49 @@ async function loadCampaigns() {
   renderRevenueCalc();
   renderCplTargets();
 
-  const sColor=s=>s==='ACTIVE'?'#16a34a':s==='PAUSED'?'#d97706':'#9ca3af';
+  const sColor=s=>s==='ACTIVE'?'#16a34a':s==='PAUSED'?'#d97706':'var(--effi-neutral)';
   const sLabel=s=>s==='ACTIVE'?t('active'):s==='PAUSED'?t('paused'):s;
   const eur=n=>'€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
 
   wrap.innerHTML=`
-    <div style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:8px">${res.campaigns.length} ${t('campaigns-period')}</div>
+    <div style="font-size:13px;font-weight:500;color:var(--effi-text-sec);margin-bottom:8px">${res.campaigns.length} ${t('campaigns-period')}</div>
     ${res.campaigns.map(c=>{
       const seg=isSanierung(c.name)?'san':'baufi';
       return `<div class="camp-row meta">
         <div onclick="toggleCamp('${c.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;flex-wrap:wrap">
           <span style="width:8px;height:8px;border-radius:50%;background:${sColor(c.status)};flex-shrink:0"></span>
-          <span style="font-size:13px;font-weight:500;flex:1;color:#1a1a2e">${c.name}</span>
+          <span style="font-size:13px;font-weight:500;flex:1;color:var(--effi-black)">${c.name}</span>
           <span class="seg-pill seg-${seg}">${seg==='san'?t('seg-san-short'):t('seg-baufi-short')}</span>
           <span style="font-size:11px;color:${sColor(c.status)};font-weight:500">${sLabel(c.status)}</span>
-          <span style="font-size:13px;font-weight:600;color:#1a1a2e">${eur(c.spend)}</span>
-          <span style="font-size:12px;color:#9ca3af">${c.impressions.toLocaleString('de-DE')} ${t('imp')}</span>
-          <span style="font-size:12px;color:#9ca3af">${c.ctr.toFixed(2)}% CTR</span>
+          <span style="font-size:13px;font-weight:600;color:var(--effi-black)">${eur(c.spend)}</span>
+          <span style="font-size:12px;color:var(--effi-neutral)">${c.impressions.toLocaleString('de-DE')} ${t('imp')}</span>
+          <span style="font-size:12px;color:var(--effi-neutral)">${c.ctr.toFixed(2)}% CTR</span>
           ${c.conversions>0?`<span style="font-size:12px;color:var(--meta);font-weight:500">${c.conversions} ${t('installs-label')}</span>`:''}
-          <span id="arr-${c.id}" style="font-size:16px;color:#9ca3af;transition:transform .2s">▸</span>
+          <span id="arr-${c.id}" style="font-size:16px;color:var(--effi-neutral);transition:transform .2s">▸</span>
         </div>
-        <div id="camp-${c.id}" style="display:none;border-top:1px solid #f3f4f6;padding:0 16px 14px">
+        <div id="camp-${c.id}" style="display:none;border-top:1px solid var(--effi-surface);padding:0 16px 14px">
           ${c.adsets.map(a=>`
             <div style="margin-top:12px">
               <div onclick="toggleAdset('${a.id}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:6px">
                 <span style="width:6px;height:6px;border-radius:50%;background:${sColor(a.status)};flex-shrink:0"></span>
-                <span style="font-size:12px;font-weight:500;flex:1;color:#374151">${a.name}</span>
-                <span style="font-size:12px;color:#6b7280">${eur(a.spend)}</span>
-                <span style="font-size:12px;color:#9ca3af">${a.impressions.toLocaleString('de-DE')} ${t('imp')}</span>
-                <span style="font-size:12px;color:#9ca3af">${a.ctr.toFixed(2)}% CTR</span>
-                <span id="arr-${a.id}" style="font-size:13px;color:#9ca3af;transition:transform .2s">▸</span>
+                <span style="font-size:12px;font-weight:500;flex:1;color:var(--effi-black)">${a.name}</span>
+                <span style="font-size:12px;color:var(--effi-text-sec)">${eur(a.spend)}</span>
+                <span style="font-size:12px;color:var(--effi-neutral)">${a.impressions.toLocaleString('de-DE')} ${t('imp')}</span>
+                <span style="font-size:12px;color:var(--effi-neutral)">${a.ctr.toFixed(2)}% CTR</span>
+                <span id="arr-${a.id}" style="font-size:13px;color:var(--effi-neutral);transition:transform .2s">▸</span>
               </div>
               <div id="adset-${a.id}" style="display:none">
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:6px">
                   ${a.ads.map(ad=>`
-                    <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:#fafafa">
+                    <div style="border:1px solid var(--effi-border);border-radius:8px;overflow:hidden;background:#fafafa">
                       <div class="ad-thumb-wrap">
-                        ${ad.thumbnail?`<img src="${ad.thumbnail}" onerror="this.parentElement.innerHTML='<span style=\\'font-size:11px;color:#9ca3af\\'>${t('no-image')}</span>'">`:`<span style="font-size:11px;color:#9ca3af">${t('no-image')}</span>`}
+                        ${ad.thumbnail?`<img src="${ad.thumbnail}" onerror="this.parentElement.innerHTML='<span style=\\'font-size:11px;color:var(--effi-neutral)\\'>${t('no-image')}</span>'">`:`<span style="font-size:11px;color:var(--effi-neutral)">${t('no-image')}</span>`}
                       </div>
                       <div style="padding:8px">
-                        <div style="font-size:11px;font-weight:500;color:#374151;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ad.name}</div>
-                        <div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280"><span>${eur(ad.spend)}</span><span>${ad.ctr.toFixed(2)}% CTR</span></div>
-                        <div style="font-size:11px;color:#9ca3af;margin-top:2px">${ad.impressions.toLocaleString('de-DE')} ${t('imp')}</div>
-                        <div style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:10px;background:${ad.status==='ACTIVE'?'#dcfce7':'#f3f4f6'};color:${ad.status==='ACTIVE'?'#16a34a':'#6b7280'};margin-top:4px">${sLabel(ad.status)}</div>
+                        <div style="font-size:11px;font-weight:500;color:var(--effi-black);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ad.name}</div>
+                        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--effi-text-sec)"><span>${eur(ad.spend)}</span><span>${ad.ctr.toFixed(2)}% CTR</span></div>
+                        <div style="font-size:11px;color:var(--effi-neutral);margin-top:2px">${ad.impressions.toLocaleString('de-DE')} ${t('imp')}</div>
+                        <div style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:10px;background:${ad.status==='ACTIVE'?'#dcfce7':'var(--effi-surface)'};color:${ad.status==='ACTIVE'?'#16a34a':'var(--effi-text-sec)'};margin-top:4px">${sLabel(ad.status)}</div>
                       </div>
                     </div>`).join('')}
                 </div>
@@ -1011,7 +1052,7 @@ function renderBudgetTab() {
   };
 
   if (barsEl) barsEl.innerHTML = `
-    ${barRow(t('b-total-bar'),  totalSpend,  totalBudget,  '#4f6ef7')}
+    ${barRow(t('b-total-bar'),  totalSpend,  totalBudget,  'var(--effi-primary)')}
     ${barRow(t('b-meta-bar'),   mSpend,      metaBudget,   '#0866ff')}
     ${barRow(t('b-google-bar'), gSpend,      googleBudget, '#34a853')}
     ${barRow(t('b-san-bar'),    sanSpend,    sanBudget,    '#16a34a')}
@@ -1067,7 +1108,7 @@ function renderBudgetTab() {
   };
 
   if (fcEl) fcEl.innerHTML = `
-    ${fcStat(t('b-total-bar'),  totalSpend,  totalBudget,  '#4f6ef7')}
+    ${fcStat(t('b-total-bar'),  totalSpend,  totalBudget,  'var(--effi-primary)')}
     ${fcStat(t('b-meta-bar'),   mSpend,      metaBudget,   '#0866ff')}
     ${fcStat(t('b-google-bar'), gSpend,      googleBudget, '#34a853')}
     ${fcStat(t('b-san-bar'),    sanSpend,    sanBudget,    '#16a34a')}
