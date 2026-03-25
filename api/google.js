@@ -34,7 +34,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ── Debug: Token-Refresh testen ──────────────────────────────────────────
+  // ── Debug 1: Token + Env-Variablen prüfen ────────────────────────────────
   if (req.query.debug === '1') {
     try {
       const r = await fetch('https://oauth2.googleapis.com/token', {
@@ -49,9 +49,9 @@ export default async function handler(req, res) {
       });
       const d = await r.json();
       return res.status(200).json({
-        token_status: r.status,
-        has_access_token: !!d.access_token,
-        error: d.error || null,
+        token_status:      r.status,
+        has_access_token:  !!d.access_token,
+        error:             d.error || null,
         error_description: d.error_description || null,
         env_check: {
           has_client_id:     !!process.env.GOOGLE_CLIENT_ID,
@@ -66,6 +66,43 @@ export default async function handler(req, res) {
       });
     } catch(e) {
       return res.status(500).json({ debug_error: e.message });
+    }
+  }
+
+  // ── Debug 2: Google Ads API direkt testen ────────────────────────────────
+  if (req.query.debug === '2') {
+    try {
+      const accessToken = await getAccessToken();
+      const customerId  = process.env.GOOGLE_ADS_CUSTOMER_ID?.replace(/-/g, '');
+      const loginId     = process.env.GOOGLE_LOGIN_CUSTOMER_ID?.replace(/-/g, '');
+      const headers = {
+        'Authorization':     `Bearer ${accessToken}`,
+        'developer-token':   process.env.GOOGLE_DEVELOPER_TOKEN,
+        'Content-Type':      'application/json',
+        ...(loginId && { 'login-customer-id': loginId }),
+      };
+      // Teste beide API-Versionen
+      const [r17, r18, r19] = await Promise.all([
+        fetch(`https://googleads.googleapis.com/v17/customers/${customerId}/googleAds:search`, {
+          method: 'POST', headers,
+          body: JSON.stringify({ query: `SELECT campaign.id FROM campaign LIMIT 1` }),
+        }),
+        fetch(`https://googleads.googleapis.com/v18/customers/${customerId}/googleAds:search`, {
+          method: 'POST', headers,
+          body: JSON.stringify({ query: `SELECT campaign.id FROM campaign LIMIT 1` }),
+        }),
+        fetch(`https://googleads.googleapis.com/v19/customers/${customerId}/googleAds:search`, {
+          method: 'POST', headers,
+          body: JSON.stringify({ query: `SELECT campaign.id FROM campaign LIMIT 1` }),
+        }),
+      ]);
+      return res.status(200).json({
+        v17: { status: r17.status, body: (await r17.text()).slice(0, 300) },
+        v18: { status: r18.status, body: (await r18.text()).slice(0, 300) },
+        v19: { status: r19.status, body: (await r19.text()).slice(0, 300) },
+      });
+    } catch(e) {
+      return res.status(500).json({ debug2_error: e.message });
     }
   }
 
