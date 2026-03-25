@@ -34,7 +34,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ── Debug 1: Token + Env-Variablen prüfen ────────────────────────────────
+  // ── Debug 1: Token + Env ──────────────────────────────────────────────────
   if (req.query.debug === '1') {
     try {
       const r = await fetch('https://oauth2.googleapis.com/token', {
@@ -49,61 +49,18 @@ export default async function handler(req, res) {
       });
       const d = await r.json();
       return res.status(200).json({
-        token_status:      r.status,
-        has_access_token:  !!d.access_token,
-        error:             d.error || null,
-        error_description: d.error_description || null,
+        token_status: r.status, has_access_token: !!d.access_token,
+        error: d.error || null, error_description: d.error_description || null,
         env_check: {
           has_client_id:     !!process.env.GOOGLE_CLIENT_ID,
           has_client_secret: !!process.env.GOOGLE_CLIENT_SECRET,
           has_refresh_token: !!process.env.GOOGLE_REFRESH_TOKEN,
           has_dev_token:     !!process.env.GOOGLE_DEVELOPER_TOKEN,
-          has_customer_id:   !!process.env.GOOGLE_ADS_CUSTOMER_ID,
-          has_login_id:      !!process.env.GOOGLE_LOGIN_CUSTOMER_ID,
           customer_id:       process.env.GOOGLE_ADS_CUSTOMER_ID,
           login_id:          process.env.GOOGLE_LOGIN_CUSTOMER_ID,
         }
       });
-    } catch(e) {
-      return res.status(500).json({ debug_error: e.message });
-    }
-  }
-
-  // ── Debug 2: Google Ads API direkt testen ────────────────────────────────
-  if (req.query.debug === '2') {
-    try {
-      const accessToken = await getAccessToken();
-      const customerId  = process.env.GOOGLE_ADS_CUSTOMER_ID?.replace(/-/g, '');
-      const loginId     = process.env.GOOGLE_LOGIN_CUSTOMER_ID?.replace(/-/g, '');
-      const headers = {
-        'Authorization':     `Bearer ${accessToken}`,
-        'developer-token':   process.env.GOOGLE_DEVELOPER_TOKEN,
-        'Content-Type':      'application/json',
-        ...(loginId && { 'login-customer-id': loginId }),
-      };
-      // Teste beide API-Versionen
-      const [r17, r18, r19] = await Promise.all([
-        fetch(`https://googleads.googleapis.com/v17/customers/${customerId}/googleAds:search`, {
-          method: 'POST', headers,
-          body: JSON.stringify({ query: `SELECT campaign.id FROM campaign LIMIT 1` }),
-        }),
-        fetch(`https://googleads.googleapis.com/v18/customers/${customerId}/googleAds:search`, {
-          method: 'POST', headers,
-          body: JSON.stringify({ query: `SELECT campaign.id FROM campaign LIMIT 1` }),
-        }),
-        fetch(`https://googleads.googleapis.com/v23/customers/${customerId}/googleAds:search`, {
-          method: 'POST', headers,
-          body: JSON.stringify({ query: `SELECT campaign.id FROM campaign LIMIT 1` }),
-        }),
-      ]);
-      return res.status(200).json({
-        v17: { status: r17.status, body: (await r17.text()).slice(0, 300) },
-        v18: { status: r18.status, body: (await r18.text()).slice(0, 300) },
-        v23: { status: r19.status, body: (await r19.text()).slice(0, 300) },
-      });
-    } catch(e) {
-      return res.status(500).json({ debug2_error: e.message });
-    }
+    } catch(e) { return res.status(500).json({ debug_error: e.message }); }
   }
 
   const { from, to, refresh } = req.query;
@@ -127,7 +84,7 @@ export default async function handler(req, res) {
       ...(loginId && { 'login-customer-id': loginId }),
     };
 
-    // ── 1. Summary + Daily (1 API-Call) ──────────────────────────────────
+    // ── 1. Summary + Daily ────────────────────────────────────────────────
     const summaryQuery = `
       SELECT
         metrics.cost_micros,
@@ -149,11 +106,9 @@ export default async function handler(req, res) {
     let summaryData;
     try { summaryData = JSON.parse(summaryText); }
     catch(e) { return res.status(500).json({ error: 'Invalid JSON from Google', raw: summaryText.slice(0, 500) }); }
-
     if (!summaryRes.ok) return res.status(500).json({ error: summaryData });
 
     const rows = summaryData.results || [];
-
     const agg = rows.reduce((acc, r) => {
       const m = r.metrics;
       acc.spend       += (m.costMicros || 0) / 1_000_000;
@@ -176,12 +131,14 @@ export default async function handler(req, res) {
       conversions: parseFloat(r.metrics.conversions || 0),
     }));
 
-    // ── 2. Kampagnen (1 API-Call) ─────────────────────────────────────────
+    // ── 2. Kampagnen mit Tagesbudget ──────────────────────────────────────
     const campQuery = `
       SELECT
         campaign.id,
         campaign.name,
         campaign.status,
+        campaign.campaign_budget,
+        campaign_budget.amount_micros,
         metrics.cost_micros,
         metrics.impressions,
         metrics.clicks,
@@ -204,6 +161,7 @@ export default async function handler(req, res) {
       id:          r.campaign.id,
       name:        r.campaign.name,
       status:      r.campaign.status,
+      dailyBudget: (r.campaignBudget?.amountMicros || 0) / 1_000_000,
       spend:       Math.round((r.metrics.costMicros || 0) / 1_000_000 * 100) / 100,
       impressions: parseInt(r.metrics.impressions || 0),
       clicks:      parseInt(r.metrics.clicks || 0),
@@ -211,11 +169,17 @@ export default async function handler(req, res) {
       ctr:         Math.round(parseFloat(r.metrics.ctr || 0) * 10000) / 100,
     }));
 
+    // Tagesbudget aktiver Kampagnen
+    const activeDailyBudget = campaigns
+      .filter(c => c.status === 'ENABLED' && c.dailyBudget > 0)
+      .reduce((sum, c) => sum + c.dailyBudget, 0);
+
     const result = {
       summary: {
         spend:       Math.round(agg.spend * 100) / 100,
         impressions: agg.impressions,
         clicks:      agg.clicks,
+        // Conversions = Lead-Sanierung
         conversions: Math.round(agg.conversions * 10) / 10,
         cpl:         Math.round(cpl * 100) / 100,
         roas:        Math.round(roas * 100) / 100,
@@ -223,6 +187,7 @@ export default async function handler(req, res) {
       },
       daily,
       campaigns,
+      activeDailyBudget: Math.round(activeDailyBudget * 100) / 100,
       cachedAt: new Date().toISOString(),
     };
 
