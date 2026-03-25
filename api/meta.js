@@ -6,15 +6,17 @@ module.exports = async function handler(req, res) {
   const { dateRange = 'last_30d', from, to } = req.query;
   const token     = process.env.META_ACCESS_TOKEN;
   const accountId = process.env.META_AD_ACCOUNT_ID;
-  const fields    = 'spend,impressions,clicks,actions,action_values,ctr,cpc';
+  // Erweiterte Felder: reach, frequency, impressions für CPM
+  const fields = 'spend,impressions,reach,frequency,clicks,actions,action_values,ctr,cpc';
 
   const getAction = (actions, type) =>
     parseFloat(actions?.find(a => a.action_type === type)?.value || 0);
 
-  const extractConv = (actions) =>
-    getAction(actions, 'lead') ||
-    getAction(actions, 'complete_registration') ||
-    getAction(actions, 'purchase');
+  // App-Install als primäre Conversion
+  const extractInstalls = (actions) =>
+    getAction(actions, 'mobile_app_install') ||
+    getAction(actions, 'app_install') ||
+    getAction(actions, 'omni_app_install');
 
   let since, until;
   if (dateRange === 'custom' && from && to) {
@@ -40,10 +42,7 @@ module.exports = async function handler(req, res) {
       const chunkEnd = new Date(cur);
       chunkEnd.setDate(chunkEnd.getDate() + 24);
       if (chunkEnd > untilDate) chunkEnd.setTime(untilDate.getTime());
-      chunks.push({
-        since: chunkStart,
-        until: chunkEnd.toISOString().slice(0, 10),
-      });
+      chunks.push({ since: chunkStart, until: chunkEnd.toISOString().slice(0, 10) });
       cur = new Date(chunkEnd);
       cur.setDate(cur.getDate() + 1);
     }
@@ -66,30 +65,62 @@ module.exports = async function handler(req, res) {
 
     const s = summaryRes.data?.[0] || {};
     const spend       = parseFloat(s.spend || 0);
-    const conversions = extractConv(s.actions);
-    const convValue   = getAction(s.action_values, 'purchase');
-    const cpl         = conversions > 0 ? spend / conversions : 0;
-    const roas        = spend > 0 ? convValue / spend : 0;
+    const impressions = parseInt(s.impressions || 0);
+    const clicks      = parseInt(s.clicks || 0);
+    const reach       = parseInt(s.reach || 0);
+    const frequency   = parseFloat(s.frequency || 0);
+    const installs    = extractInstalls(s.actions);
+    const cpi         = installs > 0 ? spend / installs : 0;
+    const installRate = clicks > 0 ? (installs / clicks) * 100 : 0;
+    const cpm         = impressions > 0 ? (spend / impressions) * 1000 : 0;
 
+    // WoW Vergleich – letzte 7 Tage vs. vorherige 7 Tage
     const allDaily = chunkResults.flat().map(d => ({
       date:        d.date_start,
       spend:       parseFloat(d.spend || 0),
       impressions: parseInt(d.impressions || 0),
       clicks:      parseInt(d.clicks || 0),
-      conversions: extractConv(d.actions),
+      reach:       parseInt(d.reach || 0),
+      frequency:   parseFloat(d.frequency || 0),
+      installs:    extractInstalls(d.actions),
+      cpm:         parseInt(d.impressions || 0) > 0 ? (parseFloat(d.spend || 0) / parseInt(d.impressions)) * 1000 : 0,
     })).sort((a, b) => a.date > b.date ? 1 : -1);
+
+    // WoW berechnen (letzte 7 Tage vs. 7 Tage davor)
+    const sorted = [...allDaily].sort((a,b) => b.date > a.date ? 1 : -1);
+    const last7   = sorted.slice(0, 7);
+    const prev7   = sorted.slice(7, 14);
+    const wow = (metric) => {
+      const cur  = last7.reduce((s,d) => s + (d[metric]||0), 0);
+      const prev = prev7.reduce((s,d) => s + (d[metric]||0), 0);
+      if (prev === 0) return null;
+      return Math.round((cur - prev) / prev * 1000) / 10; // % mit 1 Dezimalstelle
+    };
 
     res.status(200).json({
       summary: {
         spend:       Math.round(spend * 100) / 100,
-        impressions: parseInt(s.impressions || 0),
-        clicks:      parseInt(s.clicks || 0),
-        conversions: Math.round(conversions * 10) / 10,
-        cpl:         Math.round(cpl * 100) / 100,
-        roas:        Math.round(roas * 100) / 100,
+        impressions,
+        clicks,
+        reach,
+        frequency:   Math.round(frequency * 100) / 100,
+        installs:    Math.round(installs * 10) / 10,
+        cpi:         Math.round(cpi * 100) / 100,
+        installRate: Math.round(installRate * 100) / 100,
+        cpm:         Math.round(cpm * 100) / 100,
         ctr:         Math.round(parseFloat(s.ctr || 0) * 100) / 100,
+        // Legacy: conversions = installs für Rückwärtskompatibilität
+        conversions: Math.round(installs * 10) / 10,
+        cpl:         Math.round(cpi * 100) / 100,
+        roas:        0,
       },
       daily: allDaily,
+      wow: {
+        spend:    wow('spend'),
+        installs: wow('installs'),
+        cpm:      wow('cpm'),
+        clicks:   wow('clicks'),
+      },
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
