@@ -3,14 +3,12 @@ const cache = new Map();
 const CACHE_TTL = 30 * 60 * 1000;
 
 function getCacheKey(from, to) { return `google_${from}_${to}`; }
-
 function getFromCache(key) {
   const entry = cache.get(key);
   if (!entry) return null;
   if (Date.now() - entry.timestamp > CACHE_TTL) { cache.delete(key); return null; }
   return entry.data;
 }
-
 function setCache(key, data) { cache.set(key, { data, timestamp: Date.now() }); }
 
 async function getAccessToken() {
@@ -34,32 +32,19 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ── Debug 1: Token + Env ──────────────────────────────────────────────────
   if (req.query.debug === '1') {
     try {
       const r = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
-          client_id:     process.env.GOOGLE_CLIENT_ID,
-          client_secret: process.env.GOOGLE_CLIENT_SECRET,
-          refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-          grant_type:    'refresh_token',
+          client_id: process.env.GOOGLE_CLIENT_ID, client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          refresh_token: process.env.GOOGLE_REFRESH_TOKEN, grant_type: 'refresh_token',
         }),
       });
       const d = await r.json();
-      return res.status(200).json({
-        token_status: r.status, has_access_token: !!d.access_token,
-        error: d.error || null, error_description: d.error_description || null,
-        env_check: {
-          has_client_id:     !!process.env.GOOGLE_CLIENT_ID,
-          has_client_secret: !!process.env.GOOGLE_CLIENT_SECRET,
-          has_refresh_token: !!process.env.GOOGLE_REFRESH_TOKEN,
-          has_dev_token:     !!process.env.GOOGLE_DEVELOPER_TOKEN,
-          customer_id:       process.env.GOOGLE_ADS_CUSTOMER_ID,
-          login_id:          process.env.GOOGLE_LOGIN_CUSTOMER_ID,
-        }
-      });
+      return res.status(200).json({ token_status: r.status, has_access_token: !!d.access_token,
+        error: d.error || null, env_check: { customer_id: process.env.GOOGLE_ADS_CUSTOMER_ID, login_id: process.env.GOOGLE_LOGIN_CUSTOMER_ID }});
     } catch(e) { return res.status(500).json({ debug_error: e.message }); }
   }
 
@@ -76,11 +61,10 @@ export default async function handler(req, res) {
     const accessToken = await getAccessToken();
     const customerId  = process.env.GOOGLE_ADS_CUSTOMER_ID?.replace(/-/g, '');
     const loginId     = process.env.GOOGLE_LOGIN_CUSTOMER_ID?.replace(/-/g, '');
-
     const headers = {
-      'Authorization':     `Bearer ${accessToken}`,
-      'developer-token':   process.env.GOOGLE_DEVELOPER_TOKEN,
-      'Content-Type':      'application/json',
+      'Authorization':   `Bearer ${accessToken}`,
+      'developer-token': process.env.GOOGLE_DEVELOPER_TOKEN,
+      'Content-Type':    'application/json',
       ...(loginId && { 'login-customer-id': loginId }),
     };
 
@@ -105,7 +89,7 @@ export default async function handler(req, res) {
     const summaryText = await summaryRes.text();
     let summaryData;
     try { summaryData = JSON.parse(summaryText); }
-    catch(e) { return res.status(500).json({ error: 'Invalid JSON from Google', raw: summaryText.slice(0, 500) }); }
+    catch(e) { return res.status(500).json({ error: 'Invalid JSON', raw: summaryText.slice(0, 500) }); }
     if (!summaryRes.ok) return res.status(500).json({ error: summaryData });
 
     const rows = summaryData.results || [];
@@ -122,6 +106,7 @@ export default async function handler(req, res) {
     const cpl  = agg.conversions > 0 ? agg.spend / agg.conversions : 0;
     const roas = agg.spend > 0 ? agg.convValue / agg.spend : 0;
     const ctr  = agg.impressions > 0 ? (agg.clicks / agg.impressions) * 100 : 0;
+    const cpm  = agg.impressions > 0 ? (agg.spend / agg.impressions) * 1000 : 0;
 
     const daily = rows.map(r => ({
       date:        r.segments?.date,
@@ -131,13 +116,23 @@ export default async function handler(req, res) {
       conversions: parseFloat(r.metrics.conversions || 0),
     }));
 
-    // ── 2. Kampagnen mit Tagesbudget ──────────────────────────────────────
+    // WoW
+    const sorted = [...daily].sort((a,b) => b.date > a.date ? 1 : -1);
+    const last7  = sorted.slice(0,7);
+    const prev7  = sorted.slice(7,14);
+    const wow = (metric) => {
+      const cur  = last7.reduce((s,d) => s + (d[metric]||0), 0);
+      const prev = prev7.reduce((s,d) => s + (d[metric]||0), 0);
+      if (prev === 0) return null;
+      return Math.round((cur - prev) / prev * 1000) / 10;
+    };
+
+    // ── 2. Kampagnen ──────────────────────────────────────────────────────
     const campQuery = `
       SELECT
         campaign.id,
         campaign.name,
         campaign.status,
-        campaign.campaign_budget,
         campaign_budget.amount_micros,
         metrics.cost_micros,
         metrics.impressions,
@@ -167,9 +162,11 @@ export default async function handler(req, res) {
       clicks:      parseInt(r.metrics.clicks || 0),
       conversions: parseFloat(r.metrics.conversions || 0),
       ctr:         Math.round(parseFloat(r.metrics.ctr || 0) * 10000) / 100,
+      cpm:         parseInt(r.metrics.impressions || 0) > 0
+        ? Math.round((r.metrics.costMicros || 0) / 1_000_000 / parseInt(r.metrics.impressions) * 1000 * 100) / 100
+        : 0,
     }));
 
-    // Tagesbudget aktiver Kampagnen
     const activeDailyBudget = campaigns
       .filter(c => c.status === 'ENABLED' && c.dailyBudget > 0)
       .reduce((sum, c) => sum + c.dailyBudget, 0);
@@ -179,15 +176,20 @@ export default async function handler(req, res) {
         spend:       Math.round(agg.spend * 100) / 100,
         impressions: agg.impressions,
         clicks:      agg.clicks,
-        // Conversions = Lead-Sanierung
         conversions: Math.round(agg.conversions * 10) / 10,
         cpl:         Math.round(cpl * 100) / 100,
         roas:        Math.round(roas * 100) / 100,
         ctr:         Math.round(ctr * 100) / 100,
+        cpm:         Math.round(cpm * 100) / 100,
       },
       daily,
       campaigns,
       activeDailyBudget: Math.round(activeDailyBudget * 100) / 100,
+      wow: {
+        spend:       wow('spend'),
+        conversions: wow('conversions'),
+        clicks:      wow('clicks'),
+      },
       cachedAt: new Date().toISOString(),
     };
 
