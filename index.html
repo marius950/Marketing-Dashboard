@@ -328,8 +328,8 @@ async function loadCampaigns() {
   const statusLabel = s => s === 'ACTIVE' ? 'Aktiv' : s === 'PAUSED' ? 'Pausiert' : s;
   const eur = n => '€' + n.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
 
-  // Thumbnail über Proxy laden um Hotlink-Schutz zu umgehen
-  const thumbSrc = url => url ? `/api/thumbnail?url=${encodeURIComponent(url)}` : '';
+  // Direkte thumbnail_url – kein Proxy, kein Transform
+  const thumbSrc = url => url || '';
 
   wrap.innerHTML = `
     <div style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:10px">${res.campaigns.length} Kampagnen im Zeitraum</div>
