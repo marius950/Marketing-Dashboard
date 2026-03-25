@@ -8,7 +8,7 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f5f7; color: #1a1a2e; min-height: 100vh; }
-  :root { --google: #34a853; --google-light: #e6f4ea; --meta: #0866ff; --meta-light: #e7f3ff; }
+  :root { --google: #34a853; --google-light: #e6f4ea; --meta: #0866ff; --meta-light: #e7f3ff; --san: #16a34a; --baufi: #2563eb; }
 
   #login-screen { position: fixed; inset: 0; background: #f4f5f7; display: flex; align-items: center; justify-content: center; z-index: 999; }
   #login-box { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 40px 36px; width: 340px; }
@@ -43,15 +43,19 @@
   .kpi-grid-6  { grid-template-columns: repeat(6,1fr); }
   .kpi-grid-7  { grid-template-columns: repeat(7,1fr); }
   .kpi-grid-8  { grid-template-columns: repeat(8,1fr); }
+  .kpi-grid-10 { grid-template-columns: repeat(10,1fr); }
 
   .kpi-card { background: #fff; border-radius: 12px; padding: 16px 14px; border: 1px solid #e5e7eb; }
   .kpi-card.google { border-top: 3px solid var(--google); }
   .kpi-card.meta   { border-top: 3px solid var(--meta); }
   .kpi-card.budget { border-top: 3px solid #f59e0b; background: #fffbeb; }
+  .kpi-card.san    { border-top: 3px solid var(--san);   background: #f0fdf4; }
+  .kpi-card.baufi  { border-top: 3px solid var(--baufi); background: #eff6ff; }
   .kpi-label { font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
   .kpi-value { font-size: 20px; font-weight: 700; color: #1a1a2e; line-height: 1.2; }
   .kpi-value.loading { color: #d1d5db; }
   .kpi-sub { font-size: 11px; color: #6b7280; margin-top: 4px; }
+  .kpi-sub-sm { font-size: 10px; color: #9ca3af; margin-top: 2px; }
 
   .wow-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 4px; margin-top: 4px; }
   .wow-up   { background: #dcfce7; color: #16a34a; }
@@ -70,16 +74,10 @@
   .badge-google { background: var(--google-light); color: var(--google); }
   .badge-meta   { background: var(--meta-light);   color: var(--meta); }
 
-  /* ── NEU: Segment-Karte ── */
-  .segment-card { background: #fff; border-radius: 12px; padding: 20px 24px; border: 1px solid #e5e7eb; margin-bottom: 16px; }
-  .segment-card h4 { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 14px; }
-  .segment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
-  .segment-item { background: #f9fafb; border-radius: 8px; padding: 12px 14px; border: 1px solid #f3f4f6; }
-  .segment-name { font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
-  .segment-spend { font-size: 18px; font-weight: 700; color: #1a1a2e; }
-  .segment-sub { font-size: 11px; color: #9ca3af; margin-top: 3px; }
-  .segment-bar-bg { background: #e5e7eb; border-radius: 3px; height: 4px; margin-top: 8px; }
-  .segment-bar-fill { height: 100%; border-radius: 3px; }
+  /* Segment-Pill in Kampagnenlisten */
+  .seg-pill { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }
+  .seg-san   { background: #dcfce7; color: #15803d; }
+  .seg-baufi { background: #dbeafe; color: #1d4ed8; }
 
   /* Best/Worst Ads */
   .top-ads-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
@@ -100,18 +98,17 @@
   .ad-thumb-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
   @media (max-width: 1200px) {
-    .kpi-grid-8 { grid-template-columns: repeat(4,1fr); }
-    .kpi-grid-7 { grid-template-columns: repeat(4,1fr); }
+    .kpi-grid-10 { grid-template-columns: repeat(5,1fr); }
+    .kpi-grid-8  { grid-template-columns: repeat(4,1fr); }
+    .kpi-grid-7  { grid-template-columns: repeat(4,1fr); }
   }
   @media (max-width: 900px) {
-    .kpi-grid-6, .kpi-grid-7, .kpi-grid-8 { grid-template-columns: repeat(3,1fr); }
-    .charts-row, .top-ads-grid { grid-template-columns: 1fr; }
-    .segment-grid { grid-template-columns: repeat(2,1fr); }
+    .kpi-grid-6,.kpi-grid-7,.kpi-grid-8,.kpi-grid-10 { grid-template-columns: repeat(3,1fr); }
+    .charts-row,.top-ads-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 600px) {
     main { padding: 16px; }
-    .kpi-grid-6, .kpi-grid-7, .kpi-grid-8 { grid-template-columns: repeat(2,1fr); }
-    .segment-grid { grid-template-columns: 1fr 1fr; }
+    .kpi-grid-6,.kpi-grid-7,.kpi-grid-8,.kpi-grid-10 { grid-template-columns: repeat(2,1fr); }
   }
 </style>
 </head>
@@ -152,7 +149,8 @@
 
     <!-- ── GESAMT ── -->
     <div id="panel-overview" class="panel active">
-      <div class="kpi-grid kpi-grid-8">
+      <!-- Zeile 1: Kanal-KPIs -->
+      <div class="kpi-grid kpi-grid-8" style="margin-bottom:12px">
         <div class="kpi-card"><div class="kpi-label">Spend gesamt</div><div class="kpi-value loading" id="ov-spend">–</div><div id="ov-spend-wow" class="kpi-sub"></div></div>
         <div class="kpi-card"><div class="kpi-label">Impressionen</div><div class="kpi-value loading" id="ov-impressions">–</div></div>
         <div class="kpi-card"><div class="kpi-label">Klicks</div><div class="kpi-value loading" id="ov-clicks">–</div></div>
@@ -167,9 +165,25 @@
             <div style="display:flex;justify-content:space-between;font-size:10px;color:#92400e;margin-top:4px">
               <span id="pace-spent">–</span><span id="pace-pct">–%</span>
             </div>
-            <div class="pace-bar-bg"><div class="pace-bar-fill" id="pace-bar" style="width:0%;background:#f59e0b"></div></div>
-            <div style="font-size:10px;color:#6b7280;margin-top:3px" id="pace-monthly">– / Monat</div>
+            <div class="pace-bar-bg"><div class="pace-bar-fill" id="pace-bar" style="width:0%"></div></div>
+            <div style="font-size:10px;color:#6b7280;margin-top:3px" id="pace-monthly"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- Zeile 2: Segment-Spend (Sanierung vs. Baufinanzierung) -->
+      <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:20px" id="segment-row" style="display:none">
+        <div class="kpi-card san">
+          <div class="kpi-label">🟢 Sanierung – Spend</div>
+          <div class="kpi-value loading" id="seg-san-spend">–</div>
+          <div class="kpi-sub-sm" id="seg-san-meta">Meta: –</div>
+          <div class="kpi-sub-sm" id="seg-san-google">Google: –</div>
+        </div>
+        <div class="kpi-card baufi">
+          <div class="kpi-label">🔵 Baufinanzierung – Spend</div>
+          <div class="kpi-value loading" id="seg-baufi-spend">–</div>
+          <div class="kpi-sub-sm" id="seg-baufi-meta">Meta: –</div>
+          <div class="kpi-sub-sm" id="seg-baufi-google">Google: –</div>
         </div>
       </div>
 
@@ -183,12 +197,6 @@
           <div class="chart-wrap"><canvas id="chart-ov-conv"></canvas></div>
         </div>
       </div>
-
-      <!-- ── NEU: Segment-Übersicht ── -->
-      <div class="segment-card" id="segment-card" style="display:none">
-        <h4>📊 Spend nach Segment <span style="font-size:11px;font-weight:400;color:#9ca3af;margin-left:6px">Meta-Kampagnen</span></h4>
-        <div class="segment-grid" id="segment-grid"></div>
-      </div>
     </div>
 
     <!-- ── GOOGLE ADS ── -->
@@ -201,6 +209,11 @@
         <div class="kpi-card google"><div class="kpi-label">CPL</div><div class="kpi-value loading" id="g-cpl">–</div></div>
         <div class="kpi-card google"><div class="kpi-label">CTR</div><div class="kpi-value loading" id="g-ctr">–</div></div>
         <div class="kpi-card google"><div class="kpi-label">CPM</div><div class="kpi-value loading" id="g-cpm">–</div></div>
+      </div>
+      <!-- Segment-Split Google -->
+      <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px" id="g-segment-row" style="display:none">
+        <div class="kpi-card san"><div class="kpi-label">🟢 Sanierung</div><div class="kpi-value" id="g-seg-san">–</div></div>
+        <div class="kpi-card baufi"><div class="kpi-label">🔵 Baufinanzierung</div><div class="kpi-value" id="g-seg-baufi">–</div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title">Täglicher Spend – <span style="color:var(--google)">Google Ads</span></div>
@@ -221,13 +234,18 @@
         <div class="kpi-card meta"><div class="kpi-label">Install Rate</div><div class="kpi-value loading" id="m-installrate">–</div></div>
         <div class="kpi-card meta"><div class="kpi-label">CPM</div><div class="kpi-value loading" id="m-cpm">–</div><div id="m-cpm-wow" class="kpi-sub"></div></div>
       </div>
+      <!-- Segment-Split Meta -->
+      <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px" id="m-segment-row" style="display:none">
+        <div class="kpi-card san"><div class="kpi-label">🟢 Sanierung</div><div class="kpi-value" id="m-seg-san">–</div></div>
+        <div class="kpi-card baufi"><div class="kpi-label">🔵 Baufinanzierung</div><div class="kpi-value" id="m-seg-baufi">–</div></div>
+      </div>
       <div class="charts-row">
         <div class="chart-card">
           <div class="chart-title">Täglicher Spend – <span style="color:var(--meta)">Meta Ads</span></div>
           <div class="chart-wrap"><canvas id="chart-m-spend"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">CPM & CPI Verlauf</div>
+          <div class="chart-title">CPM Verlauf</div>
           <div class="chart-wrap"><canvas id="chart-m-cpm"></canvas></div>
         </div>
       </div>
@@ -244,32 +262,35 @@ const META_COLOR   = '#0866ff';
 
 let gData = null, mData = null, mCampData = null;
 
+// Sanierung-Erkennung: nur Kampagnen mit "sanierung" im Namen
+const isSanierung = name => name.toLowerCase().includes('sanierung');
+
 function checkLogin() {
   const v = document.getElementById('pw-input').value;
   if (v === PW) {
     sessionStorage.setItem('effi_auth','1');
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
     initDates(); loadAll();
-  } else { document.getElementById('login-error').style.display = 'block'; }
+  } else { document.getElementById('login-error').style.display='block'; }
 }
-if (sessionStorage.getItem('effi_auth') === '1') {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
+if (sessionStorage.getItem('effi_auth')==='1') {
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
   initDates(); loadAll();
 }
 
 function initDates() {
-  const to = new Date(); to.setDate(to.getDate()-1);
-  const from = new Date(); from.setDate(from.getDate()-30);
+  const to=new Date(); to.setDate(to.getDate()-1);
+  const from=new Date(); from.setDate(from.getDate()-30);
   document.getElementById('date-to').value   = to.toISOString().slice(0,10);
   document.getElementById('date-from').value = from.toISOString().slice(0,10);
 }
 function setQuick(days) {
   document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
   event.target.classList.add('active');
-  const to = new Date(); to.setDate(to.getDate()-1);
-  const from = new Date(); from.setDate(from.getDate()-days);
+  const to=new Date(); to.setDate(to.getDate()-1);
+  const from=new Date(); from.setDate(from.getDate()-days);
   document.getElementById('date-to').value   = to.toISOString().slice(0,10);
   document.getElementById('date-from').value = from.toISOString().slice(0,10);
   loadAll();
@@ -287,10 +308,12 @@ function setKPI(id,val,type) {
   const el=document.getElementById(id); if(!el) return;
   el.classList.remove('loading'); el.textContent=fmt(val,type);
 }
+function setText(id,txt) {
+  const el=document.getElementById(id); if(el) el.textContent=txt;
+}
 function wowBadge(id,pct) {
   const el=document.getElementById(id); if(!el||pct===null||pct===undefined) return;
-  const dir=pct>0?'▲':'▼', cls=pct>0?'wow-up':'wow-down';
-  el.innerHTML=`<span class="wow-badge ${cls}">${dir} ${Math.abs(pct)}% WoW</span>`;
+  el.innerHTML=`<span class="wow-badge ${pct>0?'wow-up':'wow-down'}">${pct>0?'▲':'▼'} ${Math.abs(pct)}% WoW</span>`;
 }
 
 function switchTab(name) {
@@ -318,76 +341,52 @@ function buildLineChart(id,labels,datasets) {
       scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:12}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}}}});
 }
 
-// ── NEU: Segment-Render ───────────────────────────────────────────────────────
-function renderSegments(campaigns) {
-  const card = document.getElementById('segment-card');
-  const grid = document.getElementById('segment-grid');
-  if (!card || !grid || !campaigns?.length) { if(card) card.style.display='none'; return; }
-
-  const SEGMENTS = {
-    'Sanierung':       n => n.includes('sanierung'),
-    'Baufinanzierung': n => n.includes('baufi') || n.includes('bauzins') || n.includes('baufinanzierung'),
-    'Immobiliensuche': n => n.includes('immobiliensuche'),
-    'Budgetrechner':   n => n.includes('budgetrechner') || (n.includes('budget') && !n.includes('tagesbudget')),
-    'Marktwert-Check': n => n.includes('kaufpreis') || n.includes('marktwert'),
-    'Beratung':        n => n.includes('beratung'),
-  };
-  const COLORS = {
-    'Sanierung':       '#16a34a',
-    'Baufinanzierung': '#2563eb',
-    'Immobiliensuche': '#0866ff',
-    'Budgetrechner':   '#7c3aed',
-    'Marktwert-Check': '#ea580c',
-    'Beratung':        '#0891b2',
-    'Sonstiges':       '#6b7280',
-  };
-
-  const segs = {};
-  campaigns.forEach(c => {
-    const n = c.name.toLowerCase();
-    let matched = false;
-    for (const [seg, test] of Object.entries(SEGMENTS)) {
-      if (test(n)) {
-        if (!segs[seg]) segs[seg] = { spend:0, installs:0, camps:0 };
-        segs[seg].spend   += c.spend;
-        segs[seg].installs += c.conversions||0;
-        segs[seg].camps   += 1;
-        matched = true; break;
-      }
-    }
-    if (!matched) {
-      if (!segs['Sonstiges']) segs['Sonstiges'] = { spend:0, installs:0, camps:0 };
-      segs['Sonstiges'].spend   += c.spend;
-      segs['Sonstiges'].installs += c.conversions||0;
-      segs['Sonstiges'].camps   += 1;
-    }
+// ── Segment-Spend berechnen aus Kampagnenliste ────────────────────────────────
+function calcSegments(campaigns) {
+  const san   = { spend: 0, google: 0, meta: 0 };
+  const baufi = { spend: 0, google: 0, meta: 0 };
+  (campaigns || []).forEach(c => {
+    const s = isSanierung(c.name) ? san : baufi;
+    s.spend += c.spend || 0;
   });
+  return { san, baufi };
+}
 
-  const totalSpend = Object.values(segs).reduce((s,v)=>s+v.spend,0);
-  if (totalSpend === 0) { card.style.display='none'; return; }
+// ── Segment-Karten rendern ────────────────────────────────────────────────────
+function renderSegmentCards(metaCamps, googleCamps) {
+  const mSegs = calcSegments(metaCamps);
+  const gSegs = calcSegments(googleCamps);
 
-  const sorted = Object.entries(segs).sort((a,b)=>b[1].spend-a[1].spend);
-  const eur = n => '€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const sanTotal   = mSegs.san.spend   + gSegs.san.spend;
+  const baufiTotal = mSegs.baufi.spend + gSegs.baufi.spend;
 
-  grid.innerHTML = sorted.map(([name,v]) => {
-    const pct   = Math.round(v.spend / totalSpend * 100);
-    const color = COLORS[name] || '#6b7280';
-    const cpi   = v.installs > 0 ? ' · CPI '+eur(Math.round(v.spend/v.installs*100)/100) : '';
-    return `
-      <div class="segment-item">
-        <div class="segment-name">
-          <span>${name}</span>
-          <span style="font-size:10px;background:#f3f4f6;color:#6b7280;padding:1px 5px;border-radius:3px">${pct}%</span>
-        </div>
-        <div class="segment-spend">${eur(Math.round(v.spend*100)/100)}</div>
-        <div class="segment-sub">${v.camps} Kampagne${v.camps!==1?'n':''}${cpi}</div>
-        <div class="segment-bar-bg">
-          <div class="segment-bar-fill" style="width:${pct}%;background:${color}"></div>
-        </div>
-      </div>`;
-  }).join('');
+  // Gesamt-Tab
+  const row = document.getElementById('segment-row');
+  if (row && (sanTotal > 0 || baufiTotal > 0)) {
+    row.style.display = 'grid';
+    setKPI('seg-san-spend',   Math.round(sanTotal*100)/100,   'currency');
+    setKPI('seg-baufi-spend', Math.round(baufiTotal*100)/100, 'currency');
+    setText('seg-san-meta',    'Meta: '   + fmt(Math.round(mSegs.san.spend*100)/100,   'currency'));
+    setText('seg-san-google',  'Google: ' + fmt(Math.round(gSegs.san.spend*100)/100,   'currency'));
+    setText('seg-baufi-meta',  'Meta: '   + fmt(Math.round(mSegs.baufi.spend*100)/100, 'currency'));
+    setText('seg-baufi-google','Google: ' + fmt(Math.round(gSegs.baufi.spend*100)/100, 'currency'));
+  }
 
-  card.style.display = 'block';
+  // Google-Tab
+  const gRow = document.getElementById('g-segment-row');
+  if (gRow && (gSegs.san.spend > 0 || gSegs.baufi.spend > 0)) {
+    gRow.style.display = 'grid';
+    setKPI('g-seg-san',   Math.round(gSegs.san.spend*100)/100,   'currency');
+    setKPI('g-seg-baufi', Math.round(gSegs.baufi.spend*100)/100, 'currency');
+  }
+
+  // Meta-Tab
+  const mRow = document.getElementById('m-segment-row');
+  if (mRow && (mSegs.san.spend > 0 || mSegs.baufi.spend > 0)) {
+    mRow.style.display = 'grid';
+    setKPI('m-seg-san',   Math.round(mSegs.san.spend*100)/100,   'currency');
+    setKPI('m-seg-baufi', Math.round(mSegs.baufi.spend*100)/100, 'currency');
+  }
 }
 
 // ── Render Google ─────────────────────────────────────────────────────────────
@@ -430,8 +429,8 @@ function renderOverview() {
   const gDaily=gData?.activeDailyBudget||0, mDaily=mCampData?.activeDailyBudget||0;
   const totalDaily=gDaily+mDaily, totalMonthly=totalDaily*30;
   const budgetEl=document.getElementById('ov-daily-budget');
-  if (budgetEl){budgetEl.classList.remove('loading');budgetEl.textContent=fmt(totalDaily,'currency')+' / Tag';}
-  if (totalMonthly>0) {
+  if(budgetEl){budgetEl.classList.remove('loading');budgetEl.textContent=fmt(totalDaily,'currency')+' / Tag';}
+  if(totalMonthly>0){
     const totalSpend=(gs.spend||0)+(ms.spend||0);
     const pct=Math.min(Math.round(totalSpend/totalMonthly*100),100);
     const pw=document.getElementById('pace-wrap');
@@ -498,11 +497,15 @@ function renderGoogleCampaigns() {
   const sLabel=s=>s==='ENABLED'?'Aktiv':s==='PAUSED'?'Pausiert':s;
   wrap.innerHTML=`
     <div style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:8px">${gData.campaigns.length} Kampagnen</div>
-    ${gData.campaigns.map(c=>`
+    ${gData.campaigns.map(c=>{
+      const seg = isSanierung(c.name) ? 'san' : 'baufi';
+      const segLabel = seg==='san' ? 'Sanierung' : 'Baufinanzierung';
+      return `
       <div class="camp-row google">
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px">
           <span style="width:8px;height:8px;border-radius:50%;background:${sColor(c.status)};flex-shrink:0"></span>
           <span style="font-size:13px;font-weight:500;flex:1;color:#1a1a2e">${c.name}</span>
+          <span class="seg-pill seg-${seg}">${segLabel}</span>
           <span style="font-size:11px;color:${sColor(c.status)};font-weight:500">${sLabel(c.status)}</span>
           <span style="font-size:13px;font-weight:600;color:#1a1a2e">${eur(c.spend)}</span>
           <span style="font-size:12px;color:#9ca3af">${c.impressions.toLocaleString('de-DE')} Imp.</span>
@@ -510,7 +513,11 @@ function renderGoogleCampaigns() {
           <span style="font-size:12px;color:#9ca3af">€${c.cpm.toFixed(2)} CPM</span>
           ${c.conversions>0?`<span style="font-size:12px;color:var(--google);font-weight:500">${c.conversions} Leads</span>`:''}
         </div>
-      </div>`).join('')}`;
+      </div>`;
+    }).join('')}`;
+
+  // Segment-Split Google aktualisieren
+  renderSegmentCards(mCampData?.campaigns||[], gData.campaigns);
 }
 
 // ── Meta Kampagnen ────────────────────────────────────────────────────────────
@@ -523,8 +530,8 @@ async function loadCampaigns() {
   if(res.error){wrap.innerHTML=`<div style="color:#ef4444;font-size:13px">Fehler: ${res.error}</div>`;return;}
   mCampData=res;
   renderOverview();
-  renderSegments(res.campaigns);
   renderTopAds(res.campaigns);
+  renderSegmentCards(res.campaigns, gData?.campaigns||[]);
 
   const sColor=s=>s==='ACTIVE'?'#16a34a':s==='PAUSED'?'#d97706':'#9ca3af';
   const sLabel=s=>s==='ACTIVE'?'Aktiv':s==='PAUSED'?'Pausiert':s;
@@ -532,11 +539,15 @@ async function loadCampaigns() {
 
   wrap.innerHTML=`
     <div style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:8px">${res.campaigns.length} Kampagnen im Zeitraum</div>
-    ${res.campaigns.map(c=>`
+    ${res.campaigns.map(c=>{
+      const seg = isSanierung(c.name) ? 'san' : 'baufi';
+      const segLabel = seg==='san' ? 'Sanierung' : 'Baufinanzierung';
+      return `
       <div class="camp-row meta">
-        <div onclick="toggleCamp('${c.id}')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none">
+        <div onclick="toggleCamp('${c.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none">
           <span style="width:8px;height:8px;border-radius:50%;background:${sColor(c.status)};flex-shrink:0"></span>
           <span style="font-size:13px;font-weight:500;flex:1;color:#1a1a2e">${c.name}</span>
+          <span class="seg-pill seg-${seg}">${segLabel}</span>
           <span style="font-size:11px;color:${sColor(c.status)};font-weight:500">${sLabel(c.status)}</span>
           <span style="font-size:13px;font-weight:600;color:#1a1a2e">${eur(c.spend)}</span>
           <span style="font-size:12px;color:#9ca3af">${c.impressions.toLocaleString('de-DE')} Imp.</span>
@@ -573,7 +584,8 @@ async function loadCampaigns() {
               </div>
             </div>`).join('')}
         </div>
-      </div>`).join('')}`;
+      </div>`;
+    }).join('')}`;
 }
 
 // ── loadAll ───────────────────────────────────────────────────────────────────
@@ -584,7 +596,8 @@ async function loadAll() {
   gData=null; mData=null; mCampData=null;
   ['g-spend','g-impressions','g-clicks','g-conversions','g-cpl','g-ctr','g-cpm',
    'm-spend','m-impressions','m-reach','m-frequency','m-installs','m-cpi','m-installrate','m-cpm',
-   'ov-spend','ov-impressions','ov-clicks','ov-installs','ov-leads','ov-cpi','ov-cpl','ov-daily-budget']
+   'ov-spend','ov-impressions','ov-clicks','ov-installs','ov-leads','ov-cpi','ov-cpl','ov-daily-budget',
+   'seg-san-spend','seg-baufi-spend']
     .forEach(id=>{const el=document.getElementById(id);if(el){el.textContent='–';el.classList.add('loading');}});
 
   const [gRes,mRes,mCampRes]=await Promise.allSettled([
@@ -602,7 +615,7 @@ async function loadAll() {
   }
   if(mCampRes.status==='fulfilled'&&!mCampRes.value.error){
     mCampData=mCampRes.value;
-    renderSegments(mCampData.campaigns);  // ← Segment-Karte direkt beim Laden
+    renderSegmentCards(mCampData.campaigns, gData?.campaigns||[]);
     if(document.getElementById('panel-meta').classList.contains('active')){
       renderTopAds(mCampData.campaigns);
       loadCampaigns();
