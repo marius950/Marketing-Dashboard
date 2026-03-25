@@ -18,16 +18,21 @@
   #login-box button { width: 100%; padding: 10px; background: #4f6ef7; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
   #login-error { font-size: 12px; color: #ef4444; margin-top: 8px; display: none; }
 
-  header { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
-  .logo { font-size: 20px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.5px; }
+  header { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 60px; gap: 12px; }
+  .logo { font-size: 20px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.5px; flex-shrink: 0; }
   .logo span { color: #4f6ef7; }
-  .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .controls label { font-size: 13px; color: #6b7280; }
   .controls input[type=date] { padding: 6px 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; background: #fff; }
   .refresh-btn { padding: 7px 16px; background: #4f6ef7; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 500; }
   .quick-btns { display: flex; gap: 4px; }
   .qbtn { padding: 5px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; cursor: pointer; background: #fff; color: #374151; }
   .qbtn.active { background: #4f6ef7; color: #fff; border-color: #4f6ef7; }
+
+  /* Language Toggle */
+  .lang-toggle { display: flex; background: #f3f4f6; border-radius: 8px; padding: 2px; gap: 2px; flex-shrink: 0; }
+  .lang-btn { padding: 4px 10px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: #6b7280; transition: all .15s; }
+  .lang-btn.active { background: #fff; color: #1a1a2e; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 
   main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
   .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #fff; padding: 4px; border-radius: 10px; width: fit-content; border: 1px solid #e5e7eb; }
@@ -43,7 +48,6 @@
   .kpi-grid-6  { grid-template-columns: repeat(6,1fr); }
   .kpi-grid-7  { grid-template-columns: repeat(7,1fr); }
   .kpi-grid-8  { grid-template-columns: repeat(8,1fr); }
-  .kpi-grid-10 { grid-template-columns: repeat(10,1fr); }
 
   .kpi-card { background: #fff; border-radius: 12px; padding: 16px 14px; border: 1px solid #e5e7eb; }
   .kpi-card.google { border-top: 3px solid var(--google); }
@@ -74,12 +78,10 @@
   .badge-google { background: var(--google-light); color: var(--google); }
   .badge-meta   { background: var(--meta-light);   color: var(--meta); }
 
-  /* Segment-Pill in Kampagnenlisten */
   .seg-pill { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }
   .seg-san   { background: #dcfce7; color: #15803d; }
   .seg-baufi { background: #dbeafe; color: #1d4ed8; }
 
-  /* Best/Worst Ads */
   .top-ads-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .top-ads-card { background: #fff; border-radius: 12px; padding: 16px 18px; border: 1px solid #e5e7eb; }
   .top-ads-card h4 { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 12px; }
@@ -97,19 +99,9 @@
   .ad-thumb-wrap { width: 100%; aspect-ratio: 1/1; background: #f3f4f6; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .ad-thumb-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
-  @media (max-width: 1200px) {
-    .kpi-grid-10 { grid-template-columns: repeat(5,1fr); }
-    .kpi-grid-8  { grid-template-columns: repeat(4,1fr); }
-    .kpi-grid-7  { grid-template-columns: repeat(4,1fr); }
-  }
-  @media (max-width: 900px) {
-    .kpi-grid-6,.kpi-grid-7,.kpi-grid-8,.kpi-grid-10 { grid-template-columns: repeat(3,1fr); }
-    .charts-row,.top-ads-grid { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 600px) {
-    main { padding: 16px; }
-    .kpi-grid-6,.kpi-grid-7,.kpi-grid-8,.kpi-grid-10 { grid-template-columns: repeat(2,1fr); }
-  }
+  @media (max-width: 1200px) { .kpi-grid-8 { grid-template-columns: repeat(4,1fr); } .kpi-grid-7 { grid-template-columns: repeat(4,1fr); } }
+  @media (max-width: 900px) { .kpi-grid-6,.kpi-grid-7,.kpi-grid-8 { grid-template-columns: repeat(3,1fr); } .charts-row,.top-ads-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { main { padding: 16px; } .kpi-grid-6,.kpi-grid-7,.kpi-grid-8 { grid-template-columns: repeat(2,1fr); } header { flex-wrap: wrap; height: auto; padding: 12px 16px; } }
 </style>
 </head>
 <body>
@@ -117,9 +109,9 @@
 <div id="login-screen">
   <div id="login-box">
     <h2>effi<span style="color:#4f6ef7">.</span></h2>
-    <p>KPI Dashboard – nur für interne Nutzung</p>
+    <p id="login-subtitle">KPI Dashboard – nur für interne Nutzung</p>
     <input type="password" id="pw-input" placeholder="Passwort" onkeydown="if(event.key==='Enter')checkLogin()">
-    <button onclick="checkLogin()">Anmelden</button>
+    <button onclick="checkLogin()" id="login-btn">Anmelden</button>
     <div id="login-error">Falsches Passwort</div>
   </div>
 </div>
@@ -129,37 +121,41 @@
     <div class="logo">effi<span>.</span></div>
     <div class="controls">
       <div class="quick-btns">
-        <button class="qbtn" onclick="setQuick(7)">7T</button>
-        <button class="qbtn active" onclick="setQuick(30)">30T</button>
-        <button class="qbtn" onclick="setQuick(90)">90T</button>
-        <button class="qbtn" onclick="setQuick(180)">180T</button>
+        <button class="qbtn" onclick="setQuick(7)" data-t="7d">7T</button>
+        <button class="qbtn active" onclick="setQuick(30)" data-t="30d">30T</button>
+        <button class="qbtn" onclick="setQuick(90)" data-t="90d">90T</button>
+        <button class="qbtn" onclick="setQuick(180)" data-t="180d">180T</button>
       </div>
-      <label>Von</label><input type="date" id="date-from">
-      <label>Bis</label><input type="date" id="date-to">
-      <button class="refresh-btn" onclick="loadAll()">Anwenden</button>
+      <label data-t="from">Von</label><input type="date" id="date-from">
+      <label data-t="to">Bis</label><input type="date" id="date-to">
+      <button class="refresh-btn" onclick="loadAll()" data-t="apply">Anwenden</button>
+    </div>
+    <!-- Language Toggle -->
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="lang-de" onclick="setLang('de')">DE</button>
+      <button class="lang-btn" id="lang-en" onclick="setLang('en')">EN</button>
     </div>
   </header>
 
   <main>
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('overview')">Gesamt</button>
-      <button class="tab google" onclick="switchTab('google')">Google Ads</button>
-      <button class="tab meta" onclick="switchTab('meta')">Meta Ads</button>
+      <button class="tab active" onclick="switchTab('overview')" data-t="tab-overview">Gesamt</button>
+      <button class="tab google" onclick="switchTab('google')" data-t="tab-google">Google Ads</button>
+      <button class="tab meta" onclick="switchTab('meta')" data-t="tab-meta">Meta Ads</button>
     </div>
 
     <!-- ── GESAMT ── -->
     <div id="panel-overview" class="panel active">
-      <!-- Zeile 1: Kanal-KPIs -->
       <div class="kpi-grid kpi-grid-8" style="margin-bottom:12px">
-        <div class="kpi-card"><div class="kpi-label">Spend gesamt</div><div class="kpi-value loading" id="ov-spend">–</div><div id="ov-spend-wow" class="kpi-sub"></div></div>
-        <div class="kpi-card"><div class="kpi-label">Impressionen</div><div class="kpi-value loading" id="ov-impressions">–</div></div>
-        <div class="kpi-card"><div class="kpi-label">Klicks</div><div class="kpi-value loading" id="ov-clicks">–</div></div>
-        <div class="kpi-card"><div class="kpi-label">App-Installs</div><div class="kpi-value loading" id="ov-installs">–</div><div id="ov-installs-wow" class="kpi-sub"></div></div>
-        <div class="kpi-card"><div class="kpi-label">Lead-Sanierung</div><div class="kpi-value loading" id="ov-leads">–</div><div id="ov-leads-wow" class="kpi-sub"></div></div>
-        <div class="kpi-card"><div class="kpi-label">CPI (Meta)</div><div class="kpi-value loading" id="ov-cpi">–</div></div>
-        <div class="kpi-card"><div class="kpi-label">CPL (Google)</div><div class="kpi-value loading" id="ov-cpl">–</div></div>
+        <div class="kpi-card"><div class="kpi-label" data-t="total-spend">Spend gesamt</div><div class="kpi-value loading" id="ov-spend">–</div><div id="ov-spend-wow" class="kpi-sub"></div></div>
+        <div class="kpi-card"><div class="kpi-label" data-t="impressions">Impressionen</div><div class="kpi-value loading" id="ov-impressions">–</div></div>
+        <div class="kpi-card"><div class="kpi-label" data-t="clicks">Klicks</div><div class="kpi-value loading" id="ov-clicks">–</div></div>
+        <div class="kpi-card"><div class="kpi-label" data-t="app-installs">App-Installs</div><div class="kpi-value loading" id="ov-installs">–</div><div id="ov-installs-wow" class="kpi-sub"></div></div>
+        <div class="kpi-card"><div class="kpi-label" data-t="lead-san">Lead-Sanierung</div><div class="kpi-value loading" id="ov-leads">–</div><div id="ov-leads-wow" class="kpi-sub"></div></div>
+        <div class="kpi-card"><div class="kpi-label" data-t="cpi-meta">CPI (Meta)</div><div class="kpi-value loading" id="ov-cpi">–</div></div>
+        <div class="kpi-card"><div class="kpi-label" data-t="cpl-google">CPL (Google)</div><div class="kpi-value loading" id="ov-cpl">–</div></div>
         <div class="kpi-card budget">
-          <div class="kpi-label">Tagesbudget</div>
+          <div class="kpi-label" data-t="daily-budget">Tagesbudget</div>
           <div class="kpi-value loading" id="ov-daily-budget">–</div>
           <div class="pace-wrap" id="pace-wrap" style="display:none">
             <div style="display:flex;justify-content:space-between;font-size:10px;color:#92400e;margin-top:4px">
@@ -171,29 +167,29 @@
         </div>
       </div>
 
-      <!-- Zeile 2: Segment-Spend (Sanierung vs. Baufinanzierung) -->
-      <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:20px" id="segment-row" style="display:none">
+      <!-- Segment-Split -->
+      <div class="kpi-grid" id="segment-row" style="grid-template-columns:1fr 1fr;margin-bottom:20px;display:none">
         <div class="kpi-card san">
-          <div class="kpi-label">🟢 Sanierung – Spend</div>
+          <div class="kpi-label" data-t="seg-san">🟢 Sanierung – Spend</div>
           <div class="kpi-value loading" id="seg-san-spend">–</div>
-          <div class="kpi-sub-sm" id="seg-san-meta">Meta: –</div>
-          <div class="kpi-sub-sm" id="seg-san-google">Google: –</div>
+          <div class="kpi-sub-sm" id="seg-san-meta"></div>
+          <div class="kpi-sub-sm" id="seg-san-google"></div>
         </div>
         <div class="kpi-card baufi">
-          <div class="kpi-label">🔵 Baufinanzierung – Spend</div>
+          <div class="kpi-label" data-t="seg-baufi">🔵 Baufinanzierung – Spend</div>
           <div class="kpi-value loading" id="seg-baufi-spend">–</div>
-          <div class="kpi-sub-sm" id="seg-baufi-meta">Meta: –</div>
-          <div class="kpi-sub-sm" id="seg-baufi-google">Google: –</div>
+          <div class="kpi-sub-sm" id="seg-baufi-meta"></div>
+          <div class="kpi-sub-sm" id="seg-baufi-google"></div>
         </div>
       </div>
 
       <div class="charts-row">
         <div class="chart-card">
-          <div class="chart-title">Spend <span class="source-badge badge-google">Google</span><span class="source-badge badge-meta">Meta</span></div>
+          <div class="chart-title" id="ct-ov-spend">Spend <span class="source-badge badge-google">Google</span><span class="source-badge badge-meta">Meta</span></div>
           <div class="chart-wrap"><canvas id="chart-ov-spend"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">Conversions <span class="source-badge badge-google">Lead-Sanierung</span><span class="source-badge badge-meta">App-Installs</span></div>
+          <div class="chart-title" id="ct-ov-conv">Conversions <span class="source-badge badge-google">Lead-Sanierung</span><span class="source-badge badge-meta">App-Installs</span></div>
           <div class="chart-wrap"><canvas id="chart-ov-conv"></canvas></div>
         </div>
       </div>
@@ -202,21 +198,20 @@
     <!-- ── GOOGLE ADS ── -->
     <div id="panel-google" class="panel">
       <div class="kpi-grid kpi-grid-7">
-        <div class="kpi-card google"><div class="kpi-label">Spend</div><div class="kpi-value loading" id="g-spend">–</div><div id="g-spend-wow" class="kpi-sub"></div></div>
-        <div class="kpi-card google"><div class="kpi-label">Impressionen</div><div class="kpi-value loading" id="g-impressions">–</div></div>
-        <div class="kpi-card google"><div class="kpi-label">Klicks</div><div class="kpi-value loading" id="g-clicks">–</div><div id="g-clicks-wow" class="kpi-sub"></div></div>
-        <div class="kpi-card google"><div class="kpi-label">Lead-Sanierung</div><div class="kpi-value loading" id="g-conversions">–</div><div id="g-conv-wow" class="kpi-sub"></div></div>
+        <div class="kpi-card google"><div class="kpi-label" data-t="spend">Spend</div><div class="kpi-value loading" id="g-spend">–</div><div id="g-spend-wow" class="kpi-sub"></div></div>
+        <div class="kpi-card google"><div class="kpi-label" data-t="impressions">Impressionen</div><div class="kpi-value loading" id="g-impressions">–</div></div>
+        <div class="kpi-card google"><div class="kpi-label" data-t="clicks">Klicks</div><div class="kpi-value loading" id="g-clicks">–</div><div id="g-clicks-wow" class="kpi-sub"></div></div>
+        <div class="kpi-card google"><div class="kpi-label" data-t="lead-san">Lead-Sanierung</div><div class="kpi-value loading" id="g-conversions">–</div><div id="g-conv-wow" class="kpi-sub"></div></div>
         <div class="kpi-card google"><div class="kpi-label">CPL</div><div class="kpi-value loading" id="g-cpl">–</div></div>
         <div class="kpi-card google"><div class="kpi-label">CTR</div><div class="kpi-value loading" id="g-ctr">–</div></div>
         <div class="kpi-card google"><div class="kpi-label">CPM</div><div class="kpi-value loading" id="g-cpm">–</div></div>
       </div>
-      <!-- Segment-Split Google -->
-      <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px" id="g-segment-row" style="display:none">
-        <div class="kpi-card san"><div class="kpi-label">🟢 Sanierung</div><div class="kpi-value" id="g-seg-san">–</div></div>
-        <div class="kpi-card baufi"><div class="kpi-label">🔵 Baufinanzierung</div><div class="kpi-value" id="g-seg-baufi">–</div></div>
+      <div class="kpi-grid" id="g-segment-row" style="grid-template-columns:1fr 1fr;margin-bottom:16px;display:none">
+        <div class="kpi-card san"><div class="kpi-label" data-t="seg-san-short">🟢 Sanierung</div><div class="kpi-value" id="g-seg-san">–</div></div>
+        <div class="kpi-card baufi"><div class="kpi-label" data-t="seg-baufi-short">🔵 Baufinanzierung</div><div class="kpi-value" id="g-seg-baufi">–</div></div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">Täglicher Spend – <span style="color:var(--google)">Google Ads</span></div>
+        <div class="chart-title" id="ct-g-spend">Täglicher Spend – <span style="color:var(--google)">Google Ads</span></div>
         <div class="chart-wrap"><canvas id="chart-g-spend"></canvas></div>
       </div>
       <div id="google-campaigns-wrap"></div>
@@ -225,27 +220,26 @@
     <!-- ── META ADS ── -->
     <div id="panel-meta" class="panel">
       <div class="kpi-grid kpi-grid-8">
-        <div class="kpi-card meta"><div class="kpi-label">Spend</div><div class="kpi-value loading" id="m-spend">–</div><div id="m-spend-wow" class="kpi-sub"></div></div>
-        <div class="kpi-card meta"><div class="kpi-label">Impressionen</div><div class="kpi-value loading" id="m-impressions">–</div></div>
-        <div class="kpi-card meta"><div class="kpi-label">Reach</div><div class="kpi-value loading" id="m-reach">–</div></div>
-        <div class="kpi-card meta"><div class="kpi-label">Frequency</div><div class="kpi-value loading" id="m-frequency">–</div></div>
-        <div class="kpi-card meta"><div class="kpi-label">App-Installs</div><div class="kpi-value loading" id="m-installs">–</div><div id="m-installs-wow" class="kpi-sub"></div></div>
+        <div class="kpi-card meta"><div class="kpi-label" data-t="spend">Spend</div><div class="kpi-value loading" id="m-spend">–</div><div id="m-spend-wow" class="kpi-sub"></div></div>
+        <div class="kpi-card meta"><div class="kpi-label" data-t="impressions">Impressionen</div><div class="kpi-value loading" id="m-impressions">–</div></div>
+        <div class="kpi-card meta"><div class="kpi-label" data-t="reach">Reach</div><div class="kpi-value loading" id="m-reach">–</div></div>
+        <div class="kpi-card meta"><div class="kpi-label" data-t="frequency">Frequency</div><div class="kpi-value loading" id="m-frequency">–</div></div>
+        <div class="kpi-card meta"><div class="kpi-label" data-t="app-installs">App-Installs</div><div class="kpi-value loading" id="m-installs">–</div><div id="m-installs-wow" class="kpi-sub"></div></div>
         <div class="kpi-card meta"><div class="kpi-label">CPI</div><div class="kpi-value loading" id="m-cpi">–</div></div>
-        <div class="kpi-card meta"><div class="kpi-label">Install Rate</div><div class="kpi-value loading" id="m-installrate">–</div></div>
+        <div class="kpi-card meta"><div class="kpi-label" data-t="install-rate">Install Rate</div><div class="kpi-value loading" id="m-installrate">–</div></div>
         <div class="kpi-card meta"><div class="kpi-label">CPM</div><div class="kpi-value loading" id="m-cpm">–</div><div id="m-cpm-wow" class="kpi-sub"></div></div>
       </div>
-      <!-- Segment-Split Meta -->
-      <div class="kpi-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px" id="m-segment-row" style="display:none">
-        <div class="kpi-card san"><div class="kpi-label">🟢 Sanierung</div><div class="kpi-value" id="m-seg-san">–</div></div>
-        <div class="kpi-card baufi"><div class="kpi-label">🔵 Baufinanzierung</div><div class="kpi-value" id="m-seg-baufi">–</div></div>
+      <div class="kpi-grid" id="m-segment-row" style="grid-template-columns:1fr 1fr;margin-bottom:16px;display:none">
+        <div class="kpi-card san"><div class="kpi-label" data-t="seg-san-short">🟢 Sanierung</div><div class="kpi-value" id="m-seg-san">–</div></div>
+        <div class="kpi-card baufi"><div class="kpi-label" data-t="seg-baufi-short">🔵 Baufinanzierung</div><div class="kpi-value" id="m-seg-baufi">–</div></div>
       </div>
       <div class="charts-row">
         <div class="chart-card">
-          <div class="chart-title">Täglicher Spend – <span style="color:var(--meta)">Meta Ads</span></div>
+          <div class="chart-title" id="ct-m-spend">Täglicher Spend – <span style="color:var(--meta)">Meta Ads</span></div>
           <div class="chart-wrap"><canvas id="chart-m-spend"></canvas></div>
         </div>
         <div class="chart-card">
-          <div class="chart-title">CPM Verlauf</div>
+          <div class="chart-title" id="ct-m-cpm">CPM Verlauf</div>
           <div class="chart-wrap"><canvas id="chart-m-cpm"></canvas></div>
         </div>
       </div>
@@ -260,9 +254,179 @@ const PW = 'Ueberseehub';
 const GOOGLE_COLOR = '#34a853';
 const META_COLOR   = '#0866ff';
 
-let gData = null, mData = null, mCampData = null;
+// ── Übersetzungen ─────────────────────────────────────────────────────────────
+const T = {
+  de: {
+    'login-subtitle': 'KPI Dashboard – nur für interne Nutzung',
+    'login-btn':      'Anmelden',
+    'login-pw':       'Passwort',
+    'login-error':    'Falsches Passwort',
+    'from':           'Von',
+    'to':             'Bis',
+    'apply':          'Anwenden',
+    '7d': '7T', '30d': '30T', '90d': '90T', '180d': '180T',
+    'tab-overview':   'Gesamt',
+    'tab-google':     'Google Ads',
+    'tab-meta':       'Meta Ads',
+    'total-spend':    'Spend gesamt',
+    'spend':          'Spend',
+    'impressions':    'Impressionen',
+    'clicks':         'Klicks',
+    'app-installs':   'App-Installs',
+    'lead-san':       'Lead-Sanierung',
+    'cpi-meta':       'CPI (Meta)',
+    'cpl-google':     'CPL (Google)',
+    'daily-budget':   'Tagesbudget',
+    'reach':          'Reichweite',
+    'frequency':      'Frequenz',
+    'install-rate':   'Install Rate',
+    'seg-san':        '🟢 Sanierung – Spend',
+    'seg-baufi':      '🔵 Baufinanzierung – Spend',
+    'seg-san-short':  '🟢 Sanierung',
+    'seg-baufi-short':'🔵 Baufinanzierung',
+    'ct-g-spend':     'Täglicher Spend',
+    'ct-m-spend':     'Täglicher Spend',
+    'ct-m-cpm':       'CPM Verlauf',
+    'spent':          'ausgegeben',
+    'per-month':      '/ Monat (est.)',
+    'per-day':        '/ Tag',
+    'campaigns-loading': 'Kampagnen werden geladen...',
+    'campaigns-error':   'Fehler beim Laden der Kampagnen',
+    'no-campaigns':      'Keine Kampagnendaten',
+    'campaigns-count':   'Kampagnen',
+    'campaigns-period':  'Kampagnen im Zeitraum',
+    'active':   'Aktiv',
+    'paused':   'Pausiert',
+    'no-image': 'Kein Bild',
+    'installs-label': 'Installs',
+    'leads-label':    'Leads',
+    'imp':  'Imp.',
+    'top3': '🏆 Top 3 Ads',
+    'worst3': '⚠️ Schwächste Ads',
+    'by-ctr': '(CTR)',
+    'google-label': 'Google (€)',
+    'meta-label':   'Meta (€)',
+    'lead-san-label':  'Lead-Sanierung',
+    'installs-chart':  'App-Installs',
+    'wow-suffix': '% WoW',
+    'meta-sub':   'Meta',
+    'google-sub': 'Google',
+  },
+  en: {
+    'login-subtitle': 'KPI Dashboard – internal use only',
+    'login-btn':      'Sign in',
+    'login-pw':       'Password',
+    'login-error':    'Wrong password',
+    'from':           'From',
+    'to':             'To',
+    'apply':          'Apply',
+    '7d': '7D', '30d': '30D', '90d': '90D', '180d': '180D',
+    'tab-overview':   'Overview',
+    'tab-google':     'Google Ads',
+    'tab-meta':       'Meta Ads',
+    'total-spend':    'Total Spend',
+    'spend':          'Spend',
+    'impressions':    'Impressions',
+    'clicks':         'Clicks',
+    'app-installs':   'App Installs',
+    'lead-san':       'Lead-Renovation',
+    'cpi-meta':       'CPI (Meta)',
+    'cpl-google':     'CPL (Google)',
+    'daily-budget':   'Daily Budget',
+    'reach':          'Reach',
+    'frequency':      'Frequency',
+    'install-rate':   'Install Rate',
+    'seg-san':        '🟢 Renovation – Spend',
+    'seg-baufi':      '🔵 Mortgage – Spend',
+    'seg-san-short':  '🟢 Renovation',
+    'seg-baufi-short':'🔵 Mortgage',
+    'ct-g-spend':     'Daily Spend',
+    'ct-m-spend':     'Daily Spend',
+    'ct-m-cpm':       'CPM Trend',
+    'spent':          'spent',
+    'per-month':      '/ month (est.)',
+    'per-day':        '/ day',
+    'campaigns-loading': 'Loading campaigns...',
+    'campaigns-error':   'Error loading campaigns',
+    'no-campaigns':      'No campaign data',
+    'campaigns-count':   'Campaigns',
+    'campaigns-period':  'Campaigns in period',
+    'active':   'Active',
+    'paused':   'Paused',
+    'no-image': 'No image',
+    'installs-label': 'Installs',
+    'leads-label':    'Leads',
+    'imp':  'Imp.',
+    'top3': '🏆 Top 3 Ads',
+    'worst3': '⚠️ Weakest Ads',
+    'by-ctr': '(CTR)',
+    'google-label': 'Google (€)',
+    'meta-label':   'Meta (€)',
+    'lead-san-label':  'Lead-Renovation',
+    'installs-chart':  'App Installs',
+    'wow-suffix': '% WoW',
+    'meta-sub':   'Meta',
+    'google-sub': 'Google',
+  }
+};
 
-// Sanierung-Erkennung: nur Kampagnen mit "sanierung" im Namen
+let lang = sessionStorage.getItem('effi_lang') || 'de';
+
+function t(key) { return T[lang][key] || T['de'][key] || key; }
+
+function setLang(l) {
+  lang = l;
+  sessionStorage.setItem('effi_lang', l);
+  document.getElementById('lang-de').classList.toggle('active', l==='de');
+  document.getElementById('lang-en').classList.toggle('active', l==='en');
+  applyTranslations();
+  // Charts neu bauen mit richtigen Labels
+  if (gData) renderGoogle(gData);
+  if (mData) renderMeta(mData);
+  renderOverview();
+  renderGoogleCampaigns();
+}
+
+function applyTranslations() {
+  // data-t Elemente
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.getAttribute('data-t');
+    el.textContent = t(key);
+  });
+  // Spezielle Elemente
+  document.getElementById('login-subtitle').textContent = t('login-subtitle');
+  document.getElementById('login-btn').textContent      = t('login-btn');
+  document.getElementById('pw-input').placeholder       = t('login-pw');
+  document.getElementById('login-error').textContent    = t('login-error');
+
+  // Chart-Titel mit Badges
+  document.getElementById('ct-g-spend').innerHTML =
+    t('ct-g-spend') + ' – <span style="color:var(--google)">Google Ads</span>';
+  document.getElementById('ct-m-spend').innerHTML =
+    t('ct-m-spend') + ' – <span style="color:var(--meta)">Meta Ads</span>';
+  document.getElementById('ct-m-cpm').textContent = t('ct-m-cpm');
+  document.getElementById('ct-ov-spend').innerHTML =
+    t('spend') + ' <span class="source-badge badge-google">Google</span><span class="source-badge badge-meta">Meta</span>';
+  document.getElementById('ct-ov-conv').innerHTML =
+    'Conversions <span class="source-badge badge-google">' + t('lead-san-label') +
+    '</span><span class="source-badge badge-meta">' + t('installs-chart') + '</span>';
+
+  // Segment-Subzeilen aktualisieren
+  updateSegmentSubs();
+}
+
+function updateSegmentSubs() {
+  const mSegs = calcSegments(mCampData?.campaigns);
+  const gSegs = calcSegments(gData?.campaigns);
+  const setText = (id,txt) => { const el=document.getElementById(id); if(el) el.textContent=txt; };
+  setText('seg-san-meta',    t('meta-sub')   + ': ' + fmt(Math.round(mSegs.san.spend*100)/100,   'currency'));
+  setText('seg-san-google',  t('google-sub') + ': ' + fmt(Math.round(gSegs.san.spend*100)/100,   'currency'));
+  setText('seg-baufi-meta',  t('meta-sub')   + ': ' + fmt(Math.round(mSegs.baufi.spend*100)/100, 'currency'));
+  setText('seg-baufi-google',t('google-sub') + ': ' + fmt(Math.round(gSegs.baufi.spend*100)/100, 'currency'));
+}
+
+// ── App-Init ──────────────────────────────────────────────────────────────────
+let gData = null, mData = null, mCampData = null;
 const isSanierung = name => name.toLowerCase().includes('sanierung');
 
 function checkLogin() {
@@ -279,6 +443,10 @@ if (sessionStorage.getItem('effi_auth')==='1') {
   document.getElementById('app').style.display='block';
   initDates(); loadAll();
 }
+
+// Init language
+applyTranslations();
+if (lang==='en') { document.getElementById('lang-de').classList.remove('active'); document.getElementById('lang-en').classList.add('active'); }
 
 function initDates() {
   const to=new Date(); to.setDate(to.getDate()-1);
@@ -308,16 +476,14 @@ function setKPI(id,val,type) {
   const el=document.getElementById(id); if(!el) return;
   el.classList.remove('loading'); el.textContent=fmt(val,type);
 }
-function setText(id,txt) {
-  const el=document.getElementById(id); if(el) el.textContent=txt;
-}
+function setText(id,txt) { const el=document.getElementById(id); if(el) el.textContent=txt; }
 function wowBadge(id,pct) {
   const el=document.getElementById(id); if(!el||pct===null||pct===undefined) return;
-  el.innerHTML=`<span class="wow-badge ${pct>0?'wow-up':'wow-down'}">${pct>0?'▲':'▼'} ${Math.abs(pct)}% WoW</span>`;
+  el.innerHTML=`<span class="wow-badge ${pct>0?'wow-up':'wow-down'}">${pct>0?'▲':'▼'} ${Math.abs(pct)}${t('wow-suffix')}</span>`;
 }
 
 function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['overview','google','meta'][i]===name));
+  document.querySelectorAll('.tab').forEach((tb,i)=>tb.classList.toggle('active',['overview','google','meta'][i]===name));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
   if (name==='meta')   loadCampaigns();
@@ -341,51 +507,36 @@ function buildLineChart(id,labels,datasets) {
       scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:12}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}}}});
 }
 
-// ── Segment-Spend berechnen aus Kampagnenliste ────────────────────────────────
+// ── Segment-Logik ─────────────────────────────────────────────────────────────
 function calcSegments(campaigns) {
-  const san   = { spend: 0, google: 0, meta: 0 };
-  const baufi = { spend: 0, google: 0, meta: 0 };
-  (campaigns || []).forEach(c => {
-    const s = isSanierung(c.name) ? san : baufi;
-    s.spend += c.spend || 0;
-  });
-  return { san, baufi };
+  const san={spend:0}, baufi={spend:0};
+  (campaigns||[]).forEach(c=>{ (isSanierung(c.name)?san:baufi).spend += c.spend||0; });
+  return {san, baufi};
 }
 
-// ── Segment-Karten rendern ────────────────────────────────────────────────────
 function renderSegmentCards(metaCamps, googleCamps) {
-  const mSegs = calcSegments(metaCamps);
-  const gSegs = calcSegments(googleCamps);
+  const mS=calcSegments(metaCamps), gS=calcSegments(googleCamps);
+  const sanTotal=mS.san.spend+gS.san.spend, baufiTotal=mS.baufi.spend+gS.baufi.spend;
+  const show = (id,display) => { const el=document.getElementById(id); if(el) el.style.display=display; };
 
-  const sanTotal   = mSegs.san.spend   + gSegs.san.spend;
-  const baufiTotal = mSegs.baufi.spend + gSegs.baufi.spend;
-
-  // Gesamt-Tab
-  const row = document.getElementById('segment-row');
-  if (row && (sanTotal > 0 || baufiTotal > 0)) {
-    row.style.display = 'grid';
+  if (sanTotal>0||baufiTotal>0) {
+    show('segment-row','grid');
     setKPI('seg-san-spend',   Math.round(sanTotal*100)/100,   'currency');
     setKPI('seg-baufi-spend', Math.round(baufiTotal*100)/100, 'currency');
-    setText('seg-san-meta',    'Meta: '   + fmt(Math.round(mSegs.san.spend*100)/100,   'currency'));
-    setText('seg-san-google',  'Google: ' + fmt(Math.round(gSegs.san.spend*100)/100,   'currency'));
-    setText('seg-baufi-meta',  'Meta: '   + fmt(Math.round(mSegs.baufi.spend*100)/100, 'currency'));
-    setText('seg-baufi-google','Google: ' + fmt(Math.round(gSegs.baufi.spend*100)/100, 'currency'));
+    setText('seg-san-meta',    t('meta-sub')   +': '+ fmt(Math.round(mS.san.spend*100)/100,   'currency'));
+    setText('seg-san-google',  t('google-sub') +': '+ fmt(Math.round(gS.san.spend*100)/100,   'currency'));
+    setText('seg-baufi-meta',  t('meta-sub')   +': '+ fmt(Math.round(mS.baufi.spend*100)/100, 'currency'));
+    setText('seg-baufi-google',t('google-sub') +': '+ fmt(Math.round(gS.baufi.spend*100)/100, 'currency'));
   }
-
-  // Google-Tab
-  const gRow = document.getElementById('g-segment-row');
-  if (gRow && (gSegs.san.spend > 0 || gSegs.baufi.spend > 0)) {
-    gRow.style.display = 'grid';
-    setKPI('g-seg-san',   Math.round(gSegs.san.spend*100)/100,   'currency');
-    setKPI('g-seg-baufi', Math.round(gSegs.baufi.spend*100)/100, 'currency');
+  if (gS.san.spend>0||gS.baufi.spend>0) {
+    show('g-segment-row','grid');
+    setKPI('g-seg-san',   Math.round(gS.san.spend*100)/100,   'currency');
+    setKPI('g-seg-baufi', Math.round(gS.baufi.spend*100)/100, 'currency');
   }
-
-  // Meta-Tab
-  const mRow = document.getElementById('m-segment-row');
-  if (mRow && (mSegs.san.spend > 0 || mSegs.baufi.spend > 0)) {
-    mRow.style.display = 'grid';
-    setKPI('m-seg-san',   Math.round(mSegs.san.spend*100)/100,   'currency');
-    setKPI('m-seg-baufi', Math.round(mSegs.baufi.spend*100)/100, 'currency');
+  if (mS.san.spend>0||mS.baufi.spend>0) {
+    show('m-segment-row','grid');
+    setKPI('m-seg-san',   Math.round(mS.san.spend*100)/100,   'currency');
+    setKPI('m-seg-baufi', Math.round(mS.baufi.spend*100)/100, 'currency');
   }
 }
 
@@ -426,21 +577,21 @@ function renderOverview() {
   wowBadge('ov-installs-wow',mData?.wow?.installs);
   wowBadge('ov-leads-wow',gData?.wow?.conversions);
 
-  const gDaily=gData?.activeDailyBudget||0, mDaily=mCampData?.activeDailyBudget||0;
-  const totalDaily=gDaily+mDaily, totalMonthly=totalDaily*30;
+  const gDailyB=gData?.activeDailyBudget||0, mDailyB=mCampData?.activeDailyBudget||0;
+  const totalDaily=gDailyB+mDailyB, totalMonthly=totalDaily*30;
   const budgetEl=document.getElementById('ov-daily-budget');
-  if(budgetEl){budgetEl.classList.remove('loading');budgetEl.textContent=fmt(totalDaily,'currency')+' / Tag';}
+  if(budgetEl){budgetEl.classList.remove('loading');budgetEl.textContent=fmt(totalDaily,'currency')+' '+t('per-day');}
   if(totalMonthly>0){
     const totalSpend=(gs.spend||0)+(ms.spend||0);
     const pct=Math.min(Math.round(totalSpend/totalMonthly*100),100);
     const pw=document.getElementById('pace-wrap');
     if(pw){
       pw.style.display='block';
-      document.getElementById('pace-spent').textContent=fmt(totalSpend,'currency')+' ausgegeben';
+      document.getElementById('pace-spent').textContent=fmt(totalSpend,'currency')+' '+t('spent');
       document.getElementById('pace-pct').textContent=pct+'%';
       const bar=document.getElementById('pace-bar');
       bar.style.width=pct+'%'; bar.style.background=pct>90?'#ef4444':pct>70?'#f59e0b':'#34a853';
-      document.getElementById('pace-monthly').textContent=fmt(totalMonthly,'currency')+' / Monat (est.)';
+      document.getElementById('pace-monthly').textContent=fmt(totalMonthly,'currency')+' '+t('per-month');
     }
   }
 
@@ -452,12 +603,12 @@ function renderOverview() {
   const mcMap=Object.fromEntries(mD.map(d=>[d.date,d.installs||0]));
   const labels=allDates.map(d=>d.slice(5));
   buildChart('chart-ov-spend',labels,[
-    {label:'Google (€)',data:allDates.map(d=>gMap[d]||0),backgroundColor:GOOGLE_COLOR,borderRadius:3},
-    {label:'Meta (€)',  data:allDates.map(d=>mMap[d]||0),backgroundColor:META_COLOR,  borderRadius:3},
+    {label:t('google-label'),data:allDates.map(d=>gMap[d]||0),backgroundColor:GOOGLE_COLOR,borderRadius:3},
+    {label:t('meta-label'),  data:allDates.map(d=>mMap[d]||0),backgroundColor:META_COLOR,  borderRadius:3},
   ]);
   buildChart('chart-ov-conv',labels,[
-    {label:'Lead-Sanierung',data:allDates.map(d=>gcMap[d]||0),backgroundColor:GOOGLE_COLOR,borderRadius:3},
-    {label:'App-Installs',  data:allDates.map(d=>mcMap[d]||0),backgroundColor:META_COLOR,  borderRadius:3},
+    {label:t('lead-san-label'), data:allDates.map(d=>gcMap[d]||0),backgroundColor:GOOGLE_COLOR,borderRadius:3},
+    {label:t('installs-chart'), data:allDates.map(d=>mcMap[d]||0),backgroundColor:META_COLOR,  borderRadius:3},
   ]);
 }
 
@@ -466,7 +617,7 @@ function renderTopAds(campaigns) {
   const wrap=document.getElementById('top-ads-wrap'); if(!wrap) return;
   const allAds=[];
   (campaigns||[]).forEach(c=>(c.adsets||[]).forEach(a=>(a.ads||[]).forEach(ad=>{
-    if(ad.impressions>100) allAds.push({...ad,campName:c.name});
+    if(ad.impressions>100) allAds.push({...ad});
   })));
   if(!allAds.length){wrap.innerHTML='';return;}
   const byCTR=[...allAds].sort((a,b)=>b.ctr-a.ctr);
@@ -479,44 +630,40 @@ function renderTopAds(campaigns) {
     </div>`;
   wrap.innerHTML=`
     <div class="top-ads-card">
-      <h4>🏆 Top 3 Ads <span style="font-weight:400;color:#9ca3af">(CTR)</span></h4>
+      <h4>${t('top3')} <span style="font-weight:400;color:#9ca3af">${t('by-ctr')}</span></h4>
       ${top3.map(ad=>adRow(ad,`${ad.ctr.toFixed(2)}% CTR · ${eur(ad.spend)} Spend`)).join('')}
     </div>
     <div class="top-ads-card">
-      <h4>⚠️ Schwächste Ads <span style="font-weight:400;color:#9ca3af">(CTR)</span></h4>
-      ${worst3.map(ad=>adRow(ad,`${ad.ctr.toFixed(2)}% CTR · ${ad.impressions.toLocaleString('de-DE')} Imp.`)).join('')}
+      <h4>${t('worst3')} <span style="font-weight:400;color:#9ca3af">${t('by-ctr')}</span></h4>
+      ${worst3.map(ad=>adRow(ad,`${ad.ctr.toFixed(2)}% CTR · ${ad.impressions.toLocaleString('de-DE')} ${t('imp')}`)).join('')}
     </div>`;
 }
 
 // ── Google Kampagnen ──────────────────────────────────────────────────────────
 function renderGoogleCampaigns() {
   const wrap=document.getElementById('google-campaigns-wrap'); if(!wrap) return;
-  if(!gData?.campaigns?.length){wrap.innerHTML='<div style="font-size:13px;color:#6b7280;padding:12px 0">Keine Kampagnendaten</div>';return;}
+  if(!gData?.campaigns?.length){wrap.innerHTML=`<div style="font-size:13px;color:#6b7280;padding:12px 0">${t('no-campaigns')}</div>`;return;}
   const eur=n=>'€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
   const sColor=s=>s==='ENABLED'?'#16a34a':s==='PAUSED'?'#d97706':'#9ca3af';
-  const sLabel=s=>s==='ENABLED'?'Aktiv':s==='PAUSED'?'Pausiert':s;
+  const sLabel=s=>s==='ENABLED'?t('active'):s==='PAUSED'?t('paused'):s;
   wrap.innerHTML=`
-    <div style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:8px">${gData.campaigns.length} Kampagnen</div>
+    <div style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:8px">${gData.campaigns.length} ${t('campaigns-count')}</div>
     ${gData.campaigns.map(c=>{
-      const seg = isSanierung(c.name) ? 'san' : 'baufi';
-      const segLabel = seg==='san' ? 'Sanierung' : 'Baufinanzierung';
-      return `
-      <div class="camp-row google">
-        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px">
+      const seg=isSanierung(c.name)?'san':'baufi';
+      return `<div class="camp-row google">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;flex-wrap:wrap">
           <span style="width:8px;height:8px;border-radius:50%;background:${sColor(c.status)};flex-shrink:0"></span>
           <span style="font-size:13px;font-weight:500;flex:1;color:#1a1a2e">${c.name}</span>
-          <span class="seg-pill seg-${seg}">${segLabel}</span>
+          <span class="seg-pill seg-${seg}">${seg==='san'?t('seg-san-short'):t('seg-baufi-short')}</span>
           <span style="font-size:11px;color:${sColor(c.status)};font-weight:500">${sLabel(c.status)}</span>
           <span style="font-size:13px;font-weight:600;color:#1a1a2e">${eur(c.spend)}</span>
-          <span style="font-size:12px;color:#9ca3af">${c.impressions.toLocaleString('de-DE')} Imp.</span>
+          <span style="font-size:12px;color:#9ca3af">${c.impressions.toLocaleString('de-DE')} ${t('imp')}</span>
           <span style="font-size:12px;color:#9ca3af">${c.ctr.toFixed(2)}% CTR</span>
           <span style="font-size:12px;color:#9ca3af">€${c.cpm.toFixed(2)} CPM</span>
-          ${c.conversions>0?`<span style="font-size:12px;color:var(--google);font-weight:500">${c.conversions} Leads</span>`:''}
+          ${c.conversions>0?`<span style="font-size:12px;color:var(--google);font-weight:500">${c.conversions} ${t('leads-label')}</span>`:''}
         </div>
       </div>`;
     }).join('')}`;
-
-  // Segment-Split Google aktualisieren
   renderSegmentCards(mCampData?.campaigns||[], gData.campaigns);
 }
 
@@ -525,34 +672,32 @@ async function loadCampaigns() {
   const from=document.getElementById('date-from').value;
   const to  =document.getElementById('date-to').value;
   const wrap=document.getElementById('campaigns-wrap');
-  wrap.innerHTML='<div style="font-size:13px;color:#6b7280;padding:12px 0">Kampagnen werden geladen...</div>';
+  wrap.innerHTML=`<div style="font-size:13px;color:#6b7280;padding:12px 0">${t('campaigns-loading')}</div>`;
   const res=await fetch(`/api/meta-campaigns?from=${from}&to=${to}`).then(r=>r.json());
-  if(res.error){wrap.innerHTML=`<div style="color:#ef4444;font-size:13px">Fehler: ${res.error}</div>`;return;}
+  if(res.error){wrap.innerHTML=`<div style="color:#ef4444;font-size:13px">${t('campaigns-error')}: ${res.error}</div>`;return;}
   mCampData=res;
   renderOverview();
   renderTopAds(res.campaigns);
   renderSegmentCards(res.campaigns, gData?.campaigns||[]);
 
   const sColor=s=>s==='ACTIVE'?'#16a34a':s==='PAUSED'?'#d97706':'#9ca3af';
-  const sLabel=s=>s==='ACTIVE'?'Aktiv':s==='PAUSED'?'Pausiert':s;
+  const sLabel=s=>s==='ACTIVE'?t('active'):s==='PAUSED'?t('paused'):s;
   const eur=n=>'€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
 
   wrap.innerHTML=`
-    <div style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:8px">${res.campaigns.length} Kampagnen im Zeitraum</div>
+    <div style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:8px">${res.campaigns.length} ${t('campaigns-period')}</div>
     ${res.campaigns.map(c=>{
-      const seg = isSanierung(c.name) ? 'san' : 'baufi';
-      const segLabel = seg==='san' ? 'Sanierung' : 'Baufinanzierung';
-      return `
-      <div class="camp-row meta">
-        <div onclick="toggleCamp('${c.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none">
+      const seg=isSanierung(c.name)?'san':'baufi';
+      return `<div class="camp-row meta">
+        <div onclick="toggleCamp('${c.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;flex-wrap:wrap">
           <span style="width:8px;height:8px;border-radius:50%;background:${sColor(c.status)};flex-shrink:0"></span>
           <span style="font-size:13px;font-weight:500;flex:1;color:#1a1a2e">${c.name}</span>
-          <span class="seg-pill seg-${seg}">${segLabel}</span>
+          <span class="seg-pill seg-${seg}">${seg==='san'?t('seg-san-short'):t('seg-baufi-short')}</span>
           <span style="font-size:11px;color:${sColor(c.status)};font-weight:500">${sLabel(c.status)}</span>
           <span style="font-size:13px;font-weight:600;color:#1a1a2e">${eur(c.spend)}</span>
-          <span style="font-size:12px;color:#9ca3af">${c.impressions.toLocaleString('de-DE')} Imp.</span>
+          <span style="font-size:12px;color:#9ca3af">${c.impressions.toLocaleString('de-DE')} ${t('imp')}</span>
           <span style="font-size:12px;color:#9ca3af">${c.ctr.toFixed(2)}% CTR</span>
-          ${c.conversions>0?`<span style="font-size:12px;color:var(--meta);font-weight:500">${c.conversions} Installs</span>`:''}
+          ${c.conversions>0?`<span style="font-size:12px;color:var(--meta);font-weight:500">${c.conversions} ${t('installs-label')}</span>`:''}
           <span id="arr-${c.id}" style="font-size:16px;color:#9ca3af;transition:transform .2s">▸</span>
         </div>
         <div id="camp-${c.id}" style="display:none;border-top:1px solid #f3f4f6;padding:0 16px 14px">
@@ -562,7 +707,7 @@ async function loadCampaigns() {
                 <span style="width:6px;height:6px;border-radius:50%;background:${sColor(a.status)};flex-shrink:0"></span>
                 <span style="font-size:12px;font-weight:500;flex:1;color:#374151">${a.name}</span>
                 <span style="font-size:12px;color:#6b7280">${eur(a.spend)}</span>
-                <span style="font-size:12px;color:#9ca3af">${a.impressions.toLocaleString('de-DE')} Imp.</span>
+                <span style="font-size:12px;color:#9ca3af">${a.impressions.toLocaleString('de-DE')} ${t('imp')}</span>
                 <span style="font-size:12px;color:#9ca3af">${a.ctr.toFixed(2)}% CTR</span>
                 <span id="arr-${a.id}" style="font-size:13px;color:#9ca3af;transition:transform .2s">▸</span>
               </div>
@@ -571,12 +716,12 @@ async function loadCampaigns() {
                   ${a.ads.map(ad=>`
                     <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;background:#fafafa">
                       <div class="ad-thumb-wrap">
-                        ${ad.thumbnail?`<img src="${ad.thumbnail}" onerror="this.parentElement.innerHTML='<span style=\\'font-size:11px;color:#9ca3af\\'>Kein Bild</span>'">`:`<span style="font-size:11px;color:#9ca3af">Kein Bild</span>`}
+                        ${ad.thumbnail?`<img src="${ad.thumbnail}" onerror="this.parentElement.innerHTML='<span style=\\'font-size:11px;color:#9ca3af\\'>${t('no-image')}</span>'">`:`<span style="font-size:11px;color:#9ca3af">${t('no-image')}</span>`}
                       </div>
                       <div style="padding:8px">
                         <div style="font-size:11px;font-weight:500;color:#374151;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ad.name}</div>
                         <div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280"><span>${eur(ad.spend)}</span><span>${ad.ctr.toFixed(2)}% CTR</span></div>
-                        <div style="font-size:11px;color:#9ca3af;margin-top:2px">${ad.impressions.toLocaleString('de-DE')} Imp.</div>
+                        <div style="font-size:11px;color:#9ca3af;margin-top:2px">${ad.impressions.toLocaleString('de-DE')} ${t('imp')}</div>
                         <div style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:10px;background:${ad.status==='ACTIVE'?'#dcfce7':'#f3f4f6'};color:${ad.status==='ACTIVE'?'#16a34a':'#6b7280'};margin-top:4px">${sLabel(ad.status)}</div>
                       </div>
                     </div>`).join('')}
