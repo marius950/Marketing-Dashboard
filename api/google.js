@@ -25,7 +25,7 @@ async function getAccessToken() {
     }),
   });
   const d = await r.json();
-  if (!d.access_token) throw new Error('Google token refresh failed: ' + JSON.stringify(d));
+  if (!d.access_token) throw new Error('Token refresh failed: ' + JSON.stringify(d));
   return d.access_token;
 }
 
@@ -46,12 +46,14 @@ export default async function handler(req, res) {
   try {
     const accessToken = await getAccessToken();
     const customerId  = process.env.GOOGLE_ADS_CUSTOMER_ID?.replace(/-/g, '');
-    const devToken    = process.env.GOOGLE_DEVELOPER_TOKEN;
+    const loginId     = process.env.GOOGLE_LOGIN_CUSTOMER_ID?.replace(/-/g, '');
 
     const headers = {
-      Authorization:     `Bearer ${accessToken}`,
-      'developer-token': devToken,
-      'Content-Type':    'application/json',
+      'Authorization':       `Bearer ${accessToken}`,
+      'developer-token':     process.env.GOOGLE_DEVELOPER_TOKEN,
+      'Content-Type':        'application/json',
+      // Login Customer ID für Manager Account Zugriff
+      ...(loginId && { 'login-customer-id': loginId }),
     };
 
     // ── 1. Summary + Daily (1 API-Call) ──────────────────────────────────
@@ -72,7 +74,11 @@ export default async function handler(req, res) {
       `https://googleads.googleapis.com/v19/customers/${customerId}/googleAds:search`,
       { method: 'POST', headers, body: JSON.stringify({ query: summaryQuery }) }
     );
-    const summaryData = await summaryRes.json();
+    const summaryText = await summaryRes.text();
+    let summaryData;
+    try { summaryData = JSON.parse(summaryText); }
+    catch(e) { return res.status(500).json({ error: 'Invalid JSON from Google', raw: summaryText.slice(0, 300) }); }
+
     if (!summaryRes.ok) return res.status(500).json({ error: summaryData });
 
     const rows = summaryData.results || [];
@@ -121,9 +127,9 @@ export default async function handler(req, res) {
       `https://googleads.googleapis.com/v19/customers/${customerId}/googleAds:search`,
       { method: 'POST', headers, body: JSON.stringify({ query: campQuery }) }
     );
-    const campData = await campRes.json();
+    const campData = campRes.ok ? await campRes.json() : { results: [] };
 
-    const campaigns = campRes.ok ? (campData.results || []).map(r => ({
+    const campaigns = (campData.results || []).map(r => ({
       id:          r.campaign.id,
       name:        r.campaign.name,
       status:      r.campaign.status,
@@ -132,7 +138,7 @@ export default async function handler(req, res) {
       clicks:      parseInt(r.metrics.clicks || 0),
       conversions: parseFloat(r.metrics.conversions || 0),
       ctr:         Math.round(parseFloat(r.metrics.ctr || 0) * 10000) / 100,
-    })) : [];
+    }));
 
     const result = {
       summary: {
