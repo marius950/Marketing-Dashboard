@@ -1,164 +1,170 @@
-// In-Memory Cache – 30 Minuten TTL
-const cache = new Map();
-const CACHE_TTL = 30 * 60 * 1000;
-
-function getCacheKey(from, to) { return `campaigns_${from}_${to}`; }
-
-function getFromCache(key) {
-  const entry = cache.get(key);
-  if (!entry) return null;
-  if (Date.now() - entry.timestamp > CACHE_TTL) { cache.delete(key); return null; }
-  return entry.data;
+// ── Thumbnail Proxy ───────────────────────────────────────────────────────────
+// Meta fbcdn URLs haben Hotlink-Schutz → Server muss das Bild serverseitig holen
+async function handleProxy(req, res) {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: 'Missing url' });
+  try {
+    const decoded = decodeURIComponent(url);
+    const response = await fetch(decoded, {
+      headers: {
+        // Referer auf facebook.com setzen – das ist was Meta erwartet
+        'Referer': 'https://www.facebook.com/',
+        'User-Agent': 'Mozilla/5.0 (compatible; effi-dashboard/1.0)',
+      }
+    });
+    if (!response.ok) {
+      return res.status(response.status).json({ error: `Upstream ${response.status}` });
+    }
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    const buffer = await response.arrayBuffer();
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.send(Buffer.from(buffer));
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
 }
 
-function setCache(key, data) { cache.set(key, { data, timestamp: Date.now() }); }
+// ── In-Memory Cache ───────────────────────────────────────────────────────────
+let cache = null;
+let cacheTime = 0;
+const CACHE_TTL = 30 * 60 * 1000; // 30 Minuten
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
+  // Proxy-Route zuerst prüfen
+  if (req.query.proxy === '1') return handleProxy(req, res);
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { from, to, refresh } = req.query;
-  const token     = process.env.META_ACCESS_TOKEN;
-  const accountId = process.env.META_AD_ACCOUNT_ID;
+  const { from, to } = req.query;
+  if (!from || !to) return res.status(400).json({ error: 'Missing from/to' });
 
-  if (!from || !to) return res.status(400).json({ error: 'from and to required' });
-
-  const cacheKey = getCacheKey(from, to);
-  if (refresh !== '1') {
-    const cached = getFromCache(cacheKey);
-    if (cached) { res.setHeader('X-Cache', 'HIT'); return res.status(200).json(cached); }
+  const now = Date.now();
+  const cacheKey = `${from}_${to}`;
+  if (cache && cache.key === cacheKey && (now - cacheTime) < CACHE_TTL) {
+    return res.status(200).json(cache.data);
   }
 
-  const fields = 'spend,impressions,clicks,ctr,cpc,actions,action_values';
-  const timeRange = `{"since":"${from}","until":"${to}"}`;
+  const TOKEN    = process.env.META_ACCESS_TOKEN;
+  const ACCOUNT  = process.env.META_AD_ACCOUNT_ID;
+  const BASE     = 'https://graph.facebook.com/v22.0';
 
-  const fixThumb = url => {
-    if (!url) return null;
-    if (url.includes('p64x64')) return url.replace('p64x64', 'p320x320');
-    return url;
-  };
-
-  const getAction = (actions, type) =>
-    parseFloat(actions?.find(a => a.action_type === type)?.value || 0);
-
-  // App-Install als primäre Conversion (mobile_app_install)
-  const getConversions = (actions) =>
-    getAction(actions, 'mobile_app_install') ||
-    getAction(actions, 'app_install') ||
-    getAction(actions, 'omni_app_install');
+  if (!TOKEN || !ACCOUNT) return res.status(500).json({ error: 'Missing META env vars' });
 
   try {
-    const campRes = await fetch(
-      `https://graph.facebook.com/v19.0/${accountId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,insights.time_range(${timeRange}){${fields}}&limit=50&access_token=${token}`
-    );
-    const campData = await campRes.json();
-    if (campData.error) return res.status(500).json({ error: campData.error });
+    // ── Kampagnen mit Insights ────────────────────────────────────────────────
+    const campUrl = `${BASE}/act_${ACCOUNT}/campaigns`
+      + `?fields=id,name,status,daily_budget,insights.date_preset(last_30d){spend,impressions,clicks,actions,ctr,cpm}`
+      + `&time_range={"since":"${from}","until":"${to}"}`
+      + `&limit=50`
+      + `&access_token=${TOKEN}`;
 
-    const allCampaigns = await Promise.all((campData.data || []).map(async (camp) => {
-      const ins = camp.insights?.data?.[0] || {};
-      const conv  = getConversions(ins.actions);
-      const spend = parseFloat(ins.spend || 0);
+    const campRes  = await fetch(campUrl);
+    const campJson = await campRes.json();
+    if (campJson.error) return res.status(400).json({ error: campJson.error.message });
 
-      if (spend === 0) {
-        return {
-          id: camp.id, name: camp.name, status: camp.status,
-          budget: parseInt(camp.daily_budget || camp.lifetime_budget || 0) / 100,
-          dailyBudget: parseInt(camp.daily_budget || 0) / 100,
-          spend: 0, impressions: 0, clicks: 0, ctr: 0, conversions: 0, adsets: [],
-        };
+    const campaigns = campJson.data || [];
+
+    // ── Aktives Tagesbudget ───────────────────────────────────────────────────
+    let activeDailyBudget = 0;
+    campaigns.forEach(c => {
+      if (c.status === 'ACTIVE' && c.daily_budget) {
+        activeDailyBudget += parseFloat(c.daily_budget) / 100;
       }
+    });
 
-      const adsetRes = await fetch(
-        `https://graph.facebook.com/v19.0/${camp.id}/adsets?fields=id,name,status,daily_budget,insights.time_range(${timeRange}){${fields}}&limit=10&access_token=${token}`
-      );
-      const adsetData = await adsetRes.json();
+    // ── Für jede Kampagne: Adsets + Ads ──────────────────────────────────────
+    const enriched = await Promise.all(campaigns.map(async (camp) => {
+      const ins = camp.insights?.data?.[0] || {};
+      const spend       = parseFloat(ins.spend || 0);
+      const impressions = parseInt(ins.impressions || 0);
+      const clicks      = parseInt(ins.clicks || 0);
+      const ctr         = parseFloat(ins.ctr || 0);
+      const cpm         = parseFloat(ins.cpm || 0);
+      const conversions = (ins.actions || [])
+        .filter(a => a.action_type === 'mobile_app_install' || a.action_type === 'app_install')
+        .reduce((s, a) => s + parseInt(a.value || 0), 0);
 
-      const adsets = await Promise.all((adsetData.data || []).map(async (adset) => {
-        const ai    = adset.insights?.data?.[0] || {};
-        const aConv = getConversions(ai.actions);
-        const aSpend = parseFloat(ai.spend || 0);
+      // Adsets laden
+      let adsets = [];
+      try {
+        const adsetUrl = `${BASE}/${camp.id}/adsets`
+          + `?fields=id,name,status,insights.date_preset(last_30d){spend,impressions,clicks,ctr}`
+          + `&time_range={"since":"${from}","until":"${to}"}`
+          + `&limit=20`
+          + `&access_token=${TOKEN}`;
+        const adsetRes  = await fetch(adsetUrl);
+        const adsetJson = await adsetRes.json();
 
-        const adsRes = await fetch(
-          `https://graph.facebook.com/v19.0/${adset.id}/ads?fields=id,name,status,creative{id,thumbnail_url}&insights.time_range(${timeRange}){${fields}}&limit=5&access_token=${token}`
-        );
-        const adsData = await adsRes.json();
+        adsets = await Promise.all((adsetJson.data || []).map(async (adset) => {
+          const ai = adset.insights?.data?.[0] || {};
 
-        const ads = (adsData.data || []).map(ad => {
-          const di   = ad.insights?.data?.[0] || {};
-          const dConv = getConversions(di.actions);
+          // Ads laden
+          let ads = [];
+          try {
+            const adUrl = `${BASE}/${adset.id}/ads`
+              + `?fields=id,name,status,creative{thumbnail_url,object_story_spec},insights.date_preset(last_30d){spend,impressions,clicks,ctr,cpm}`
+              + `&time_range={"since":"${from}","until":"${to}"}`
+              + `&limit=20`
+              + `&access_token=${TOKEN}`;
+            const adRes  = await fetch(adUrl);
+            const adJson = await adRes.json();
+
+            ads = (adJson.data || []).map(ad => {
+              const adi = ad.insights?.data?.[0] || {};
+              // Thumbnail: bevorzuge object_story_spec image, fallback auf thumbnail_url
+              const thumb = ad.creative?.thumbnail_url || null;
+              return {
+                id:          ad.id,
+                name:        ad.name,
+                status:      ad.status,
+                thumbnail:   thumb,
+                spend:       parseFloat(adi.spend || 0),
+                impressions: parseInt(adi.impressions || 0),
+                clicks:      parseInt(adi.clicks || 0),
+                ctr:         parseFloat(adi.ctr || 0),
+                cpm:         parseFloat(adi.cpm || 0),
+              };
+            });
+          } catch (e) { /* Ads optional */ }
+
           return {
-            id:          ad.id,
-            name:        ad.name,
-            status:      ad.status,
-            thumbnail:   ad.creative?.thumbnail_url ? fixThumb(ad.creative.thumbnail_url) : null,
-            spend:       Math.round(parseFloat(di.spend || 0) * 100) / 100,
-            impressions: parseInt(di.impressions || 0),
-            clicks:      parseInt(di.clicks || 0),
-            ctr:         Math.round(parseFloat(di.ctr || 0) * 100) / 100,
-            conversions: Math.round(dConv * 10) / 10,
+            id:          adset.id,
+            name:        adset.name,
+            status:      adset.status,
+            spend:       parseFloat(ai.spend || 0),
+            impressions: parseInt(ai.impressions || 0),
+            clicks:      parseInt(ai.clicks || 0),
+            ctr:         parseFloat(ai.ctr || 0),
+            ads,
           };
-        });
-
-        return {
-          id:          adset.id,
-          name:        adset.name,
-          status:      adset.status,
-          budget:      parseInt(adset.daily_budget || 0) / 100,
-          dailyBudget: parseInt(adset.daily_budget || 0) / 100,
-          spend:       Math.round(aSpend * 100) / 100,
-          impressions: parseInt(ai.impressions || 0),
-          clicks:      parseInt(ai.clicks || 0),
-          ctr:         Math.round(parseFloat(ai.ctr || 0) * 100) / 100,
-          conversions: Math.round(aConv * 10) / 10,
-          ads,
-        };
-      }));
+        }));
+      } catch (e) { /* Adsets optional */ }
 
       return {
-        id:          camp.id,
-        name:        camp.name,
-        status:      camp.status,
-        budget:      parseInt(camp.daily_budget || camp.lifetime_budget || 0) / 100,
-        dailyBudget: parseInt(camp.daily_budget || 0) / 100,
-        spend:       Math.round(spend * 100) / 100,
-        impressions: parseInt(ins.impressions || 0),
-        clicks:      parseInt(ins.clicks || 0),
-        ctr:         Math.round(parseFloat(ins.ctr || 0) * 100) / 100,
-        conversions: Math.round(conv * 10) / 10,
+        id:           camp.id,
+        name:         camp.name,
+        status:       camp.status,
+        spend,
+        impressions,
+        clicks,
+        ctr,
+        cpm,
+        conversions,
         adsets,
       };
     }));
 
-    const campaigns = allCampaigns
-      .filter(c => c.spend > 0)
-      .sort((a, b) => b.spend - a.spend);
+    const result = { campaigns: enriched, activeDailyBudget };
+    cache = { key: cacheKey, data: result };
+    cacheTime = now;
 
-    // Tagesbudget: Kampagnen-Budget wenn gesetzt, sonst Adset-Budgets summieren
-    const activeDailyBudget = allCampaigns
-      .filter(c => c.status === 'ACTIVE')
-      .reduce((sum, c) => {
-        if (c.dailyBudget > 0) {
-          // Budget auf Kampagnen-Ebene
-          return sum + c.dailyBudget;
-        } else {
-          // Budget auf Adset-Ebene summieren
-          const adsetBudget = (c.adsets || [])
-            .filter(a => a.status === 'ACTIVE' && a.dailyBudget > 0)
-            .reduce((s, a) => s + a.dailyBudget, 0);
-          return sum + adsetBudget;
-        }
-      }, 0);
+    return res.status(200).json(result);
 
-    const result = {
-      campaigns,
-      activeDailyBudget: Math.round(activeDailyBudget * 100) / 100,
-      cachedAt: new Date().toISOString(),
-    };
-    setCache(cacheKey, result);
-    res.setHeader('X-Cache', 'MISS');
-    res.status(200).json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
   }
 }
