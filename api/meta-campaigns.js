@@ -105,6 +105,7 @@ module.exports = async function handler(req, res) {
           name:        adset.name,
           status:      adset.status,
           budget:      parseInt(adset.daily_budget || 0) / 100,
+          dailyBudget: parseInt(adset.daily_budget || 0) / 100,
           spend:       Math.round(aSpend * 100) / 100,
           impressions: parseInt(ai.impressions || 0),
           clicks:      parseInt(ai.clicks || 0),
@@ -133,10 +134,21 @@ module.exports = async function handler(req, res) {
       .filter(c => c.spend > 0)
       .sort((a, b) => b.spend - a.spend);
 
-    // Tagesbudget aktiver Kampagnen summieren
+    // Tagesbudget: Kampagnen-Budget wenn gesetzt, sonst Adset-Budgets summieren
     const activeDailyBudget = allCampaigns
-      .filter(c => c.status === 'ACTIVE' && c.dailyBudget > 0)
-      .reduce((sum, c) => sum + c.dailyBudget, 0);
+      .filter(c => c.status === 'ACTIVE')
+      .reduce((sum, c) => {
+        if (c.dailyBudget > 0) {
+          // Budget auf Kampagnen-Ebene
+          return sum + c.dailyBudget;
+        } else {
+          // Budget auf Adset-Ebene summieren
+          const adsetBudget = (c.adsets || [])
+            .filter(a => a.status === 'ACTIVE' && a.dailyBudget > 0)
+            .reduce((s, a) => s + a.dailyBudget, 0);
+          return sum + adsetBudget;
+        }
+      }, 0);
 
     const result = {
       campaigns,
