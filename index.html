@@ -121,6 +121,13 @@
   .budget-warn { color: #d97706; }
   .budget-over { color: #dc2626; }
 
+  /* Ziel vs. Ist */
+  .target-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+  .target-val { font-size: 11px; color: #9ca3af; }
+  .target-delta-good { font-size: 10px; font-weight: 600; background: #dcfce7; color: #16a34a; padding: 1px 5px; border-radius: 4px; }
+  .target-delta-bad  { font-size: 10px; font-weight: 600; background: #fee2e2; color: #dc2626; padding: 1px 5px; border-radius: 4px; }
+  .target-delta-neu  { font-size: 10px; font-weight: 600; background: #f3f4f6; color: #6b7280; padding: 1px 5px; border-radius: 4px; }
+
   @media (max-width: 1200px) { .kpi-grid-8 { grid-template-columns: repeat(4,1fr); } .kpi-grid-7 { grid-template-columns: repeat(4,1fr); } }
   @media (max-width: 900px) { .kpi-grid-6,.kpi-grid-7,.kpi-grid-8 { grid-template-columns: repeat(3,1fr); } .charts-row,.top-ads-grid { grid-template-columns: 1fr; } }
   @media (max-width: 600px) { main { padding: 16px; } .kpi-grid-6,.kpi-grid-7,.kpi-grid-8 { grid-template-columns: repeat(2,1fr); } header { flex-wrap: wrap; height: auto; padding: 12px 16px; } }
@@ -177,9 +184,9 @@
         <div class="kpi-card"><div class="kpi-label" data-t="lead-san">Lead-Sanierung</div><div class="kpi-value loading" id="ov-leads">–</div><div id="ov-leads-wow" class="kpi-sub"></div></div>
         <div class="kpi-card"><div class="kpi-label" data-t="cpi-meta">CPI (Meta)</div><div class="kpi-value loading" id="ov-cpi">–</div></div>
         <div class="kpi-card"><div class="kpi-label" data-t="cpl-google">CPL (Google)</div><div class="kpi-value loading" id="ov-cpl">–</div></div>
-        <div class="kpi-card budget">
-          <div class="kpi-label" data-t="daily-budget">Tagesbudget</div>
-          <div class="kpi-value loading" id="ov-daily-budget">–</div>
+        <div class="kpi-card budget" style="cursor:pointer" onclick="switchTab('budget')" title="Zum Budget-Tab">
+          <div class="kpi-label" data-t="daily-budget">Tagesbudget <span style="font-size:9px;color:#d97706">↗</span></div>
+          <div class="kpi-value" id="ov-daily-budget">–</div>
           <div class="pace-wrap" id="pace-wrap" style="display:none">
             <div style="display:flex;justify-content:space-between;font-size:10px;color:#92400e;margin-top:4px">
               <span id="pace-spent">–</span><span id="pace-pct">–%</span>
@@ -203,6 +210,30 @@
           <div class="kpi-value loading" id="seg-baufi-spend">–</div>
           <div class="kpi-sub-sm" id="seg-baufi-meta"></div>
           <div class="kpi-sub-sm" id="seg-baufi-google"></div>
+        </div>
+      </div>
+
+      <!-- ROAS + CPL-Ziele Zeile -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px" id="ov-targets-row">
+        <div class="kpi-card" style="border-top:3px solid #8b5cf6">
+          <div class="kpi-label">ROAS (Gesamt)</div>
+          <div class="kpi-value" id="ov-roas-calc">–</div>
+          <div class="kpi-sub" id="ov-roas-sub" style="font-size:10px;color:#9ca3af"></div>
+        </div>
+        <div class="kpi-card san">
+          <div class="kpi-label">CPL Sanierung – Ziel vs. Ist</div>
+          <div class="kpi-value" id="ov-cpl-san-ist">–</div>
+          <div id="ov-cpl-san-target" class="target-row"></div>
+        </div>
+        <div class="kpi-card baufi">
+          <div class="kpi-label">CPL Baufi – Ziel vs. Ist</div>
+          <div class="kpi-value" id="ov-cpl-baufi-ist">–</div>
+          <div id="ov-cpl-baufi-target" class="target-row"></div>
+        </div>
+        <div class="kpi-card" style="border-top:3px solid #16a34a;background:#f0fdf4">
+          <div class="kpi-label">Revenue-Prognose</div>
+          <div class="kpi-value" id="ov-rev-forecast">–</div>
+          <div class="kpi-sub" id="ov-rev-sub" style="font-size:10px;color:#9ca3af"></div>
         </div>
       </div>
 
@@ -293,6 +324,32 @@
             <input type="number" id="b-san-pct" value="40" oninput="recalcBudget()" min="0" max="100" step="5">
           </div>
         </div>
+        <div class="budget-input-grid" style="margin-top:8px">
+          <div class="budget-input-item">
+            <label>CPL-Ziel Sanierung (€)</label>
+            <input type="number" id="b-cpl-san-target" value="22.5" oninput="recalcBudget()" min="0" step="0.5">
+          </div>
+          <div class="budget-input-item">
+            <label>CPL-Ziel Baufi (€)</label>
+            <input type="number" id="b-cpl-baufi-target" value="70" oninput="recalcBudget()" min="0" step="5">
+          </div>
+          <div class="budget-input-item">
+            <label>WVQ Sanierung (%)</label>
+            <input type="number" id="b-wvq" value="45" oninput="recalcBudget()" min="0" max="100" step="5">
+          </div>
+          <div class="budget-input-item">
+            <label>VK-Leadpreis Sanierung (€)</label>
+            <input type="number" id="b-vk-price" value="75" oninput="recalcBudget()" min="0" step="5">
+          </div>
+          <div class="budget-input-item">
+            <label>Abschlussquote Baufi (%)</label>
+            <input type="number" id="b-abschluss" value="2.4" oninput="recalcBudget()" min="0" max="100" step="0.1">
+          </div>
+          <div class="budget-input-item">
+            <label>Provision Baufi (€)</label>
+            <input type="number" id="b-provision" value="3000" oninput="recalcBudget()" min="0" step="100">
+          </div>
+        </div>
         <p style="font-size:11px;color:#9ca3af;margin-bottom:16px" data-t="budget-edit-hint">Werte direkt editierbar – Änderungen werden sofort berechnet</p>
 
         <!-- Spend vs. Budget Balken -->
@@ -308,6 +365,19 @@
         <h3>📈 <span data-t="budget-forecast-title">Monats-Hochrechnung</span></h3>
         <div class="budget-summary" id="budget-forecast"></div>
         <p style="font-size:11px;color:#9ca3af;margin-top:12px" data-t="budget-forecast-hint">Hochrechnung basiert auf Tagesschnitt im gewählten Zeitraum</p>
+      </div>
+
+      <!-- Revenue-Rechner -->
+      <div class="budget-section">
+        <h3>💰 Revenue-Prognose <span style="font-size:11px;font-weight:400;color:#9ca3af;margin-left:6px">basierend auf Leads × Conversion</span></h3>
+        <div class="budget-summary" id="revenue-calc"></div>
+        <p style="font-size:11px;color:#9ca3af;margin-top:12px">Sanierung: Leads × WVQ% × VK-Preis · Baufi: Leads × Abschlussquote% × Provision</p>
+      </div>
+
+      <!-- CPL Ziel vs. Ist -->
+      <div class="budget-section">
+        <h3>🎯 CPL-Ziele vs. Ist</h3>
+        <div class="budget-summary" id="cpl-targets"></div>
       </div>
     </div>
   </main>
@@ -730,23 +800,29 @@ function renderOverview() {
   wowBadge('ov-installs-wow',mData?.wow?.installs);
   wowBadge('ov-leads-wow',gData?.wow?.conversions);
 
-  const gDailyB=gData?.activeDailyBudget||0, mDailyB=mCampData?.activeDailyBudget||0;
-  const totalDaily=gDailyB+mDailyB, totalMonthly=totalDaily*30;
+  // Budget-Karte: Wert aus Budget-Tab (b-total) statt aus API
+  const budgetTotal   = parseFloat(document.getElementById('b-total')?.value || 15000);
+  const budgetMeta    = parseFloat(document.getElementById('b-meta')?.value   || 10000);
+  const budgetGoogle  = parseFloat(document.getElementById('b-google')?.value || 5000);
+  const totalDaily    = Math.round(budgetTotal / 30 * 100) / 100;
+
   const budgetEl=document.getElementById('ov-daily-budget');
-  if(budgetEl){budgetEl.classList.remove('loading');budgetEl.textContent=fmt(totalDaily,'currency')+' '+t('per-day');}
-  if(totalMonthly>0){
-    const totalSpend=(gs.spend||0)+(ms.spend||0);
-    const pct=Math.min(Math.round(totalSpend/totalMonthly*100),100);
-    const pw=document.getElementById('pace-wrap');
-    if(pw){
-      pw.style.display='block';
-      document.getElementById('pace-spent').textContent=fmt(totalSpend,'currency')+' '+t('spent');
-      document.getElementById('pace-pct').textContent=pct+'%';
-      const bar=document.getElementById('pace-bar');
-      bar.style.width=pct+'%'; bar.style.background=pct>90?'#ef4444':pct>70?'#f59e0b':'#34a853';
-      document.getElementById('pace-monthly').textContent=fmt(totalMonthly,'currency')+' '+t('per-month');
-    }
+  if(budgetEl){budgetEl.textContent=fmt(totalDaily,'currency')+' '+t('per-day');}
+
+  const totalSpend=(gs.spend||0)+(ms.spend||0);
+  const pct=Math.min(Math.round(totalSpend/budgetTotal*100),100);
+  const pw=document.getElementById('pace-wrap');
+  if(pw){
+    pw.style.display='block';
+    document.getElementById('pace-spent').textContent=fmt(totalSpend,'currency')+' '+t('spent');
+    document.getElementById('pace-pct').textContent=pct+'%';
+    const bar=document.getElementById('pace-bar');
+    bar.style.width=pct+'%'; bar.style.background=pct>90?'#ef4444':pct>70?'#f59e0b':'#34a853';
+    document.getElementById('pace-monthly').textContent=fmt(budgetTotal,'currency')+' '+t('per-month');
   }
+
+  // Revenue + CPL-Ziele in Overview aktualisieren (falls Daten vorhanden)
+  if (mCampData || gData) { renderRevenueCalc(); renderCplTargets(); }
 
   const gD=gData?.daily||[], mD=mData?.daily||[];
   const allDates=[...new Set([...gD.map(d=>d.date),...mD.map(d=>d.date)])].sort();
@@ -832,6 +908,8 @@ async function loadCampaigns() {
   renderOverview();
   renderTopAds(res.campaigns);
   renderSegmentCards(res.campaigns, gData?.campaigns||[]);
+  renderRevenueCalc();
+  renderCplTargets();
 
   const sColor=s=>s==='ACTIVE'?'#16a34a':s==='PAUSED'?'#d97706':'#9ca3af';
   const sLabel=s=>s==='ACTIVE'?t('active'):s==='PAUSED'?t('paused'):s;
@@ -965,6 +1043,10 @@ function renderBudgetTab() {
       <div class="budget-stat-sub">${statusText}</div>
     </div>`;
 
+  // Revenue-Rechner + CPL-Ziele
+  renderRevenueCalc();
+  renderCplTargets();
+
   // Forecast nach Kanal
   const gForecast = gSpend/days*daysInMonth;
   const mForecast = mSpend/days*daysInMonth;
@@ -990,6 +1072,137 @@ function renderBudgetTab() {
     ${fcStat(t('b-google-bar'), gSpend,      googleBudget, '#34a853')}
     ${fcStat(t('b-san-bar'),    sanSpend,    sanBudget,    '#16a34a')}
     ${fcStat(t('b-baufi-bar'),  baufiSpend,  baufiBudget,  '#2563eb')}`;
+}
+
+// ── Budget-Tab Erweiterung: Revenue + CPL-Targets ────────────────────────────
+function renderRevenueCalc() {
+  const eur = n => '€'+n.toLocaleString('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0});
+
+  const wvq     = parseFloat(document.getElementById('b-wvq')?.value || 45) / 100;
+  const vkPrice = parseFloat(document.getElementById('b-vk-price')?.value || 75);
+  const abschl  = parseFloat(document.getElementById('b-abschluss')?.value || 2.4) / 100;
+  const prov    = parseFloat(document.getElementById('b-provision')?.value || 3000);
+
+  const from = document.getElementById('date-from').value;
+  const to   = document.getElementById('date-to').value;
+  const days = from && to ? Math.max(1, Math.round((new Date(to)-new Date(from))/(1000*60*60*24))+1) : 30;
+
+  const mSegs  = calcSegments(mCampData?.campaigns);
+  const gSegs  = calcSegments(gData?.campaigns);
+  const sanSpend   = mSegs.san.spend   + gSegs.san.spend;
+  const baufiSpend = mSegs.baufi.spend + gSegs.baufi.spend;
+
+  // Leads aus CPL
+  const cplSanIst   = parseFloat(document.getElementById('b-cpl-san-target')?.value || 22.5);
+  const cplBaufiIst = parseFloat(document.getElementById('b-cpl-baufi-target')?.value || 70);
+  const sanLeads   = cplSanIst   > 0 ? Math.round(sanSpend   / cplSanIst)   : 0;
+  const baufiLeads = cplBaufiIst > 0 ? Math.round(baufiSpend / cplBaufiIst) : 0;
+
+  // Revenue
+  const sanRev   = Math.round(sanLeads   * wvq   * vkPrice);
+  const baufiRev = Math.round(baufiLeads * abschl * prov);
+  const totalRev = sanRev + baufiRev;
+  const roas     = (sanSpend + baufiSpend) > 0 ? Math.round(totalRev / (sanSpend + baufiSpend) * 100) : 0;
+
+  const stat = (label, val, sub, color) => `
+    <div class="budget-stat" style="border-left:3px solid ${color}">
+      <div class="budget-stat-label">${label}</div>
+      <div class="budget-stat-value">${val}</div>
+      <div class="budget-stat-sub">${sub}</div>
+    </div>`;
+
+  const rcEl = document.getElementById('revenue-calc');
+  if (rcEl) rcEl.innerHTML = `
+    ${stat('🟢 Sanierung Revenue', eur(sanRev),
+      `${sanLeads} Leads × ${Math.round(wvq*100)}% WVQ × ${eur(vkPrice)}/Lead`, '#16a34a')}
+    ${stat('🔵 Baufi Revenue', eur(baufiRev),
+      `${baufiLeads} Leads × ${(abschl*100).toFixed(1)}% Abschluss × ${eur(prov)}/Abschluss`, '#2563eb')}
+    ${stat('💰 Gesamt Revenue', eur(totalRev), `ROAS: ${roas}%`, '#8b5cf6')}
+    ${stat('📊 ROAS', roas+'%',
+      roas >= 100 ? '✅ Break-even überschritten' : `Noch ${100-roas}% bis Break-even`, roas>=100?'#16a34a':'#d97706')}`;
+
+  // Overview aktualisieren
+  const roasEl = document.getElementById('ov-roas-calc');
+  const roas2El = document.getElementById('ov-roas-sub');
+  if (roasEl) { roasEl.textContent = roas+'%'; roasEl.style.color = roas>=100?'#16a34a':'#d97706'; }
+  if (roas2El) roas2El.textContent = `${eur(totalRev)} est. Revenue`;
+
+  const revEl = document.getElementById('ov-rev-forecast');
+  const revSubEl = document.getElementById('ov-rev-sub');
+  if (revEl) { revEl.textContent = eur(totalRev); revEl.style.color = '#16a34a'; }
+  if (revSubEl) revSubEl.textContent = `ROAS: ${roas}%`;
+}
+
+function renderCplTargets() {
+  const eur = n => '€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const cplSanTarget   = parseFloat(document.getElementById('b-cpl-san-target')?.value   || 22.5);
+  const cplBaufiTarget = parseFloat(document.getElementById('b-cpl-baufi-target')?.value || 70);
+
+  // Ist-CPL aus Kampagnendaten
+  const mSegs = calcSegments(mCampData?.campaigns);
+  const gSegs = calcSegments(gData?.campaigns);
+
+  // CPL Sanierung: Meta-Kampagnen
+  const sanSpend = mSegs.san.spend + gSegs.san.spend;
+  const sanInst  = (mCampData?.campaigns||[]).filter(c=>isSanierung(c.name)).reduce((s,c)=>s+c.conversions,0)
+                 + (gData?.campaigns||[]).filter(c=>isSanierung(c.name)).reduce((s,c)=>s+c.conversions,0);
+  const sanCplIst = sanInst > 0 ? sanSpend / sanInst : null;
+
+  const baufiSpend = mSegs.baufi.spend + gSegs.baufi.spend;
+  const baufiInst  = (mCampData?.campaigns||[]).filter(c=>!isSanierung(c.name)).reduce((s,c)=>s+c.conversions,0)
+                   + (gData?.campaigns||[]).filter(c=>!isSanierung(c.name)).reduce((s,c)=>s+c.conversions,0);
+  const baufiCplIst = baufiInst > 0 ? baufiSpend / baufiInst : null;
+
+  const targetStat = (label, ist, target, color) => {
+    if (ist === null) return `<div class="budget-stat" style="border-left:3px solid ${color}">
+      <div class="budget-stat-label">${label}</div>
+      <div class="budget-stat-value">–</div>
+      <div class="budget-stat-sub">Keine Conversion-Daten</div>
+    </div>`;
+    const diff = Math.round((ist - target) * 100) / 100;
+    const pct  = Math.round((ist - target) / target * 100);
+    const good = diff <= 0;
+    const badge = good
+      ? `<span class="target-delta-good">▼ ${Math.abs(pct)}% unter Ziel</span>`
+      : `<span class="target-delta-bad">▲ ${Math.abs(pct)}% über Ziel</span>`;
+    return `<div class="budget-stat" style="border-left:3px solid ${color}">
+      <div class="budget-stat-label">${label}</div>
+      <div class="budget-stat-value" style="color:${good?'#16a34a':'#dc2626'}">${eur(ist)}</div>
+      <div class="target-row"><span class="target-val">Ziel: ${eur(target)}</span>${badge}</div>
+    </div>`;
+  };
+
+  const ctEl = document.getElementById('cpl-targets');
+  if (ctEl) ctEl.innerHTML = `
+    ${targetStat('CPL Sanierung (Ist)', sanCplIst, cplSanTarget, '#16a34a')}
+    ${targetStat('CPL Baufi (Ist)', baufiCplIst, cplBaufiTarget, '#2563eb')}`;
+
+  // Auch Overview-Karten updaten
+  const sanIstEl = document.getElementById('ov-cpl-san-ist');
+  const sanTgEl  = document.getElementById('ov-cpl-san-target');
+  const baufiIstEl = document.getElementById('ov-cpl-baufi-ist');
+  const baufiTgEl  = document.getElementById('ov-cpl-baufi-target');
+
+  if (sanIstEl) {
+    sanIstEl.textContent = sanCplIst !== null ? eur(Math.round(sanCplIst*100)/100) : '–';
+    sanIstEl.style.color = sanCplIst !== null && sanCplIst <= cplSanTarget ? '#16a34a' : '#dc2626';
+  }
+  if (sanTgEl && sanCplIst !== null) {
+    const diff = Math.round((sanCplIst - cplSanTarget) * 100) / 100;
+    const good = diff <= 0;
+    sanTgEl.innerHTML = `<span class="target-val">Ziel: ${eur(cplSanTarget)}</span>
+      <span class="${good?'target-delta-good':'target-delta-bad'}">${good?'▼':'▲'} ${eur(Math.abs(diff))}</span>`;
+  }
+  if (baufiIstEl) {
+    baufiIstEl.textContent = baufiCplIst !== null ? eur(Math.round(baufiCplIst*100)/100) : '–';
+    baufiIstEl.style.color = baufiCplIst !== null && baufiCplIst <= cplBaufiTarget ? '#16a34a' : '#dc2626';
+  }
+  if (baufiTgEl && baufiCplIst !== null) {
+    const diff = Math.round((baufiCplIst - cplBaufiTarget) * 100) / 100;
+    const good = diff <= 0;
+    baufiTgEl.innerHTML = `<span class="target-val">Ziel: ${eur(cplBaufiTarget)}</span>
+      <span class="${good?'target-delta-good':'target-delta-bad'}">${good?'▼':'▲'} ${eur(Math.abs(diff))}</span>`;
+  }
 }
 
 // ── loadAll ───────────────────────────────────────────────────────────────────
