@@ -327,8 +327,8 @@ async function loadCampaigns() {
   const statusLabel = s => s === 'ACTIVE' ? 'Aktiv' : s === 'PAUSED' ? 'Pausiert' : s;
   const eur = n => '€' + n.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
 
-  // Thumbnail über eigenen Proxy laden – umgeht CORS-Block von fbcdn.net
-  const thumbSrc = url => url ? `/api/thumbnail?url=${encodeURIComponent(url)}` : null;
+  // Thumbnail direkt vom Browser laden – kein Proxy, direkte fbcdn URL
+  const thumbSrc = url => url || '';
 
   wrap.innerHTML = `
     <div style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:10px">${res.campaigns.length} Kampagnen im Zeitraum</div>
