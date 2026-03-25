@@ -32,12 +32,19 @@ module.exports = async function handler(req, res) {
 
   const fields = 'spend,impressions,clicks,ctr,cpc,actions,action_values';
   const timeRange = `{"since":"${from}","until":"${to}"}`;
-  const fixThumb = url => url ? url.replace('p64x64', 'p320x320') : null;
+
+  // Thumbnail-URL sicher machen – p64x64 auf p320x320 nur wenn vorhanden
+  const fixThumb = url => {
+    if (!url) return null;
+    if (url.includes('p64x64')) return url.replace('p64x64', 'p320x320');
+    return url;
+  };
+
   const getAction = (actions, type) =>
     parseFloat(actions?.find(a => a.action_type === type)?.value || 0);
 
   try {
-    // ALLE Kampagnen laden (aktiv + pausiert) – wir filtern selbst nach Spend > 0
+    // Alle Kampagnen laden – Filterung nach Spend > 0 machen wir selbst
     const campRes = await fetch(
       `https://graph.facebook.com/v19.0/${accountId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget,insights.time_range(${timeRange}){${fields}}&limit=50&access_token=${token}`
     );
@@ -51,13 +58,12 @@ module.exports = async function handler(req, res) {
                    getAction(ins.actions, 'purchase');
       const spend = parseFloat(ins.spend || 0);
 
-      // Nur Adsets laden wenn die Kampagne Spend hatte
+      // Kein Spend → keine weiteren API-Calls
       if (spend === 0) {
         return {
           id: camp.id, name: camp.name, status: camp.status,
           budget: parseInt(camp.daily_budget || camp.lifetime_budget || 0) / 100,
-          spend: 0, impressions: 0, clicks: 0, ctr: 0, conversions: 0,
-          adsets: [],
+          spend: 0, impressions: 0, clicks: 0, ctr: 0, conversions: 0, adsets: [],
         };
       }
 
@@ -86,7 +92,7 @@ module.exports = async function handler(req, res) {
           const thumb =
             ad.creative?.image_url ||
             ad.creative?.object_story_spec?.video_data?.image_url ||
-            (ad.creative?.thumbnail_url ? fixThumb(ad.creative.thumbnail_url) : null);
+            fixThumb(ad.creative?.thumbnail_url);
           return {
             id:          ad.id,
             name:        ad.name,
@@ -128,7 +134,7 @@ module.exports = async function handler(req, res) {
       };
     }));
 
-    // Nur Kampagnen mit Spend > 0 anzeigen, sortiert nach Spend
+    // Nur Kampagnen mit Spend > 0, sortiert nach Spend
     const campaigns = allCampaigns
       .filter(c => c.spend > 0)
       .sort((a, b) => b.spend - a.spend);
