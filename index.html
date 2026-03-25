@@ -682,6 +682,11 @@ function updateSegmentSubs() {
 let gData = null, mData = null, mCampData = null;
 const isSanierung = name => name.toLowerCase().includes('sanierung');
 
+// Route Meta thumbnail URLs through server-side proxy to bypass fbcdn hotlink protection
+const proxyThumb = url => url
+  ? `/api/meta-campaigns?proxy=1&url=${encodeURIComponent(url)}`
+  : null;
+
 function checkLogin() {
   const v = document.getElementById('pw-input').value;
   if (v === PW) {
@@ -898,7 +903,7 @@ function renderTopAds(campaigns) {
   const eur=n=>'€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
   const adRow=(ad,metric)=>`
     <div class="ad-row">
-      ${ad.thumbnail?`<img class="ad-thumb-sm" src="${ad.thumbnail}" onerror="this.style.display='none'">`:`<div class="ad-thumb-sm"></div>`}
+      ${ad.thumbnail?`<img class="ad-thumb-sm" src="${proxyThumb(ad.thumbnail)}" onerror="this.style.display='none'">`:`<div class="ad-thumb-sm"></div>`}
       <div class="ad-info"><div class="ad-name-sm">${ad.name}</div><div class="ad-metric">${metric}</div></div>
     </div>`;
   wrap.innerHTML=`
@@ -991,7 +996,7 @@ async function loadCampaigns() {
                   ${a.ads.map(ad=>`
                     <div style="border:1px solid var(--effi-border);border-radius:8px;overflow:hidden;background:#fafafa">
                       <div class="ad-thumb-wrap">
-                        ${ad.thumbnail?`<img src="${ad.thumbnail}" onerror="this.parentElement.innerHTML='<span style=\\'font-size:11px;color:var(--effi-neutral)\\'>${t('no-image')}</span>'">`:`<span style="font-size:11px;color:var(--effi-neutral)">${t('no-image')}</span>`}
+                        ${ad.thumbnail?`<img src="${proxyThumb(ad.thumbnail)}" onerror="this.parentElement.innerHTML='<span style=\\'font-size:11px;color:var(--effi-neutral)\\'>${t('no-image')}</span>'">`:`<span style="font-size:11px;color:var(--effi-neutral)">${t('no-image')}</span>`}
                       </div>
                       <div style="padding:8px">
                         <div style="font-size:11px;font-weight:500;color:var(--effi-black);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ad.name}</div>
