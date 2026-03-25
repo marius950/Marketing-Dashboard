@@ -99,6 +99,28 @@
   .ad-thumb-wrap { width: 100%; aspect-ratio: 1/1; background: #f3f4f6; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .ad-thumb-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
+  /* Budget-Tab */
+  .budget-section { background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #e5e7eb; margin-bottom: 16px; }
+  .budget-section h3 { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .budget-input-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .budget-input-item label { display: block; font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .budget-input-item input { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-weight: 600; color: #1a1a2e; background: #f9fafb; }
+  .budget-input-item input:focus { outline: none; border-color: #4f6ef7; background: #fff; }
+  .budget-bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .budget-bar-label { font-size: 12px; color: #374151; font-weight: 500; width: 140px; flex-shrink: 0; }
+  .budget-bar-track { flex: 1; background: #f3f4f6; border-radius: 6px; height: 12px; overflow: hidden; }
+  .budget-bar-inner { height: 100%; border-radius: 6px; transition: width .4s; }
+  .budget-bar-value { font-size: 12px; font-weight: 600; color: #374151; width: 80px; text-align: right; flex-shrink: 0; }
+  .budget-bar-pct { font-size: 11px; color: #9ca3af; width: 38px; text-align: right; flex-shrink: 0; }
+  .budget-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 16px; }
+  .budget-stat { background: #f9fafb; border-radius: 8px; padding: 12px 14px; border: 1px solid #f3f4f6; }
+  .budget-stat-label { font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .budget-stat-value { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+  .budget-stat-sub { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .budget-ok   { color: #16a34a; }
+  .budget-warn { color: #d97706; }
+  .budget-over { color: #dc2626; }
+
   @media (max-width: 1200px) { .kpi-grid-8 { grid-template-columns: repeat(4,1fr); } .kpi-grid-7 { grid-template-columns: repeat(4,1fr); } }
   @media (max-width: 900px) { .kpi-grid-6,.kpi-grid-7,.kpi-grid-8 { grid-template-columns: repeat(3,1fr); } .charts-row,.top-ads-grid { grid-template-columns: 1fr; } }
   @media (max-width: 600px) { main { padding: 16px; } .kpi-grid-6,.kpi-grid-7,.kpi-grid-8 { grid-template-columns: repeat(2,1fr); } header { flex-wrap: wrap; height: auto; padding: 12px 16px; } }
@@ -142,6 +164,7 @@
       <button class="tab active" onclick="switchTab('overview')" data-t="tab-overview">Gesamt</button>
       <button class="tab google" onclick="switchTab('google')" data-t="tab-google">Google Ads</button>
       <button class="tab meta" onclick="switchTab('meta')" data-t="tab-meta">Meta Ads</button>
+      <button class="tab" onclick="switchTab('budget')" data-t="tab-budget">Budget</button>
     </div>
 
     <!-- ── GESAMT ── -->
@@ -246,6 +269,47 @@
       <div class="top-ads-grid" id="top-ads-wrap"></div>
       <div id="campaigns-wrap"></div>
     </div>
+
+    <!-- ── BUDGET ── -->
+    <div id="panel-budget" class="panel">
+      <!-- Budgetplanung -->
+      <div class="budget-section">
+        <h3>📋 <span data-t="budget-plan-title">Budgetplanung</span></h3>
+        <div class="budget-input-grid">
+          <div class="budget-input-item">
+            <label data-t="budget-total-label">Monatsbudget Gesamt</label>
+            <input type="number" id="b-total" value="15000" oninput="recalcBudget()" min="0" step="100">
+          </div>
+          <div class="budget-input-item">
+            <label data-t="budget-meta-label">davon Meta Ads</label>
+            <input type="number" id="b-meta" value="10000" oninput="recalcBudget()" min="0" step="100">
+          </div>
+          <div class="budget-input-item">
+            <label data-t="budget-google-label">davon Google Ads</label>
+            <input type="number" id="b-google" value="5000" oninput="recalcBudget()" min="0" step="100">
+          </div>
+          <div class="budget-input-item">
+            <label data-t="budget-san-label">Sanierung %</label>
+            <input type="number" id="b-san-pct" value="40" oninput="recalcBudget()" min="0" max="100" step="5">
+          </div>
+        </div>
+        <p style="font-size:11px;color:#9ca3af;margin-bottom:16px" data-t="budget-edit-hint">Werte direkt editierbar – Änderungen werden sofort berechnet</p>
+
+        <!-- Spend vs. Budget Balken -->
+        <h3 style="margin-top:4px"><span data-t="budget-actual-title">Aktueller Spend im Zeitraum</span></h3>
+        <div id="budget-bars"></div>
+
+        <!-- Kennzahlen -->
+        <div class="budget-summary" id="budget-stats"></div>
+      </div>
+
+      <!-- Monatliche Hochrechnung -->
+      <div class="budget-section">
+        <h3>📈 <span data-t="budget-forecast-title">Monats-Hochrechnung</span></h3>
+        <div class="budget-summary" id="budget-forecast"></div>
+        <p style="font-size:11px;color:#9ca3af;margin-top:12px" data-t="budget-forecast-hint">Hochrechnung basiert auf Tagesschnitt im gewählten Zeitraum</p>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -309,6 +373,50 @@ const T = {
     'lead-san-label':  'Lead-Sanierung',
     'installs-chart':  'App-Installs',
     'wow-suffix': '% WoW',
+    'tab-budget':          'Budget',
+    'budget-plan-title':   'Budgetplanung',
+    'budget-total-label':  'Monatsbudget Gesamt',
+    'budget-meta-label':   'davon Meta Ads',
+    'budget-google-label': 'davon Google Ads',
+    'budget-san-label':    'Sanierung %',
+    'budget-edit-hint':    'Werte direkt editierbar – Änderungen werden sofort berechnet',
+    'budget-actual-title': 'Aktueller Spend im Zeitraum',
+    'budget-forecast-title':'Monats-Hochrechnung',
+    'budget-forecast-hint':'Hochrechnung basiert auf Tagesschnitt im gewählten Zeitraum',
+    'b-remaining':  'Verbleibendes Budget',
+    'b-spent-pct':  'Verbraucht',
+    'b-daily-avg':  'Ø Tagesausgabe',
+    'b-pace-label': 'Hochrechnung Monat',
+    'b-over':       'ÜBERBUDGET',
+    'b-on-track':   'Im Plan',
+    'b-under':      'Unter Budget',
+    'b-meta-bar':   'Meta Ads',
+    'b-google-bar': 'Google Ads',
+    'b-san-bar':    'Sanierung',
+    'b-baufi-bar':  'Baufinanzierung',
+    'b-total-bar':  'Gesamt',
+    'tab-budget':          'Budget',
+    'budget-plan-title':   'Budgetplanung',
+    'budget-total-label':  'Monatsbudget Gesamt',
+    'budget-meta-label':   'davon Meta Ads',
+    'budget-google-label': 'davon Google Ads',
+    'budget-san-label':    'Sanierung %',
+    'budget-edit-hint':    'Werte direkt editierbar – Änderungen werden sofort berechnet',
+    'budget-actual-title': 'Aktueller Spend im Zeitraum',
+    'budget-forecast-title':'Monats-Hochrechnung',
+    'budget-forecast-hint':'Hochrechnung basiert auf Tagesschnitt im gewählten Zeitraum',
+    'b-remaining':  'Verbleibendes Budget',
+    'b-spent-pct':  'Verbraucht',
+    'b-daily-avg':  'Ø Tagesausgabe',
+    'b-pace-label': 'Hochrechnung Monat',
+    'b-over':       'ÜBERBUDGET',
+    'b-on-track':   'Im Plan',
+    'b-under':      'Unter Budget',
+    'b-meta-bar':   'Meta Ads',
+    'b-google-bar': 'Google Ads',
+    'b-san-bar':    'Sanierung',
+    'b-baufi-bar':  'Baufinanzierung',
+    'b-total-bar':  'Gesamt',
     'meta-sub':   'Meta',
     'google-sub': 'Google',
   },
@@ -365,6 +473,50 @@ const T = {
     'lead-san-label':  'Lead-Renovation',
     'installs-chart':  'App Installs',
     'wow-suffix': '% WoW',
+    'tab-budget':          'Budget',
+    'budget-plan-title':   'Budget Planning',
+    'budget-total-label':  'Monthly Budget Total',
+    'budget-meta-label':   'thereof Meta Ads',
+    'budget-google-label': 'thereof Google Ads',
+    'budget-san-label':    'Renovation %',
+    'budget-edit-hint':    'Values are editable – changes are calculated instantly',
+    'budget-actual-title': 'Actual Spend in Period',
+    'budget-forecast-title':'Monthly Forecast',
+    'budget-forecast-hint':'Forecast based on daily average in selected period',
+    'b-remaining':  'Remaining Budget',
+    'b-spent-pct':  'Spent',
+    'b-daily-avg':  'Avg Daily Spend',
+    'b-pace-label': 'Monthly Forecast',
+    'b-over':       'OVER BUDGET',
+    'b-on-track':   'On Track',
+    'b-under':      'Under Budget',
+    'b-meta-bar':   'Meta Ads',
+    'b-google-bar': 'Google Ads',
+    'b-san-bar':    'Renovation',
+    'b-baufi-bar':  'Mortgage',
+    'b-total-bar':  'Total',
+    'tab-budget':          'Budget',
+    'budget-plan-title':   'Budgetplanung',
+    'budget-total-label':  'Monatsbudget Gesamt',
+    'budget-meta-label':   'davon Meta Ads',
+    'budget-google-label': 'davon Google Ads',
+    'budget-san-label':    'Sanierung %',
+    'budget-edit-hint':    'Werte direkt editierbar – Änderungen werden sofort berechnet',
+    'budget-actual-title': 'Aktueller Spend im Zeitraum',
+    'budget-forecast-title':'Monats-Hochrechnung',
+    'budget-forecast-hint':'Hochrechnung basiert auf Tagesschnitt im gewählten Zeitraum',
+    'b-remaining':  'Verbleibendes Budget',
+    'b-spent-pct':  'Verbraucht',
+    'b-daily-avg':  'Ø Tagesausgabe',
+    'b-pace-label': 'Hochrechnung Monat',
+    'b-over':       'ÜBERBUDGET',
+    'b-on-track':   'Im Plan',
+    'b-under':      'Unter Budget',
+    'b-meta-bar':   'Meta Ads',
+    'b-google-bar': 'Google Ads',
+    'b-san-bar':    'Sanierung',
+    'b-baufi-bar':  'Baufinanzierung',
+    'b-total-bar':  'Gesamt',
     'meta-sub':   'Meta',
     'google-sub': 'Google',
   }
@@ -483,11 +635,12 @@ function wowBadge(id,pct) {
 }
 
 function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((tb,i)=>tb.classList.toggle('active',['overview','google','meta'][i]===name));
+  document.querySelectorAll('.tab').forEach((tb,i)=>tb.classList.toggle('active',['overview','google','meta','budget'][i]===name));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
   if (name==='meta')   loadCampaigns();
   if (name==='google') renderGoogleCampaigns();
+  if (name==='budget') renderBudgetTab();
 }
 
 function buildChart(id,labels,datasets) {
@@ -731,6 +884,112 @@ async function loadCampaigns() {
         </div>
       </div>`;
     }).join('')}`;
+}
+
+// ── Budget Tab ───────────────────────────────────────────────────────────────────
+function recalcBudget() { if (document.getElementById('panel-budget').classList.contains('active')) renderBudgetTab(); }
+
+function renderBudgetTab() {
+  const eur = n => '€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  // Eingaben
+  const totalBudget  = parseFloat(document.getElementById('b-total')?.value  || 15000);
+  const metaBudget   = parseFloat(document.getElementById('b-meta')?.value   || 10000);
+  const googleBudget = parseFloat(document.getElementById('b-google')?.value || 5000);
+  const sanPct       = parseFloat(document.getElementById('b-san-pct')?.value || 40) / 100;
+
+  const sanBudget   = Math.round(totalBudget * sanPct);
+  const baufiBudget = Math.round(totalBudget * (1 - sanPct));
+
+  // Aktueller Spend
+  const gSpend = gData?.summary?.spend || 0;
+  const mSpend = mData?.summary?.spend || 0;
+  const totalSpend = gSpend + mSpend;
+
+  // Segmente aus Kampagnendaten
+  const mSegs = calcSegments(mCampData?.campaigns);
+  const gSegs = calcSegments(gData?.campaigns);
+  const sanSpend   = mSegs.san.spend   + gSegs.san.spend;
+  const baufiSpend = mSegs.baufi.spend + gSegs.baufi.spend;
+
+  // Tage im Zeitraum
+  const from = document.getElementById('date-from').value;
+  const to   = document.getElementById('date-to').value;
+  const days = from && to ? Math.max(1, Math.round((new Date(to)-new Date(from))/(1000*60*60*24))+1) : 30;
+  const daysInMonth = 30;
+
+  // Balken rendern
+  const barsEl = document.getElementById('budget-bars');
+  const barRow = (label, spend, budget, color) => {
+    const pct = budget > 0 ? Math.min(Math.round(spend/budget*100), 100) : 0;
+    const over = spend > budget;
+    const cls = over ? 'budget-over' : pct > 85 ? 'budget-warn' : '';
+    return `<div class="budget-bar-row">
+      <span class="budget-bar-label">${label}</span>
+      <div class="budget-bar-track"><div class="budget-bar-inner" style="width:${pct}%;background:${over?'#ef4444':color}"></div></div>
+      <span class="budget-bar-value ${cls}">${eur(Math.round(spend*100)/100)}</span>
+      <span class="budget-bar-pct ${cls}">${pct}%</span>
+    </div>`;
+  };
+
+  if (barsEl) barsEl.innerHTML = `
+    ${barRow(t('b-total-bar'),  totalSpend,  totalBudget,  '#4f6ef7')}
+    ${barRow(t('b-meta-bar'),   mSpend,      metaBudget,   '#0866ff')}
+    ${barRow(t('b-google-bar'), gSpend,      googleBudget, '#34a853')}
+    ${barRow(t('b-san-bar'),    sanSpend,    sanBudget,    '#16a34a')}
+    ${barRow(t('b-baufi-bar'),  baufiSpend,  baufiBudget,  '#2563eb')}`;
+
+  // Kennzahlen
+  const remaining = totalBudget - totalSpend;
+  const spentPct  = totalBudget > 0 ? Math.round(totalSpend/totalBudget*100) : 0;
+  const dailyAvg  = days > 0 ? totalSpend / days : 0;
+  const forecast  = dailyAvg * daysInMonth;
+  const forecastCls = forecast > totalBudget*1.05 ? 'budget-over' : forecast > totalBudget*0.95 ? 'budget-ok' : 'budget-warn';
+  const statusText = forecast > totalBudget*1.05 ? t('b-over') : forecast <= totalBudget ? t('b-on-track') : t('b-under');
+
+  const statsEl = document.getElementById('budget-stats');
+  if (statsEl) statsEl.innerHTML = `
+    <div class="budget-stat">
+      <div class="budget-stat-label">${t('b-remaining')}</div>
+      <div class="budget-stat-value ${remaining<0?'budget-over':''}">${eur(Math.round(remaining*100)/100)}</div>
+      <div class="budget-stat-sub">${t('b-spent-pct')}: ${spentPct}%</div>
+    </div>
+    <div class="budget-stat">
+      <div class="budget-stat-label">${t('b-daily-avg')}</div>
+      <div class="budget-stat-value">${eur(Math.round(dailyAvg*100)/100)}</div>
+      <div class="budget-stat-sub">${days} ${lang==='de'?'Tage':'days'}</div>
+    </div>
+    <div class="budget-stat">
+      <div class="budget-stat-label">${t('b-pace-label')}</div>
+      <div class="budget-stat-value ${forecastCls}">${eur(Math.round(forecast*100)/100)}</div>
+      <div class="budget-stat-sub">${statusText}</div>
+    </div>`;
+
+  // Forecast nach Kanal
+  const gForecast = gSpend/days*daysInMonth;
+  const mForecast = mSpend/days*daysInMonth;
+  const sanForecast  = sanSpend/days*daysInMonth;
+  const baufiForecast = baufiSpend/days*daysInMonth;
+
+  const fcEl = document.getElementById('budget-forecast');
+  const fcStat = (label, actual, budget, color) => {
+    const fc = actual/days*daysInMonth;
+    const diff = fc - budget;
+    const cls = diff > budget*0.05 ? 'budget-over' : diff > 0 ? 'budget-warn' : 'budget-ok';
+    const sign = diff >= 0 ? '+' : '';
+    return `<div class="budget-stat" style="border-left:3px solid ${color}">
+      <div class="budget-stat-label">${label}</div>
+      <div class="budget-stat-value">${eur(Math.round(fc*100)/100)}</div>
+      <div class="budget-stat-sub ${cls}">${sign}${eur(Math.round(diff*100)/100)} vs Budget</div>
+    </div>`;
+  };
+
+  if (fcEl) fcEl.innerHTML = `
+    ${fcStat(t('b-total-bar'),  totalSpend,  totalBudget,  '#4f6ef7')}
+    ${fcStat(t('b-meta-bar'),   mSpend,      metaBudget,   '#0866ff')}
+    ${fcStat(t('b-google-bar'), gSpend,      googleBudget, '#34a853')}
+    ${fcStat(t('b-san-bar'),    sanSpend,    sanBudget,    '#16a34a')}
+    ${fcStat(t('b-baufi-bar'),  baufiSpend,  baufiBudget,  '#2563eb')}`;
 }
 
 // ── loadAll ───────────────────────────────────────────────────────────────────
