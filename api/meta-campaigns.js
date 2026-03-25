@@ -1,13 +1,45 @@
+// In-Memory Cache – 30 Minuten TTL
+const cache = new Map();
+const CACHE_TTL = 30 * 60 * 1000; // 30 Minuten
+
+function getCacheKey(from, to) {
+  return `campaigns_${from}_${to}`;
+}
+
+function getFromCache(key) {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL) {
+    cache.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCache(key, data) {
+  cache.set(key, { data, timestamp: Date.now() });
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { from, to } = req.query;
+  const { from, to, refresh } = req.query;
   const token     = process.env.META_ACCESS_TOKEN;
   const accountId = process.env.META_AD_ACCOUNT_ID;
 
   if (!from || !to) return res.status(400).json({ error: 'from and to required' });
+
+  // Cache prüfen (außer bei ?refresh=1)
+  const cacheKey = getCacheKey(from, to);
+  if (refresh !== '1') {
+    const cached = getFromCache(cacheKey);
+    if (cached) {
+      res.setHeader('X-Cache', 'HIT');
+      return res.status(200).json(cached);
+    }
+  }
 
   const fields = 'spend,impressions,clicks,ctr,cpc,actions,action_values';
   const timeRange = `{"since":"${from}","until":"${to}"}`;
@@ -100,7 +132,12 @@ module.exports = async function handler(req, res) {
     }));
 
     campaigns.sort((a, b) => b.spend - a.spend);
-    res.status(200).json({ campaigns });
+
+    const result = { campaigns, cachedAt: new Date().toISOString() };
+    setCache(cacheKey, result);
+
+    res.setHeader('X-Cache', 'MISS');
+    res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
