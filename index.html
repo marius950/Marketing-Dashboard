@@ -39,30 +39,24 @@
   .panel { display: none; }
   .panel.active { display: block; }
 
-  /* KPI Grids */
   .kpi-grid { display: grid; gap: 12px; margin-bottom: 20px; }
   .kpi-grid-6  { grid-template-columns: repeat(6,1fr); }
   .kpi-grid-7  { grid-template-columns: repeat(7,1fr); }
   .kpi-grid-8  { grid-template-columns: repeat(8,1fr); }
 
-  .kpi-card { background: #fff; border-radius: 12px; padding: 16px 14px; border: 1px solid #e5e7eb; position: relative; overflow: hidden; }
+  .kpi-card { background: #fff; border-radius: 12px; padding: 16px 14px; border: 1px solid #e5e7eb; }
   .kpi-card.google { border-top: 3px solid var(--google); }
   .kpi-card.meta   { border-top: 3px solid var(--meta); }
   .kpi-card.budget { border-top: 3px solid #f59e0b; background: #fffbeb; }
-  .kpi-card.warn   { border-top: 3px solid #ef4444; background: #fef2f2; }
-
   .kpi-label { font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
   .kpi-value { font-size: 20px; font-weight: 700; color: #1a1a2e; line-height: 1.2; }
   .kpi-value.loading { color: #d1d5db; }
   .kpi-sub { font-size: 11px; color: #6b7280; margin-top: 4px; }
 
-  /* WoW Badge */
   .wow-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 4px; margin-top: 4px; }
   .wow-up   { background: #dcfce7; color: #16a34a; }
   .wow-down { background: #fee2e2; color: #dc2626; }
-  .wow-neu  { background: #f3f4f6; color: #6b7280; }
 
-  /* Spend-Pace Bar */
   .pace-wrap { margin-top: 6px; }
   .pace-bar-bg { background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden; margin-top: 4px; }
   .pace-bar-fill { height: 100%; border-radius: 4px; transition: width .4s; }
@@ -76,10 +70,21 @@
   .badge-google { background: var(--google-light); color: var(--google); }
   .badge-meta   { background: var(--meta-light);   color: var(--meta); }
 
+  /* ── NEU: Segment-Karte ── */
+  .segment-card { background: #fff; border-radius: 12px; padding: 20px 24px; border: 1px solid #e5e7eb; margin-bottom: 16px; }
+  .segment-card h4 { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 14px; }
+  .segment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .segment-item { background: #f9fafb; border-radius: 8px; padding: 12px 14px; border: 1px solid #f3f4f6; }
+  .segment-name { font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+  .segment-spend { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+  .segment-sub { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+  .segment-bar-bg { background: #e5e7eb; border-radius: 3px; height: 4px; margin-top: 8px; }
+  .segment-bar-fill { height: 100%; border-radius: 3px; }
+
   /* Best/Worst Ads */
   .top-ads-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .top-ads-card { background: #fff; border-radius: 12px; padding: 16px 18px; border: 1px solid #e5e7eb; }
-  .top-ads-card h4 { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .top-ads-card h4 { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 12px; }
   .ad-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
   .ad-row:last-child { border-bottom: none; }
   .ad-thumb-sm { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; background: #f3f4f6; flex-shrink: 0; }
@@ -87,19 +92,12 @@
   .ad-name-sm { font-size: 11px; font-weight: 500; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ad-metric { font-size: 11px; color: #6b7280; }
 
-  /* Kampagnen */
   .camp-row { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
   .camp-row.google { border-left: 4px solid var(--google); }
   .camp-row.meta   { border-left: 4px solid var(--meta); }
 
   .ad-thumb-wrap { width: 100%; aspect-ratio: 1/1; background: #f3f4f6; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .ad-thumb-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }
-
-  /* Heatmap */
-  .heatmap-card { background: #fff; border-radius: 12px; padding: 20px 24px; border: 1px solid #e5e7eb; margin-bottom: 16px; }
-  .heatmap-grid { display: grid; grid-template-columns: 40px repeat(7,1fr); gap: 3px; margin-top: 12px; font-size: 10px; }
-  .heatmap-cell { height: 28px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #374151; }
-  .heatmap-label { color: #9ca3af; font-size: 10px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; }
 
   @media (max-width: 1200px) {
     .kpi-grid-8 { grid-template-columns: repeat(4,1fr); }
@@ -108,10 +106,12 @@
   @media (max-width: 900px) {
     .kpi-grid-6, .kpi-grid-7, .kpi-grid-8 { grid-template-columns: repeat(3,1fr); }
     .charts-row, .top-ads-grid { grid-template-columns: 1fr; }
+    .segment-grid { grid-template-columns: repeat(2,1fr); }
   }
   @media (max-width: 600px) {
     main { padding: 16px; }
     .kpi-grid-6, .kpi-grid-7, .kpi-grid-8 { grid-template-columns: repeat(2,1fr); }
+    .segment-grid { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
@@ -172,6 +172,7 @@
           </div>
         </div>
       </div>
+
       <div class="charts-row">
         <div class="chart-card">
           <div class="chart-title">Spend <span class="source-badge badge-google">Google</span><span class="source-badge badge-meta">Meta</span></div>
@@ -181,6 +182,12 @@
           <div class="chart-title">Conversions <span class="source-badge badge-google">Lead-Sanierung</span><span class="source-badge badge-meta">App-Installs</span></div>
           <div class="chart-wrap"><canvas id="chart-ov-conv"></canvas></div>
         </div>
+      </div>
+
+      <!-- ── NEU: Segment-Übersicht ── -->
+      <div class="segment-card" id="segment-card" style="display:none">
+        <h4>📊 Spend nach Segment <span style="font-size:11px;font-weight:400;color:#9ca3af;margin-left:6px">Meta-Kampagnen</span></h4>
+        <div class="segment-grid" id="segment-grid"></div>
       </div>
     </div>
 
@@ -214,7 +221,6 @@
         <div class="kpi-card meta"><div class="kpi-label">Install Rate</div><div class="kpi-value loading" id="m-installrate">–</div></div>
         <div class="kpi-card meta"><div class="kpi-label">CPM</div><div class="kpi-value loading" id="m-cpm">–</div><div id="m-cpm-wow" class="kpi-sub"></div></div>
       </div>
-
       <div class="charts-row">
         <div class="chart-card">
           <div class="chart-title">Täglicher Spend – <span style="color:var(--meta)">Meta Ads</span></div>
@@ -225,10 +231,7 @@
           <div class="chart-wrap"><canvas id="chart-m-cpm"></canvas></div>
         </div>
       </div>
-
-      <!-- Best/Worst Ads -->
       <div class="top-ads-grid" id="top-ads-wrap"></div>
-
       <div id="campaigns-wrap"></div>
     </div>
   </main>
@@ -284,208 +287,216 @@ function setKPI(id,val,type) {
   const el=document.getElementById(id); if(!el) return;
   el.classList.remove('loading'); el.textContent=fmt(val,type);
 }
-function wowBadge(id, pct) {
-  const el = document.getElementById(id); if(!el||pct===null) return;
-  const dir = pct > 0 ? '▲' : '▼';
-  const cls = pct > 0 ? 'wow-up' : 'wow-down';
-  el.innerHTML = `<span class="wow-badge ${cls}">${dir} ${Math.abs(pct)}% WoW</span>`;
+function wowBadge(id,pct) {
+  const el=document.getElementById(id); if(!el||pct===null||pct===undefined) return;
+  const dir=pct>0?'▲':'▼', cls=pct>0?'wow-up':'wow-down';
+  el.innerHTML=`<span class="wow-badge ${cls}">${dir} ${Math.abs(pct)}% WoW</span>`;
 }
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['overview','google','meta'][i]===name));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
-  if (name==='meta')   { loadCampaigns(); }
-  if (name==='google') { renderGoogleCampaigns(); }
+  if (name==='meta')   loadCampaigns();
+  if (name==='google') renderGoogleCampaigns();
 }
 
-function buildChart(id,labels,datasets,yLabel) {
+function buildChart(id,labels,datasets) {
   if (charts[id]) charts[id].destroy();
-  const ctx = document.getElementById(id)?.getContext('2d'); if(!ctx) return;
-  charts[id] = new Chart(ctx,{
-    type:'bar', data:{labels,datasets},
-    options:{
-      responsive:true, maintainAspectRatio:false,
+  const ctx=document.getElementById(id)?.getContext('2d'); if(!ctx) return;
+  charts[id]=new Chart(ctx,{type:'bar',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:datasets.length>1,position:'top',labels:{font:{size:11},boxWidth:10}}},
-      scales:{
-        x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:12}},
-        y:{grid:{color:'#f3f4f6'},ticks:{font:{size:10}},title:yLabel?{display:true,text:yLabel,font:{size:10}}:undefined}
-      }
-    }
-  });
+      scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:12}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}}}});
 }
 function buildLineChart(id,labels,datasets) {
   if (charts[id]) charts[id].destroy();
-  const ctx = document.getElementById(id)?.getContext('2d'); if(!ctx) return;
-  charts[id] = new Chart(ctx,{
-    type:'line', data:{labels,datasets},
-    options:{
-      responsive:true, maintainAspectRatio:false,
+  const ctx=document.getElementById(id)?.getContext('2d'); if(!ctx) return;
+  charts[id]=new Chart(ctx,{type:'line',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:10}}},
-      scales:{
-        x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:12}},
-        y:{grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}
+      scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:12}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:10}}}}}});
+}
+
+// ── NEU: Segment-Render ───────────────────────────────────────────────────────
+function renderSegments(campaigns) {
+  const card = document.getElementById('segment-card');
+  const grid = document.getElementById('segment-grid');
+  if (!card || !grid || !campaigns?.length) { if(card) card.style.display='none'; return; }
+
+  const SEGMENTS = {
+    'Sanierung':       n => n.includes('sanierung'),
+    'Baufinanzierung': n => n.includes('baufi') || n.includes('bauzins') || n.includes('baufinanzierung'),
+    'Immobiliensuche': n => n.includes('immobiliensuche'),
+    'Budgetrechner':   n => n.includes('budgetrechner') || (n.includes('budget') && !n.includes('tagesbudget')),
+    'Marktwert-Check': n => n.includes('kaufpreis') || n.includes('marktwert'),
+    'Beratung':        n => n.includes('beratung'),
+  };
+  const COLORS = {
+    'Sanierung':       '#16a34a',
+    'Baufinanzierung': '#2563eb',
+    'Immobiliensuche': '#0866ff',
+    'Budgetrechner':   '#7c3aed',
+    'Marktwert-Check': '#ea580c',
+    'Beratung':        '#0891b2',
+    'Sonstiges':       '#6b7280',
+  };
+
+  const segs = {};
+  campaigns.forEach(c => {
+    const n = c.name.toLowerCase();
+    let matched = false;
+    for (const [seg, test] of Object.entries(SEGMENTS)) {
+      if (test(n)) {
+        if (!segs[seg]) segs[seg] = { spend:0, installs:0, camps:0 };
+        segs[seg].spend   += c.spend;
+        segs[seg].installs += c.conversions||0;
+        segs[seg].camps   += 1;
+        matched = true; break;
       }
     }
+    if (!matched) {
+      if (!segs['Sonstiges']) segs['Sonstiges'] = { spend:0, installs:0, camps:0 };
+      segs['Sonstiges'].spend   += c.spend;
+      segs['Sonstiges'].installs += c.conversions||0;
+      segs['Sonstiges'].camps   += 1;
+    }
   });
+
+  const totalSpend = Object.values(segs).reduce((s,v)=>s+v.spend,0);
+  if (totalSpend === 0) { card.style.display='none'; return; }
+
+  const sorted = Object.entries(segs).sort((a,b)=>b[1].spend-a[1].spend);
+  const eur = n => '€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  grid.innerHTML = sorted.map(([name,v]) => {
+    const pct   = Math.round(v.spend / totalSpend * 100);
+    const color = COLORS[name] || '#6b7280';
+    const cpi   = v.installs > 0 ? ' · CPI '+eur(Math.round(v.spend/v.installs*100)/100) : '';
+    return `
+      <div class="segment-item">
+        <div class="segment-name">
+          <span>${name}</span>
+          <span style="font-size:10px;background:#f3f4f6;color:#6b7280;padding:1px 5px;border-radius:3px">${pct}%</span>
+        </div>
+        <div class="segment-spend">${eur(Math.round(v.spend*100)/100)}</div>
+        <div class="segment-sub">${v.camps} Kampagne${v.camps!==1?'n':''}${cpi}</div>
+        <div class="segment-bar-bg">
+          <div class="segment-bar-fill" style="width:${pct}%;background:${color}"></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  card.style.display = 'block';
 }
 
 // ── Render Google ─────────────────────────────────────────────────────────────
 function renderGoogle(d) {
-  const s = d.summary;
-  setKPI('g-spend', s.spend, 'currency');
-  setKPI('g-impressions', s.impressions);
-  setKPI('g-clicks', s.clicks);
-  setKPI('g-conversions', s.conversions);
-  setKPI('g-cpl', s.cpl, 'currency');
-  setKPI('g-ctr', s.ctr, 'pct');
-  setKPI('g-cpm', s.cpm, 'currency');
-  wowBadge('g-spend-wow', d.wow?.spend);
-  wowBadge('g-clicks-wow', d.wow?.clicks);
-  wowBadge('g-conv-wow', d.wow?.conversions);
-  buildChart('chart-g-spend', d.daily.map(r=>r.date?.slice(5)), [{
-    label:'Spend (€)', data:d.daily.map(r=>r.spend),
-    backgroundColor: GOOGLE_COLOR, borderRadius:3
-  }]);
+  const s=d.summary;
+  setKPI('g-spend',s.spend,'currency'); setKPI('g-impressions',s.impressions);
+  setKPI('g-clicks',s.clicks); setKPI('g-conversions',s.conversions);
+  setKPI('g-cpl',s.cpl,'currency'); setKPI('g-ctr',s.ctr,'pct'); setKPI('g-cpm',s.cpm,'currency');
+  wowBadge('g-spend-wow',d.wow?.spend); wowBadge('g-clicks-wow',d.wow?.clicks); wowBadge('g-conv-wow',d.wow?.conversions);
+  buildChart('chart-g-spend',d.daily.map(r=>r.date?.slice(5)),[{label:'Spend (€)',data:d.daily.map(r=>r.spend),backgroundColor:GOOGLE_COLOR,borderRadius:3}]);
 }
 
 // ── Render Meta ───────────────────────────────────────────────────────────────
 function renderMeta(d) {
-  const s = d.summary;
-  setKPI('m-spend', s.spend, 'currency');
-  setKPI('m-impressions', s.impressions);
-  setKPI('m-reach', s.reach);
-  setKPI('m-frequency', s.frequency);
-  setKPI('m-installs', s.installs);
-  setKPI('m-cpi', s.cpi, 'currency');
-  setKPI('m-installrate', s.installRate, 'pct');
-  setKPI('m-cpm', s.cpm, 'currency');
-  wowBadge('m-spend-wow', d.wow?.spend);
-  wowBadge('m-installs-wow', d.wow?.installs);
-  wowBadge('m-cpm-wow', d.wow?.cpm);
-
-  buildChart('chart-m-spend', d.daily.map(r=>r.date?.slice(5)), [{
-    label:'Spend (€)', data:d.daily.map(r=>r.spend),
-    backgroundColor: META_COLOR, borderRadius:3
-  }]);
-
-  // CPM + CPI Verlauf
-  buildLineChart('chart-m-cpm', d.daily.map(r=>r.date?.slice(5)), [
-    { label:'CPM (€)', data:d.daily.map(r=>Math.round(r.cpm*100)/100),
-      borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,0.08)', tension:0.3, fill:true, pointRadius:2 },
+  const s=d.summary;
+  setKPI('m-spend',s.spend,'currency'); setKPI('m-impressions',s.impressions);
+  setKPI('m-reach',s.reach); setKPI('m-frequency',s.frequency);
+  setKPI('m-installs',s.installs); setKPI('m-cpi',s.cpi,'currency');
+  setKPI('m-installrate',s.installRate,'pct'); setKPI('m-cpm',s.cpm,'currency');
+  wowBadge('m-spend-wow',d.wow?.spend); wowBadge('m-installs-wow',d.wow?.installs); wowBadge('m-cpm-wow',d.wow?.cpm);
+  buildChart('chart-m-spend',d.daily.map(r=>r.date?.slice(5)),[{label:'Spend (€)',data:d.daily.map(r=>r.spend),backgroundColor:META_COLOR,borderRadius:3}]);
+  buildLineChart('chart-m-cpm',d.daily.map(r=>r.date?.slice(5)),[
+    {label:'CPM (€)',data:d.daily.map(r=>Math.round(r.cpm*100)/100),borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,0.08)',tension:0.3,fill:true,pointRadius:2},
   ]);
 }
 
 // ── Render Overview ───────────────────────────────────────────────────────────
 function renderOverview() {
   if (!gData && !mData) return;
-  const gs = gData?.summary || {};
-  const ms = mData?.summary || {};
+  const gs=gData?.summary||{}, ms=mData?.summary||{};
+  setKPI('ov-spend',Math.round(((gs.spend||0)+(ms.spend||0))*100)/100,'currency');
+  setKPI('ov-impressions',(gs.impressions||0)+(ms.impressions||0));
+  setKPI('ov-clicks',(gs.clicks||0)+(ms.clicks||0));
+  setKPI('ov-installs',ms.installs||0); setKPI('ov-leads',gs.conversions||0);
+  setKPI('ov-cpi',ms.cpi||0,'currency'); setKPI('ov-cpl',gs.cpl||0,'currency');
+  wowBadge('ov-spend-wow',gData?.wow?.spend??mData?.wow?.spend);
+  wowBadge('ov-installs-wow',mData?.wow?.installs);
+  wowBadge('ov-leads-wow',gData?.wow?.conversions);
 
-  setKPI('ov-spend', Math.round(((gs.spend||0)+(ms.spend||0))*100)/100, 'currency');
-  setKPI('ov-impressions', (gs.impressions||0)+(ms.impressions||0));
-  setKPI('ov-clicks', (gs.clicks||0)+(ms.clicks||0));
-  setKPI('ov-installs', ms.installs||0);
-  setKPI('ov-leads', gs.conversions||0);
-  setKPI('ov-cpi', ms.cpi||0, 'currency');
-  setKPI('ov-cpl', gs.cpl||0, 'currency');
-
-  // WoW
-  wowBadge('ov-spend-wow', gData?.wow?.spend ?? mData?.wow?.spend);
-  wowBadge('ov-installs-wow', mData?.wow?.installs);
-  wowBadge('ov-leads-wow', gData?.wow?.conversions);
-
-  // Spend-Pace Budget-Karte
-  const gDaily = gData?.activeDailyBudget || 0;
-  const mDaily = mCampData?.activeDailyBudget || 0;
-  const totalDaily = gDaily + mDaily;
-  const totalMonthly = totalDaily * 30;
-
-  const budgetEl = document.getElementById('ov-daily-budget');
-  if (budgetEl) {
-    budgetEl.classList.remove('loading');
-    budgetEl.textContent = fmt(totalDaily, 'currency') + ' / Tag';
-  }
-
-  if (totalMonthly > 0) {
-    const totalSpend = (gs.spend||0) + (ms.spend||0);
-    const pct = Math.min(Math.round(totalSpend / totalMonthly * 100), 100);
-    const paceWrap = document.getElementById('pace-wrap');
-    if (paceWrap) {
-      paceWrap.style.display = 'block';
-      document.getElementById('pace-spent').textContent = fmt(totalSpend, 'currency') + ' ausgegeben';
-      document.getElementById('pace-pct').textContent = pct + '%';
-      document.getElementById('pace-bar').style.width = pct + '%';
-      document.getElementById('pace-bar').style.background = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#34a853';
-      document.getElementById('pace-monthly').textContent = fmt(totalMonthly, 'currency') + ' / Monat (est.)';
+  const gDaily=gData?.activeDailyBudget||0, mDaily=mCampData?.activeDailyBudget||0;
+  const totalDaily=gDaily+mDaily, totalMonthly=totalDaily*30;
+  const budgetEl=document.getElementById('ov-daily-budget');
+  if (budgetEl){budgetEl.classList.remove('loading');budgetEl.textContent=fmt(totalDaily,'currency')+' / Tag';}
+  if (totalMonthly>0) {
+    const totalSpend=(gs.spend||0)+(ms.spend||0);
+    const pct=Math.min(Math.round(totalSpend/totalMonthly*100),100);
+    const pw=document.getElementById('pace-wrap');
+    if(pw){
+      pw.style.display='block';
+      document.getElementById('pace-spent').textContent=fmt(totalSpend,'currency')+' ausgegeben';
+      document.getElementById('pace-pct').textContent=pct+'%';
+      const bar=document.getElementById('pace-bar');
+      bar.style.width=pct+'%'; bar.style.background=pct>90?'#ef4444':pct>70?'#f59e0b':'#34a853';
+      document.getElementById('pace-monthly').textContent=fmt(totalMonthly,'currency')+' / Monat (est.)';
     }
   }
 
-  // Charts
-  const gDailyArr = gData?.daily || [];
-  const mDailyArr = mData?.daily || [];
-  const allDates = [...new Set([...gDailyArr.map(d=>d.date),...mDailyArr.map(d=>d.date)])].sort();
-  const gMap  = Object.fromEntries(gDailyArr.map(d=>[d.date,d.spend]));
-  const mMap  = Object.fromEntries(mDailyArr.map(d=>[d.date,d.spend]));
-  const gcMap = Object.fromEntries(gDailyArr.map(d=>[d.date,d.conversions]));
-  const mcMap = Object.fromEntries(mDailyArr.map(d=>[d.date,d.installs||0]));
-  const labels = allDates.map(d=>d.slice(5));
-
-  buildChart('chart-ov-spend', labels, [
-    {label:'Google (€)', data:allDates.map(d=>gMap[d]||0), backgroundColor:GOOGLE_COLOR, borderRadius:3},
-    {label:'Meta (€)',   data:allDates.map(d=>mMap[d]||0), backgroundColor:META_COLOR,   borderRadius:3},
+  const gD=gData?.daily||[], mD=mData?.daily||[];
+  const allDates=[...new Set([...gD.map(d=>d.date),...mD.map(d=>d.date)])].sort();
+  const gMap=Object.fromEntries(gD.map(d=>[d.date,d.spend]));
+  const mMap=Object.fromEntries(mD.map(d=>[d.date,d.spend]));
+  const gcMap=Object.fromEntries(gD.map(d=>[d.date,d.conversions]));
+  const mcMap=Object.fromEntries(mD.map(d=>[d.date,d.installs||0]));
+  const labels=allDates.map(d=>d.slice(5));
+  buildChart('chart-ov-spend',labels,[
+    {label:'Google (€)',data:allDates.map(d=>gMap[d]||0),backgroundColor:GOOGLE_COLOR,borderRadius:3},
+    {label:'Meta (€)',  data:allDates.map(d=>mMap[d]||0),backgroundColor:META_COLOR,  borderRadius:3},
   ]);
-  buildChart('chart-ov-conv', labels, [
-    {label:'Lead-Sanierung', data:allDates.map(d=>gcMap[d]||0), backgroundColor:GOOGLE_COLOR, borderRadius:3},
-    {label:'App-Installs',   data:allDates.map(d=>mcMap[d]||0), backgroundColor:META_COLOR,   borderRadius:3},
+  buildChart('chart-ov-conv',labels,[
+    {label:'Lead-Sanierung',data:allDates.map(d=>gcMap[d]||0),backgroundColor:GOOGLE_COLOR,borderRadius:3},
+    {label:'App-Installs',  data:allDates.map(d=>mcMap[d]||0),backgroundColor:META_COLOR,  borderRadius:3},
   ]);
 }
 
-// ── Best / Worst Ads ──────────────────────────────────────────────────────────
+// ── Best/Worst Ads ────────────────────────────────────────────────────────────
 function renderTopAds(campaigns) {
-  const wrap = document.getElementById('top-ads-wrap'); if(!wrap) return;
-  const allAds = [];
-  (campaigns||[]).forEach(c => (c.adsets||[]).forEach(a => (a.ads||[]).forEach(ad => {
-    if (ad.impressions > 100) allAds.push({ ...ad, campName: c.name });
+  const wrap=document.getElementById('top-ads-wrap'); if(!wrap) return;
+  const allAds=[];
+  (campaigns||[]).forEach(c=>(c.adsets||[]).forEach(a=>(a.ads||[]).forEach(ad=>{
+    if(ad.impressions>100) allAds.push({...ad,campName:c.name});
   })));
-  if (!allAds.length) { wrap.innerHTML=''; return; }
-
-  const byCTR   = [...allAds].sort((a,b)=>b.ctr-a.ctr);
-  const top3    = byCTR.slice(0,3);
-  const worst3  = byCTR.slice(-3).reverse();
-  const eur = n => '€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
-
-  const adRow = (ad, metric) => `
+  if(!allAds.length){wrap.innerHTML='';return;}
+  const byCTR=[...allAds].sort((a,b)=>b.ctr-a.ctr);
+  const top3=byCTR.slice(0,3), worst3=byCTR.slice(-3).reverse();
+  const eur=n=>'€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const adRow=(ad,metric)=>`
     <div class="ad-row">
-      ${ad.thumbnail
-        ? `<img class="ad-thumb-sm" src="${ad.thumbnail}" onerror="this.style.display='none'">`
-        : `<div class="ad-thumb-sm"></div>`}
-      <div class="ad-info">
-        <div class="ad-name-sm">${ad.name}</div>
-        <div class="ad-metric">${metric}</div>
-      </div>
+      ${ad.thumbnail?`<img class="ad-thumb-sm" src="${ad.thumbnail}" onerror="this.style.display='none'">`:`<div class="ad-thumb-sm"></div>`}
+      <div class="ad-info"><div class="ad-name-sm">${ad.name}</div><div class="ad-metric">${metric}</div></div>
     </div>`;
-
-  wrap.innerHTML = `
+  wrap.innerHTML=`
     <div class="top-ads-card">
       <h4>🏆 Top 3 Ads <span style="font-weight:400;color:#9ca3af">(CTR)</span></h4>
-      ${top3.map(ad => adRow(ad, `${ad.ctr.toFixed(2)}% CTR · ${eur(ad.spend)} Spend`)).join('')}
+      ${top3.map(ad=>adRow(ad,`${ad.ctr.toFixed(2)}% CTR · ${eur(ad.spend)} Spend`)).join('')}
     </div>
     <div class="top-ads-card">
       <h4>⚠️ Schwächste Ads <span style="font-weight:400;color:#9ca3af">(CTR)</span></h4>
-      ${worst3.map(ad => adRow(ad, `${ad.ctr.toFixed(2)}% CTR · ${ad.impressions.toLocaleString('de-DE')} Imp.`)).join('')}
+      ${worst3.map(ad=>adRow(ad,`${ad.ctr.toFixed(2)}% CTR · ${ad.impressions.toLocaleString('de-DE')} Imp.`)).join('')}
     </div>`;
 }
 
 // ── Google Kampagnen ──────────────────────────────────────────────────────────
 function renderGoogleCampaigns() {
-  const wrap = document.getElementById('google-campaigns-wrap'); if(!wrap) return;
-  if (!gData?.campaigns?.length) { wrap.innerHTML='<div style="font-size:13px;color:#6b7280;padding:12px 0">Keine Kampagnendaten</div>'; return; }
-  const eur = n => '€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const sColor = s => s==='ENABLED'?'#16a34a':s==='PAUSED'?'#d97706':'#9ca3af';
-  const sLabel = s => s==='ENABLED'?'Aktiv':s==='PAUSED'?'Pausiert':s;
-
-  wrap.innerHTML = `
+  const wrap=document.getElementById('google-campaigns-wrap'); if(!wrap) return;
+  if(!gData?.campaigns?.length){wrap.innerHTML='<div style="font-size:13px;color:#6b7280;padding:12px 0">Keine Kampagnendaten</div>';return;}
+  const eur=n=>'€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const sColor=s=>s==='ENABLED'?'#16a34a':s==='PAUSED'?'#d97706':'#9ca3af';
+  const sLabel=s=>s==='ENABLED'?'Aktiv':s==='PAUSED'?'Pausiert':s;
+  wrap.innerHTML=`
     <div style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:8px">${gData.campaigns.length} Kampagnen</div>
     ${gData.campaigns.map(c=>`
       <div class="camp-row google">
@@ -504,23 +515,22 @@ function renderGoogleCampaigns() {
 
 // ── Meta Kampagnen ────────────────────────────────────────────────────────────
 async function loadCampaigns() {
-  const from = document.getElementById('date-from').value;
-  const to   = document.getElementById('date-to').value;
-  const wrap = document.getElementById('campaigns-wrap');
-  wrap.innerHTML = '<div style="font-size:13px;color:#6b7280;padding:12px 0">Kampagnen werden geladen...</div>';
-
-  const res = await fetch(`/api/meta-campaigns?from=${from}&to=${to}`).then(r=>r.json());
-  if (res.error) { wrap.innerHTML='<div style="color:#ef4444;font-size:13px">Fehler: '+res.error+'</div>'; return; }
-
-  mCampData = res;
+  const from=document.getElementById('date-from').value;
+  const to  =document.getElementById('date-to').value;
+  const wrap=document.getElementById('campaigns-wrap');
+  wrap.innerHTML='<div style="font-size:13px;color:#6b7280;padding:12px 0">Kampagnen werden geladen...</div>';
+  const res=await fetch(`/api/meta-campaigns?from=${from}&to=${to}`).then(r=>r.json());
+  if(res.error){wrap.innerHTML=`<div style="color:#ef4444;font-size:13px">Fehler: ${res.error}</div>`;return;}
+  mCampData=res;
   renderOverview();
+  renderSegments(res.campaigns);
   renderTopAds(res.campaigns);
 
-  const sColor = s => s==='ACTIVE'?'#16a34a':s==='PAUSED'?'#d97706':'#9ca3af';
-  const sLabel = s => s==='ACTIVE'?'Aktiv':s==='PAUSED'?'Pausiert':s;
-  const eur = n => '€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const sColor=s=>s==='ACTIVE'?'#16a34a':s==='PAUSED'?'#d97706':'#9ca3af';
+  const sLabel=s=>s==='ACTIVE'?'Aktiv':s==='PAUSED'?'Pausiert':s;
+  const eur=n=>'€'+n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
 
-  wrap.innerHTML = `
+  wrap.innerHTML=`
     <div style="font-size:13px;font-weight:500;color:#6b7280;margin-bottom:8px">${res.campaigns.length} Kampagnen im Zeitraum</div>
     ${res.campaigns.map(c=>`
       <div class="camp-row meta">
@@ -568,32 +578,32 @@ async function loadCampaigns() {
 
 // ── loadAll ───────────────────────────────────────────────────────────────────
 async function loadAll() {
-  const from = document.getElementById('date-from').value;
-  const to   = document.getElementById('date-to').value;
-  if (!from || !to) return;
-
-  gData = null; mData = null; mCampData = null;
+  const from=document.getElementById('date-from').value;
+  const to  =document.getElementById('date-to').value;
+  if(!from||!to) return;
+  gData=null; mData=null; mCampData=null;
   ['g-spend','g-impressions','g-clicks','g-conversions','g-cpl','g-ctr','g-cpm',
    'm-spend','m-impressions','m-reach','m-frequency','m-installs','m-cpi','m-installrate','m-cpm',
    'ov-spend','ov-impressions','ov-clicks','ov-installs','ov-leads','ov-cpi','ov-cpl','ov-daily-budget']
     .forEach(id=>{const el=document.getElementById(id);if(el){el.textContent='–';el.classList.add('loading');}});
 
-  const [gRes, mRes, mCampRes] = await Promise.allSettled([
+  const [gRes,mRes,mCampRes]=await Promise.allSettled([
     fetch(`/api/google?from=${from}&to=${to}`).then(r=>r.json()),
     fetch(`/api/meta?dateRange=custom&from=${from}&to=${to}`).then(r=>r.json()),
     fetch(`/api/meta-campaigns?from=${from}&to=${to}`).then(r=>r.json()),
   ]);
 
-  if (gRes.status==='fulfilled' && !gRes.value.error) {
-    gData = gRes.value; renderGoogle(gData);
-    if (document.getElementById('panel-google').classList.contains('active')) renderGoogleCampaigns();
+  if(gRes.status==='fulfilled'&&!gRes.value.error){
+    gData=gRes.value; renderGoogle(gData);
+    if(document.getElementById('panel-google').classList.contains('active')) renderGoogleCampaigns();
   }
-  if (mRes.status==='fulfilled' && !mRes.value.error) {
-    mData = mRes.value; renderMeta(mData);
+  if(mRes.status==='fulfilled'&&!mRes.value.error){
+    mData=mRes.value; renderMeta(mData);
   }
-  if (mCampRes.status==='fulfilled' && !mCampRes.value.error) {
-    mCampData = mCampRes.value;
-    if (document.getElementById('panel-meta').classList.contains('active')) {
+  if(mCampRes.status==='fulfilled'&&!mCampRes.value.error){
+    mCampData=mCampRes.value;
+    renderSegments(mCampData.campaigns);  // ← Segment-Karte direkt beim Laden
+    if(document.getElementById('panel-meta').classList.contains('active')){
       renderTopAds(mCampData.campaigns);
       loadCampaigns();
     }
@@ -602,12 +612,12 @@ async function loadAll() {
 }
 
 function toggleCamp(id) {
-  const el=document.getElementById('camp-'+id), arr=document.getElementById('arr-'+id);
+  const el=document.getElementById('camp-'+id),arr=document.getElementById('arr-'+id);
   const open=el.style.display==='none'; el.style.display=open?'block':'none';
   arr.style.transform=open?'rotate(90deg)':'';
 }
 function toggleAdset(id) {
-  const el=document.getElementById('adset-'+id), arr=document.getElementById('arr-'+id);
+  const el=document.getElementById('adset-'+id),arr=document.getElementById('arr-'+id);
   const open=el.style.display==='none'; el.style.display=open?'block':'none';
   arr.style.transform=open?'rotate(90deg)':'';
 }
