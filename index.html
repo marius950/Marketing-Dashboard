@@ -320,7 +320,7 @@ async function loadCampaigns() {
   const wrap = document.getElementById('campaigns-wrap');
   wrap.innerHTML = '<div style="font-size:13px;color:#6b7280;padding:12px 0">Kampagnen werden geladen...</div>';
 
-  const res = await fetch(`/api/meta-campaigns?from=${from}&to=${to}`).then(r => r.json());
+  const res = await fetch(`/api/meta-campaigns?from=${from}&to=${to}&refresh=1`).then(r => r.json());
   if (res.error) { wrap.innerHTML = '<div style="color:#ef4444;font-size:13px">Fehler beim Laden der Kampagnen</div>'; return; }
 
   const statusColor = s => s === 'ACTIVE' ? '#16a34a' : s === 'PAUSED' ? '#d97706' : '#9ca3af';
