@@ -4,20 +4,23 @@ export default async function handler(req, res) {
 
   try {
     const decoded = decodeURIComponent(url);
-
-    // Direkt versuchen mit Browser-Headers
-    const response = await fetch(decoded, {
+    
+    // _nc_tpa entfernen – das ist Metas Hotlink-Schutz für Browser
+    // Ohne diesen Parameter akzeptiert Meta Server-zu-Server Requests
+    const cleanUrl = new URL(decoded);
+    cleanUrl.searchParams.delete('_nc_tpa');
+    cleanUrl.searchParams.delete('edm');
+    
+    const response = await fetch(cleanUrl.toString(), {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Referer': 'https://www.facebook.com/',
+        'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
         'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
-        'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8',
       }
     });
 
     if (!response.ok) {
-      // Fallback: weserv.nl als externer Proxy
-      const weservUrl = `https://images.weserv.nl/?url=${encodeURIComponent(decoded)}&w=320&h=320&fit=cover&output=jpg`;
+      // Fallback: weserv.nl
+      const weservUrl = `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl.toString())}&w=320&h=320&fit=cover&output=jpg`;
       res.setHeader('Location', weservUrl);
       return res.status(302).end();
     }
@@ -25,12 +28,9 @@ export default async function handler(req, res) {
     const contentType = response.headers.get('content-type') || 'image/jpeg';
     const buffer = await response.arrayBuffer();
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
     res.send(Buffer.from(buffer));
   } catch (e) {
-    // Fallback bei jedem Fehler: weserv.nl
-    const weservUrl = `https://images.weserv.nl/?url=${encodeURIComponent(decodeURIComponent(url))}&w=320&h=320&fit=cover&output=jpg`;
-    res.setHeader('Location', weservUrl);
-    res.status(302).end();
+    res.status(500).json({ error: e.message });
   }
 }
