@@ -49,7 +49,9 @@ export default async function handler(req, res) {
   }
 
   const TOKEN    = process.env.META_ACCESS_TOKEN;
-  const ACCOUNT  = process.env.META_AD_ACCOUNT_ID;
+  const RAW_ACCOUNT = process.env.META_AD_ACCOUNT_ID || '';
+  // Sicherstellen dass act_ nur einmal vorhanden ist
+  const ACCOUNT  = RAW_ACCOUNT.replace(/^act_/, '');
   const BASE     = 'https://graph.facebook.com/v22.0';
 
   if (!TOKEN || !ACCOUNT) return res.status(500).json({ error: 'Missing META env vars' });
