@@ -1282,12 +1282,14 @@ async function loadAll() {
   if(mCampRes.status==='fulfilled'&&!mCampRes.value.error){
     mCampData=mCampRes.value;
     renderSegmentCards(mCampData.campaigns, gData?.campaigns||[]);
+    renderOverview(); // Budget-Karte mit Meta-Tagesbudget aktualisieren
     if(document.getElementById('panel-meta').classList.contains('active')){
       renderTopAds(mCampData.campaigns);
       loadCampaigns();
     }
+  } else {
+    renderOverview(); // auch ohne mCampData rendern
   }
-  renderOverview();
 }
 
 function toggleCamp(id) {
