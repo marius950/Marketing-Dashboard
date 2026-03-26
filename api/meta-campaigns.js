@@ -70,13 +70,9 @@ export default async function handler(req, res) {
 
     const campaigns = campJson.data || [];
 
-    // ── Aktives Tagesbudget ───────────────────────────────────────────────────
+    // ── Aktives Tagesbudget: erst nach Enrichment berechnen ────────────────
+    // Platzhalter – wird weiter unten nach dem Adset-Abruf befüllt
     let activeDailyBudget = 0;
-    campaigns.forEach(c => {
-      if (c.status === 'ACTIVE' && c.daily_budget) {
-        activeDailyBudget += parseFloat(c.daily_budget) / 100;
-      }
-    });
 
     // ── Für jede Kampagne: Adsets + Ads ──────────────────────────────────────
     const enriched = await Promise.all(campaigns.map(async (camp) => {
@@ -94,7 +90,7 @@ export default async function handler(req, res) {
       let adsets = [];
       try {
         const adsetUrl = `${BASE}/${camp.id}/adsets`
-          + `?fields=id,name,status,insights.date_preset(last_30d){spend,impressions,clicks,ctr}`
+          + `?fields=id,name,status,daily_budget,insights.date_preset(last_30d){spend,impressions,clicks,ctr}`
           + `&time_range={"since":"${from}","until":"${to}"}`
           + `&limit=20`
           + `&access_token=${TOKEN}`;
@@ -159,6 +155,33 @@ export default async function handler(req, res) {
         adsets,
       };
     }));
+
+    // activeDailyBudget: Kampagnen-Budget ODER Summe der Adset-Budgets
+    // Meta setzt daily_budget entweder auf Kampagnen- oder Adset-Ebene
+    activeDailyBudget = 0;
+    for (const camp of enriched) {
+      if (camp.status !== 'ACTIVE') continue;
+      // Versuche Kampagnen-Budget aus Rohdaten
+      const rawCamp = campaigns.find(c => c.id === camp.id);
+      if (rawCamp?.daily_budget && parseFloat(rawCamp.daily_budget) > 0) {
+        activeDailyBudget += parseFloat(rawCamp.daily_budget) / 100;
+      } else {
+        // Kein Kampagnen-Budget → Adset-Budgets summieren
+        // Adset daily_budget aus separatem API Call holen
+        try {
+          const budgetUrl = `${BASE}/${camp.id}/adsets`
+            + `?fields=daily_budget,status`
+            + `&access_token=${TOKEN}`;
+          const budgetRes  = await fetch(budgetUrl);
+          const budgetJson = await budgetRes.json();
+          (budgetJson.data || []).forEach(adset => {
+            if (adset.status === 'ACTIVE' && adset.daily_budget) {
+              activeDailyBudget += parseFloat(adset.daily_budget) / 100;
+            }
+          });
+        } catch(e) { /* Budget optional */ }
+      }
+    }
 
     const result = { campaigns: enriched, activeDailyBudget };
     cache = { key: cacheKey, data: result };
