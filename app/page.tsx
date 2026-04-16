@@ -7,6 +7,7 @@ import GoogleTab from '@/components/GoogleTab';
 import MetaTab from '@/components/MetaTab';
 import BudgetTab from '@/components/BudgetTab';
 import SanierungTab from '@/components/SanierungTab';
+import BaufiTab from '@/components/BaufiTab';
 import { Lang, Tab, DateRange, MetaData, GoogleData, MetaCampaignsData } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
@@ -103,6 +104,7 @@ export default function Page() {
     { key: 'meta',     label: t(lang, 'tab-meta'),     color: 'var(--meta)' },
     { key: 'budget',   label: t(lang, 'tab-budget') },
     { key: 'sanierung', label: '🟢 Sanierung' },
+    { key: 'baufi',     label: '🔵 Baufi Sales' },
   ];
 
   return (
@@ -165,6 +167,9 @@ export default function Page() {
         )}
         {tab === 'sanierung' && (
           <SanierungTab lang={lang} from={customFrom} to={customTo} />
+        )}
+        {tab === 'baufi' && (
+          <BaufiTab lang={lang} from={customFrom} to={customTo} />
         )}
       </main>
     </>
