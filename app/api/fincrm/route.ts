@@ -62,11 +62,18 @@ export async function GET(req: NextRequest) {
     // Stages + Purposes parallel laden - neueste zuerst, alle Seiten
     const [stagesRes, purposes] = await Promise.all([
       fetch(`${BASE}/stages`, { headers }),
-      fetchAllPages(`${BASE}/purposes?per_page=100&sort=-created_at`, headers),
+      fetchAllPages(`${BASE}/purposes?per_page=100`, headers),
     ]);
 
     const stagesData = stagesRes.ok ? await stagesRes.json() : { data: [] };
     const stages: any[] = stagesData.data ?? stagesData ?? [];
+
+    // Lokal nach created_at absteigend sortieren (neueste zuerst)
+    purposes.sort((a: any, b: any) => {
+      const ta = new Date(a.created_at || 0).getTime();
+      const tb = new Date(b.created_at || 0).getTime();
+      return tb - ta;
+    });
 
     // Zeitraum-Filter auf created_at
     const fromTs = from ? new Date(from).getTime() : 0;
