@@ -6,6 +6,7 @@ import OverviewTab from '@/components/OverviewTab';
 import GoogleTab from '@/components/GoogleTab';
 import MetaTab from '@/components/MetaTab';
 import BudgetTab from '@/components/BudgetTab';
+import SanierungTab from '@/components/SanierungTab';
 import { Lang, Tab, DateRange, MetaData, GoogleData, MetaCampaignsData } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
@@ -101,6 +102,7 @@ export default function Page() {
     { key: 'google',   label: t(lang, 'tab-google'),   color: 'var(--google)' },
     { key: 'meta',     label: t(lang, 'tab-meta'),     color: 'var(--meta)' },
     { key: 'budget',   label: t(lang, 'tab-budget') },
+    { key: 'sanierung', label: '🟢 Sanierung' },
   ];
 
   return (
@@ -160,6 +162,9 @@ export default function Page() {
         )}
         {tab === 'budget' && (
           <BudgetTab lang={lang} meta={metaData} google={googleData} />
+        )}
+        {tab === 'sanierung' && (
+          <SanierungTab lang={lang} from={customFrom} to={customTo} />
         )}
       </main>
     </>
