@@ -81,10 +81,12 @@ export default function BaufiTab({ lang, from, to }: BaufiTabProps) {
   const [revenuePerDeal, setRevenuePerDeal] = useState(3000);
 
   useEffect(() => {
-    if (!from || !to) return;
     setLoading(true);
     setError(null);
-    fetch(`/api/fincrm?from=${from}&to=${to}`)
+    // finCRM Daten sind aus 2025 - nutze einen langen Zeitraum als Default
+    const effectiveFrom = '2025-01-01';
+    const effectiveTo = to && to > '2025-01-01' ? to : new Date().toISOString().slice(0, 10);
+    fetch(`/api/fincrm?from=${effectiveFrom}&to=${effectiveTo}`)
       .then(r => r.json())
       .then(d => {
         if (d.error) setError(d.error);
@@ -235,17 +237,19 @@ export default function BaufiTab({ lang, from, to }: BaufiTabProps) {
       {(data?.notesList ?? []).length > 0 && (
         <div style={card({ marginBottom: 16 })}>
           <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>
-            💬 Kommentare BaufiExpertin — Nicht-Abschlüsse ({data?.notesList.length})
+            💬 Letzte Aktivitäten — Neueste Leads ({data?.notesList.length})
           </div>
           {(data?.notesList ?? []).map(entry => (
             <div key={entry.purposeId} style={{
-              borderLeft: '3px solid #dc2626', paddingLeft: 12, marginBottom: 16,
+              borderLeft: `3px solid ${entry.state === 'LOST' ? '#dc2626' : entry.stageName === 'Parkplatz' ? '#9ca3af' : '#156949'}`,
+              paddingLeft: 12, marginBottom: 16,
               paddingBottom: 12, borderBottom: '1px solid var(--effi-surface)',
             }}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
                 <span style={{
                   fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
-                  background: '#fee2e2', color: '#dc2626',
+                  background: entry.state === 'LOST' ? '#fee2e2' : entry.stageName === 'Parkplatz' ? '#f3f4f6' : '#e8f5ee',
+                  color: entry.state === 'LOST' ? '#dc2626' : entry.stageName === 'Parkplatz' ? '#6b7280' : '#156949',
                 }}>{entry.stageName}</span>
                 {entry.stateReason && (
                   <span style={{ fontSize: 11, color: 'var(--effi-neutral)' }}>
@@ -259,11 +263,11 @@ export default function BaufiTab({ lang, from, to }: BaufiTabProps) {
                   padding: '10px 12px', marginBottom: 6,
                 }}>
                   <div style={{ fontSize: 11, color: 'var(--effi-neutral)', marginBottom: 4 }}>
-                    👤 {note.author} · {note.createdAt ? new Date(note.createdAt).toLocaleDateString('de-DE') : '–'}
+                    👤 {typeof note.author === 'string' ? note.author : 'Berater'} · {note.createdAt ? new Date(note.createdAt).toLocaleDateString('de-DE') : '–'}
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--effi-black)', lineHeight: 1.5 }}>
-                    {note.content}
-                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--effi-black)', lineHeight: 1.5 }}
+                    dangerouslySetInnerHTML={{ __html: note.content }}
+                  />
                 </div>
               ))}
             </div>

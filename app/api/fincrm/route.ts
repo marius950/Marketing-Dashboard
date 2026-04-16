@@ -34,7 +34,7 @@ async function fetchAllPages(url: string, headers: Record<string, string>): Prom
   const results: any[] = [];
   let nextUrl: string | null = url;
   let page = 0;
-  while (nextUrl && page < 20) {
+  while (nextUrl && page < 50) {
     page++;
     const res: Response = await fetch(nextUrl, { headers });
     if (!res.ok) {
@@ -46,7 +46,7 @@ async function fetchAllPages(url: string, headers: Record<string, string>): Prom
     if (Array.isArray(items)) results.push(...items);
     else if (Array.isArray(data)) results.push(...data);
     nextUrl = data.links?.next ?? null;
-    if (results.length > 5000) break;
+    if (results.length > 10000) break;
   }
   return results;
 }
@@ -59,10 +59,10 @@ export async function GET(req: NextRequest) {
   try {
     const headers = await getHeaders();
 
-    // Stages + Purposes parallel laden
+    // Stages + Purposes parallel laden - neueste zuerst, alle Seiten
     const [stagesRes, purposes] = await Promise.all([
       fetch(`${BASE}/stages`, { headers }),
-      fetchAllPages(`${BASE}/purposes?per_page=100`, headers),
+      fetchAllPages(`${BASE}/purposes?per_page=100&sort=-created_at`, headers),
     ]);
 
     const stagesData = stagesRes.ok ? await stagesRes.json() : { data: [] };
@@ -100,17 +100,15 @@ export async function GET(req: NextRequest) {
     });
 
     // Notes für LOST/Parkplatz Purposes laden (max 20 um API nicht zu überlasten)
-    const purposesForNotes = filtered.filter((p: any) => {
-      const stageId = Number(p.stage_id ?? 0);
-      return p.state === 'LOST' || stageId === 21 || stageId === 6;
-    }).slice(0, 20);
+    // Neueste 30 Purposes für Notes laden (sortiert nach created_at desc da API so liefert)
+    const purposesForNotes = filtered.slice(0, 30);
 
     const notesResults = await Promise.allSettled(
       purposesForNotes.map(async (p: any) => {
         if (!p.customer_id) return null;
         try {
           const res: Response = await fetch(
-            `${BASE}/customers/${p.customer_id}/notes?per_page=10`,
+            `${BASE}/customers/${p.customer_id}/notes?per_page=5&sort=-created_at`,
             { headers }
           );
           if (!res.ok) return null;
