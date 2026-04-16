@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
   const TOKEN = process.env.META_ACCESS_TOKEN;
   const RAW_ACCOUNT = process.env.META_AD_ACCOUNT_ID || '';
   const ACCOUNT = RAW_ACCOUNT.replace(/^act_/, '');
-  const BASE = 'https://graph.facebook.com/v22.0';
+  const BASE = 'https://graph.facebook.com/v25.0';
 
   if (!TOKEN || !ACCOUNT) return NextResponse.json({ error: 'Missing META env vars' }, { status: 500 });
 

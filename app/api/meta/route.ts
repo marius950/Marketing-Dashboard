@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
 
     const fetchChunk = async (chunk: { since: string; until: string }) => {
       const tr = encodeURIComponent(JSON.stringify(chunk));
-      const url = `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&time_range=${tr}&time_increment=1&access_token=${token}`;
+      const url = `https://graph.facebook.com/v25.0/${accountId}/insights?fields=${fields}&time_range=${tr}&time_increment=1&access_token=${token}`;
       const r = await fetch(url);
       const d = await r.json();
       return d.data || [];
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 
     const summaryTR = encodeURIComponent(JSON.stringify({ since, until }));
     const [summaryRes, ...chunkResults] = await Promise.all([
-      fetch(`https://graph.facebook.com/v19.0/${accountId}/insights?fields=${fields}&time_range=${summaryTR}&access_token=${token}`).then((r) => r.json()),
+      fetch(`https://graph.facebook.com/v25.0/${accountId}/insights?fields=${fields}&time_range=${summaryTR}&access_token=${token}`).then((r) => r.json()),
       ...chunks.map(fetchChunk),
     ]);
 
