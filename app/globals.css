@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  --effi-primary:  #156949;
+  --effi-accent:   #C6F35F;
+  --effi-black:    #010D0A;
+  --effi-neutral:  #727E79;
+  --effi-text-sec: #4D5B57;
+  --effi-border:   #E6EDEB;
+  --effi-surface:  #F4F7F5;
+  --effi-surface2: #EBF0EC;
+  --google:  #34a853;
+  --meta:    #0866ff;
+  --san:     #156949;
+  --baufi:   #2563eb;
+  --san-light:   #e8f5ee;
+  --baufi-light: #eff6ff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--effi-surface);
+  color: var(--effi-black);
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--effi-surface); }
+::-webkit-scrollbar-thumb { background: var(--effi-primary); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--effi-accent); }
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { opacity: 1; }
