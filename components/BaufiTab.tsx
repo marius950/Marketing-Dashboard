@@ -21,6 +21,22 @@ interface DailyLead {
   count: number;
 }
 
+interface Note {
+  id: number;
+  content: string;
+  createdAt: string;
+  author: string;
+}
+
+interface NotesEntry {
+  purposeId: number;
+  customerId: number;
+  stageName: string;
+  state: string;
+  stateReason: string | null;
+  notes: Note[];
+}
+
 interface BaufiData {
   kpis: {
     totalLeads: number;
@@ -33,7 +49,9 @@ interface BaufiData {
   };
   funnel: FunnelStage[];
   lossReasons: LossReason[];
+  notesList: NotesEntry[];
   daily: DailyLead[];
+  meta: { totalPurposes: number; filtered: number };
 }
 
 interface BaufiTabProps {
@@ -96,6 +114,13 @@ export default function BaufiTab({ lang, from, to }: BaufiTabProps) {
 
   return (
     <div>
+      {/* Meta Info */}
+      {data?.meta && (
+        <div style={{ fontSize: 11, color: 'var(--effi-neutral)', marginBottom: 12 }}>
+          {data.meta.filtered} von {data.meta.totalPurposes} Vorgängen im gewählten Zeitraum
+        </div>
+      )}
+
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12, marginBottom: 20 }}>
         <KpiCard label="Leads gesamt"   value={loading ? '–' : fmt(data?.kpis.totalLeads ?? 0)}   loading={loading} />
@@ -205,6 +230,46 @@ export default function BaufiTab({ lang, from, to }: BaufiTabProps) {
           </div>
         </div>
       </div>
+
+      {/* Kommentare der BaufiExpertin */}
+      {(data?.notesList ?? []).length > 0 && (
+        <div style={card({ marginBottom: 16 })}>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>
+            💬 Kommentare BaufiExpertin — Nicht-Abschlüsse ({data?.notesList.length})
+          </div>
+          {(data?.notesList ?? []).map(entry => (
+            <div key={entry.purposeId} style={{
+              borderLeft: '3px solid #dc2626', paddingLeft: 12, marginBottom: 16,
+              paddingBottom: 12, borderBottom: '1px solid var(--effi-surface)',
+            }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20,
+                  background: '#fee2e2', color: '#dc2626',
+                }}>{entry.stageName}</span>
+                {entry.stateReason && (
+                  <span style={{ fontSize: 11, color: 'var(--effi-neutral)' }}>
+                    Grund: {entry.stateReason}
+                  </span>
+                )}
+              </div>
+              {entry.notes.map(note => (
+                <div key={note.id} style={{
+                  background: 'var(--effi-surface)', borderRadius: 8,
+                  padding: '10px 12px', marginBottom: 6,
+                }}>
+                  <div style={{ fontSize: 11, color: 'var(--effi-neutral)', marginBottom: 4 }}>
+                    👤 {note.author} · {note.createdAt ? new Date(note.createdAt).toLocaleDateString('de-DE') : '–'}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--effi-black)', lineHeight: 1.5 }}>
+                    {note.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Tägliche Leads Chart */}
       {(data?.daily ?? []).length > 0 && (

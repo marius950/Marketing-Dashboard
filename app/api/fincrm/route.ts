@@ -2,25 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const BASE = 'https://effi.fincrm.de/api/v1';
 
-// Stage-Mapping basierend auf deinen Definitionen
-// Stage-IDs aus finCRM (aus der API gelesen)
 const STAGE_CONFIG: Record<number, { label: string; category: 'active' | 'lost' | 'won' | 'inactive' }> = {
-  1:  { label: 'Neuer Lead',             category: 'active' },
-  9:  { label: 'Kontaktversuch / Mail',  category: 'active' },
-  10: { label: 'Wiedervorlage',          category: 'active' },
-  16: { label: 'Immobiliensuche',        category: 'active' },
-  2:  { label: 'Beratung',              category: 'active' },
-  15: { label: 'Beratung Phase 2',      category: 'active' },
-  22: { label: 'Warten auf RM',         category: 'active' },
-  24: { label: 'Voranfrage',            category: 'active' },
-  4:  { label: 'Bank',                  category: 'active' },
-  5:  { label: 'Vertrag ✅',            category: 'won' },
-  6:  { label: 'Parkplatz',             category: 'inactive' },
-  21: { label: 'Nicht finanzierbar',    category: 'lost' },
-  26: { label: 'Inaktiv',              category: 'inactive' },
+  1:  { label: 'Neuer Lead',            category: 'active' },
+  9:  { label: 'Kontaktversuch / Mail', category: 'active' },
+  10: { label: 'Wiedervorlage',         category: 'active' },
+  16: { label: 'Immobiliensuche',       category: 'active' },
+  2:  { label: 'Beratung',             category: 'active' },
+  15: { label: 'Beratung Phase 2',     category: 'active' },
+  22: { label: 'Warten auf RM',        category: 'active' },
+  24: { label: 'Voranfrage',           category: 'active' },
+  4:  { label: 'Bank',                 category: 'active' },
+  5:  { label: 'Vertrag',              category: 'won' },
+  6:  { label: 'Parkplatz',            category: 'inactive' },
+  21: { label: 'Nicht finanzierbar',   category: 'lost' },
+  26: { label: 'Inaktiv',             category: 'inactive' },
 };
 
-// Funnel-Reihenfolge (nach Stage-ID)
 const FUNNEL_ORDER_IDS = [1, 9, 10, 16, 2, 15, 22, 24, 4, 5, 6, 21, 26];
 
 async function getHeaders() {
@@ -33,26 +30,23 @@ async function getHeaders() {
   };
 }
 
-async function fetchAllPages(url: string, headers: Record<string, string>) {
+async function fetchAllPages(url: string, headers: Record<string, string>): Promise<any[]> {
   const results: any[] = [];
   let nextUrl: string | null = url;
-
-  while (nextUrl) {
+  let page = 0;
+  while (nextUrl && page < 20) {
+    page++;
     const res: Response = await fetch(nextUrl, { headers });
     if (!res.ok) {
       const text = await res.text();
       throw new Error(`finCRM API ${res.status}: ${text}`);
     }
     const data: any = await res.json();
-
-    // finCRM pagination: { data: [...], links: { next: ... }, meta: { total: ... } }
     const items = data.data ?? data;
     if (Array.isArray(items)) results.push(...items);
     else if (Array.isArray(data)) results.push(...data);
-
     nextUrl = data.links?.next ?? null;
-    // Safety: max 20 pages
-    if (results.length > 2000) break;
+    if (results.length > 5000) break;
   }
   return results;
 }
@@ -65,26 +59,27 @@ export async function GET(req: NextRequest) {
   try {
     const headers = await getHeaders();
 
-    // Stages laden
-    const stagesRes = await fetch(`${BASE}/stages`, { headers });
+    // Stages + Purposes parallel laden
+    const [stagesRes, purposes] = await Promise.all([
+      fetch(`${BASE}/stages`, { headers }),
+      fetchAllPages(`${BASE}/purposes?per_page=100`, headers),
+    ]);
+
     const stagesData = stagesRes.ok ? await stagesRes.json() : { data: [] };
     const stages: any[] = stagesData.data ?? stagesData ?? [];
 
-    // Alle Purposes laden
-    // Alle Purposes laden ohne Server-Filter (API unterstützt = Operator nicht)
-    // Zeitraum-Filter wird client-seitig angewendet
-    const purposesUrl = `${BASE}/purposes?per_page=100`;
-
-    const purposes = await fetchAllPages(purposesUrl, headers);
-
-    // Zeitraum-Filter (client-side als Fallback)
-    // Kein Zeitraum-Filter - alle Purposes anzeigen (finCRM hat historische Daten)
-    // from/to wird nur fuer daily chart genutzt
-    const filtered = purposes;
+    // Zeitraum-Filter auf created_at
     const fromTs = from ? new Date(from).getTime() : 0;
-    const toTs   = to   ? new Date(to).getTime() + 86400000 : Infinity;
+    const toTs   = to   ? new Date(to).getTime() + 86400000 : Date.now();
 
-    // Purposes nach Stage-ID gruppieren
+    const filtered = purposes.filter((p: any) => {
+      const raw = p.created_at || p.createdAt || '';
+      if (!raw) return true; // wenn kein Datum, mitnehmen
+      const ts = new Date(raw).getTime();
+      return ts >= fromTs && ts <= toTs;
+    });
+
+    // Nach Stage-ID gruppieren
     const byStageId: Record<number, any[]> = {};
     const byState: Record<string, number> = { ACTIVE: 0, WON: 0, LOST: 0, ON_HOLD: 0 };
     const lossReasons: Record<string, number> = {};
@@ -94,52 +89,87 @@ export async function GET(req: NextRequest) {
       if (!byStageId[stageId]) byStageId[stageId] = [];
       byStageId[stageId].push(p);
 
-      const state = p.state ?? p.status ?? 'ACTIVE';
+      const state = p.state ?? 'ACTIVE';
       byState[state] = (byState[state] ?? 0) + 1;
 
-      if ((state === 'LOST' || state === 'WON') && (p.state_reason || p.loss_reason)) {
-        const reason = p.state_reason || p.loss_reason;
+      // state_reason oder state_note als Nicht-Abschluss-Grund
+      if ((state === 'LOST' || stageId === 21) && (p.state_reason || p.state_note)) {
+        const reason = p.state_reason || p.state_note;
         lossReasons[reason] = (lossReasons[reason] ?? 0) + 1;
       }
     });
 
-    // Funnel aufbauen nach Stage-ID Reihenfolge
+    // Notes für LOST/Parkplatz Purposes laden (max 20 um API nicht zu überlasten)
+    const purposesForNotes = filtered.filter((p: any) => {
+      const stageId = Number(p.stage_id ?? 0);
+      return p.state === 'LOST' || stageId === 21 || stageId === 6;
+    }).slice(0, 20);
+
+    const notesResults = await Promise.allSettled(
+      purposesForNotes.map(async (p: any) => {
+        if (!p.customer_id) return null;
+        try {
+          const res: Response = await fetch(
+            `${BASE}/customers/${p.customer_id}/notes?per_page=10`,
+            { headers }
+          );
+          if (!res.ok) return null;
+          const data: any = await res.json();
+          const notes: any[] = data.data ?? data ?? [];
+          return {
+            purposeId:  p.id,
+            customerId: p.customer_id,
+            stageName:  STAGE_CONFIG[Number(p.stage_id)]?.label ?? String(p.stage_id),
+            state:      p.state,
+            stateReason: p.state_reason ?? p.state_note ?? null,
+            notes: notes.slice(0, 3).map((n: any) => ({
+              id:        n.id,
+              content:   n.note ?? n.content ?? n.body ?? n.text ?? String(n),
+              createdAt: n.created_at ?? n.createdAt ?? '',
+              author:    n.user?.name ?? n.author ?? n.created_by ?? 'BaufiExpertin',
+            })),
+          };
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    const notesList = notesResults
+      .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled' && r.value !== null)
+      .map(r => r.value)
+      .filter(v => v.notes.length > 0);
+
+    // Funnel
     const funnel = FUNNEL_ORDER_IDS.map(stageId => {
       const config = STAGE_CONFIG[stageId] ?? { label: String(stageId), category: 'active' as const };
-      const count  = byStageId[stageId]?.length ?? 0;
-      return { stage: String(stageId), label: config.label, category: config.category, count };
+      return { stage: String(stageId), label: config.label, category: config.category, count: byStageId[stageId]?.length ?? 0 };
     });
 
-    // Won = Vertrag (ID 5) oder WON state
-    const wonCount  = (byStageId[5]?.length ?? 0) + (byState['WON'] ?? 0);
+    // Unbekannte Stages auch anzeigen
+    Object.keys(byStageId).forEach(sid => {
+      const id = Number(sid);
+      if (!FUNNEL_ORDER_IDS.includes(id)) {
+        const config = STAGE_CONFIG[id] ?? { label: `Stage ${id}`, category: 'active' as const };
+        funnel.push({ stage: sid, label: config.label, category: config.category, count: byStageId[id].length });
+      }
+    });
+
+    const wonCount  = byStageId[5]?.length ?? 0;
     const lostCount = (byStageId[21]?.length ?? 0) + (byState['LOST'] ?? 0);
     const totalLeads = filtered.length;
 
-    // Revenue: WON × Provision (Platzhalter €3000 aus Budget-Tab)
-    const revenuePerDeal = 3000;
-    const totalRevenue = wonCount * revenuePerDeal;
-
-    // Tägliche Neuzugänge
-    // Daily chart - nur im gewaehlten Zeitraum
+    // Daily chart
     const dailyMap: Record<string, number> = {};
     filtered.forEach((p: any) => {
-      const rawDate = p.created_at || p.createdAt || p.updated_at || '';
-      const date = rawDate.slice(0, 10);
-      if (!date) return;
-      const ts = new Date(rawDate).getTime();
-      if (ts >= fromTs && ts <= toTs) {
-        dailyMap[date] = (dailyMap[date] ?? 0) + 1;
-      }
+      const date = (p.created_at || '').slice(0, 10);
+      if (date) dailyMap[date] = (dailyMap[date] ?? 0) + 1;
     });
     const daily = Object.entries(dailyMap)
       .map(([date, count]) => ({ date, count }))
       .sort((a, b) => a.date > b.date ? 1 : -1);
 
-    // Aktuelle Pipeline-Werte
-    const activePipeline = filtered.filter((p: any) => {
-      const state = p.state ?? 'ACTIVE';
-      return state === 'ACTIVE';
-    }).length;
+    const activePipeline = filtered.filter((p: any) => (p.state ?? 'ACTIVE') === 'ACTIVE').length;
 
     return NextResponse.json({
       kpis: {
@@ -147,16 +177,18 @@ export async function GET(req: NextRequest) {
         activePipeline,
         wonCount,
         lostCount,
-        totalRevenue,
-        revenuePerDeal,
+        totalRevenue: 0,
+        revenuePerDeal: 3000,
         conversionRate: totalLeads > 0 ? Math.round((wonCount / totalLeads) * 1000) / 10 : 0,
       },
       funnel,
       lossReasons: Object.entries(lossReasons)
         .map(([reason, count]) => ({ reason, count }))
         .sort((a, b) => b.count - a.count),
+      notesList, // Kommentare der BaufiExpertin
       daily,
       stages: stages.map((s: any) => ({ id: s.id, name: s.name ?? s.title })),
+      meta: { totalPurposes: purposes.length, filtered: filtered.length },
     });
 
   } catch (err: any) {
