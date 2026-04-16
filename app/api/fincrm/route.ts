@@ -45,7 +45,22 @@ async function fetchAllPages(url: string, headers: Record<string, string>): Prom
     const items = data.data ?? data;
     if (Array.isArray(items)) results.push(...items);
     else if (Array.isArray(data)) results.push(...data);
-    nextUrl = data.links?.next ?? null;
+
+    // finCRM pagination: try different link fields
+    const next = data.links?.next
+      ?? data.meta?.next_page_url
+      ?? data.next_page_url
+      ?? null;
+
+    // If no next link but we got a full page, try page-based pagination
+    if (!next && Array.isArray(items) && items.length === 100) {
+      const pageNum = page + 1;
+      const separator = nextUrl.includes('?') ? '&' : '?';
+      nextUrl = `${url}${separator}page=${pageNum}`;
+    } else {
+      nextUrl = next;
+    }
+
     if (results.length > 10000) break;
   }
   return results;
