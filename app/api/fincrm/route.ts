@@ -55,7 +55,7 @@ async function fetchAllPages(url: string, headers: Record<string, string>): Prom
     // If no next link but we got a full page, try page-based pagination
     if (!next && Array.isArray(items) && items.length === 100) {
       const pageNum = page + 1;
-      const separator = nextUrl.includes('?') ? '&' : '?';
+      const separator: string = nextUrl.includes('?') ? '&' : '?';
       nextUrl = `${url}${separator}page=${pageNum}`;
     } else {
       nextUrl = next;
