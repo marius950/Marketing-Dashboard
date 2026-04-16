@@ -78,13 +78,11 @@ export async function GET(req: NextRequest) {
     const purposes = await fetchAllPages(purposesUrl, headers);
 
     // Zeitraum-Filter (client-side als Fallback)
+    // Kein Zeitraum-Filter - alle Purposes anzeigen (finCRM hat historische Daten)
+    // from/to wird nur fuer daily chart genutzt
+    const filtered = purposes;
     const fromTs = from ? new Date(from).getTime() : 0;
     const toTs   = to   ? new Date(to).getTime() + 86400000 : Infinity;
-
-    const filtered = purposes.filter((p: any) => {
-      const ts = new Date(p.created_at || p.createdAt || 0).getTime();
-      return ts >= fromTs && ts <= toTs;
-    });
 
     // Purposes nach Stage-ID gruppieren
     const byStageId: Record<number, any[]> = {};
@@ -122,10 +120,16 @@ export async function GET(req: NextRequest) {
     const totalRevenue = wonCount * revenuePerDeal;
 
     // Tägliche Neuzugänge
+    // Daily chart - nur im gewaehlten Zeitraum
     const dailyMap: Record<string, number> = {};
     filtered.forEach((p: any) => {
-      const date = (p.created_at || p.createdAt || p.updated_at || '').slice(0, 10);
-      if (date) dailyMap[date] = (dailyMap[date] ?? 0) + 1;
+      const rawDate = p.created_at || p.createdAt || p.updated_at || '';
+      const date = rawDate.slice(0, 10);
+      if (!date) return;
+      const ts = new Date(rawDate).getTime();
+      if (ts >= fromTs && ts <= toTs) {
+        dailyMap[date] = (dailyMap[date] ?? 0) + 1;
+      }
     });
     const daily = Object.entries(dailyMap)
       .map(([date, count]) => ({ date, count }))
@@ -137,17 +141,7 @@ export async function GET(req: NextRequest) {
       return state === 'ACTIVE';
     }).length;
 
-    // Debug: zeige ersten Purpose um Struktur zu verstehen
-    const debugSample = purposes.slice(0, 2).map((p: any) => ({
-      id: p.id,
-      state: p.state,
-      stage_id: p.stage_id,
-      created_at: p.created_at,
-      keys: Object.keys(p).slice(0, 15),
-    }));
-
     return NextResponse.json({
-      _debug: { totalPurposes: purposes.length, filtered: filtered.length, sample: debugSample },
       kpis: {
         totalLeads,
         activePipeline,
