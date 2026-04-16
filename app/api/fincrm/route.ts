@@ -3,34 +3,25 @@ import { NextRequest, NextResponse } from 'next/server';
 const BASE = 'https://effi.fincrm.de/api/v1';
 
 // Stage-Mapping basierend auf deinen Definitionen
-const STAGE_LABELS: Record<string, { label: string; category: 'active' | 'lost' | 'won' | 'inactive' }> = {
-  'Neuer Lead':                   { label: 'Neuer Lead',             category: 'active' },
-  'Kontaktversuch Mail':          { label: 'Kontaktversuch / Mail',  category: 'active' },
-  'Wiedervorlage':                { label: 'Wiedervorlage',          category: 'active' },
-  'Immobiliensuche':              { label: 'Immobiliensuche',        category: 'active' },
-  'Beratung':                     { label: 'Beratung',               category: 'active' },
-  'Beratung Phase 2':             { label: 'Beratung Phase 2',       category: 'active' },
-  'Warten auf Rückmeldung':       { label: 'Warten auf RM',          category: 'active' },
-  'Bank':                         { label: 'Bank',                   category: 'active' },
-  'Voranfrage':                   { label: 'Voranfrage',             category: 'active' },
-  'Vertrag':                      { label: 'Vertrag ✅',             category: 'won' },
-  'Parkplatz':                    { label: 'Parkplatz',              category: 'inactive' },
+// Stage-IDs aus finCRM (aus der API gelesen)
+const STAGE_CONFIG: Record<number, { label: string; category: 'active' | 'lost' | 'won' | 'inactive' }> = {
+  1:  { label: 'Neuer Lead',             category: 'active' },
+  9:  { label: 'Kontaktversuch / Mail',  category: 'active' },
+  10: { label: 'Wiedervorlage',          category: 'active' },
+  16: { label: 'Immobiliensuche',        category: 'active' },
+  2:  { label: 'Beratung',              category: 'active' },
+  15: { label: 'Beratung Phase 2',      category: 'active' },
+  22: { label: 'Warten auf RM',         category: 'active' },
+  24: { label: 'Voranfrage',            category: 'active' },
+  4:  { label: 'Bank',                  category: 'active' },
+  5:  { label: 'Vertrag ✅',            category: 'won' },
+  6:  { label: 'Parkplatz',             category: 'inactive' },
+  21: { label: 'Nicht finanzierbar',    category: 'lost' },
+  26: { label: 'Inaktiv',              category: 'inactive' },
 };
 
-// Funnel-Reihenfolge
-const FUNNEL_ORDER = [
-  'Neuer Lead',
-  'Kontaktversuch Mail',
-  'Wiedervorlage',
-  'Immobiliensuche',
-  'Beratung',
-  'Beratung Phase 2',
-  'Warten auf Rückmeldung',
-  'Voranfrage',
-  'Bank',
-  'Vertrag',
-  'Parkplatz',
-];
+// Funnel-Reihenfolge (nach Stage-ID)
+const FUNNEL_ORDER_IDS = [1, 9, 10, 16, 2, 15, 22, 24, 4, 5, 6, 21, 26];
 
 async function getHeaders() {
   const token = process.env.FINCRM_ACCESS_TOKEN;
@@ -95,60 +86,35 @@ export async function GET(req: NextRequest) {
       return ts >= fromTs && ts <= toTs;
     });
 
-    // Stage-Namen aus API oder Mapping
-    const stageMap: Record<string, string> = {};
-    stages.forEach((s: any) => {
-      stageMap[String(s.id)] = s.name ?? s.title ?? String(s.id);
-    });
-
-    // Purposes nach Stage gruppieren
-    const byStage: Record<string, any[]> = {};
+    // Purposes nach Stage-ID gruppieren
+    const byStageId: Record<number, any[]> = {};
     const byState: Record<string, number> = { ACTIVE: 0, WON: 0, LOST: 0, ON_HOLD: 0 };
     const lossReasons: Record<string, number> = {};
 
     filtered.forEach((p: any) => {
-      const stageId   = String(p.stage_id ?? p.stageId ?? '');
-      const stageName = stageMap[stageId] ?? p.stage?.name ?? stageId ?? 'Unbekannt';
-
-      if (!byStage[stageName]) byStage[stageName] = [];
-      byStage[stageName].push(p);
+      const stageId = Number(p.stage_id ?? p.stageId ?? 0);
+      if (!byStageId[stageId]) byStageId[stageId] = [];
+      byStageId[stageId].push(p);
 
       const state = p.state ?? p.status ?? 'ACTIVE';
       byState[state] = (byState[state] ?? 0) + 1;
 
-      if (state === 'LOST' && (p.state_reason || p.loss_reason)) {
+      if ((state === 'LOST' || state === 'WON') && (p.state_reason || p.loss_reason)) {
         const reason = p.state_reason || p.loss_reason;
         lossReasons[reason] = (lossReasons[reason] ?? 0) + 1;
       }
     });
 
-    // Funnel aufbauen
-    const funnel = FUNNEL_ORDER.map(stageName => {
-      const count    = byStage[stageName]?.length ?? 0;
-      const stageInfo = STAGE_LABELS[stageName] ?? { label: stageName, category: 'active' };
-      return {
-        stage:    stageName,
-        label:    stageInfo.label,
-        category: stageInfo.category,
-        count,
-      };
+    // Funnel aufbauen nach Stage-ID Reihenfolge
+    const funnel = FUNNEL_ORDER_IDS.map(stageId => {
+      const config = STAGE_CONFIG[stageId] ?? { label: String(stageId), category: 'active' as const };
+      const count  = byStageId[stageId]?.length ?? 0;
+      return { stage: String(stageId), label: config.label, category: config.category, count };
     });
 
-    // Auch Stages die nicht im FUNNEL_ORDER sind hinzufügen
-    Object.keys(byStage).forEach(stageName => {
-      if (!FUNNEL_ORDER.includes(stageName)) {
-        funnel.push({
-          stage:    stageName,
-          label:    stageName,
-          category: 'active' as const,
-          count:    byStage[stageName].length,
-        });
-      }
-    });
-
-    // Won = Vertrag Stage oder WON state
-    const wonCount  = (byStage['Vertrag']?.length ?? 0) + (byState['WON'] ?? 0);
-    const lostCount = byState['LOST'] ?? 0;
+    // Won = Vertrag (ID 5) oder WON state
+    const wonCount  = (byStageId[5]?.length ?? 0) + (byState['WON'] ?? 0);
+    const lostCount = (byStageId[21]?.length ?? 0) + (byState['LOST'] ?? 0);
     const totalLeads = filtered.length;
 
     // Revenue: WON × Provision (Platzhalter €3000 aus Budget-Tab)
@@ -158,7 +124,7 @@ export async function GET(req: NextRequest) {
     // Tägliche Neuzugänge
     const dailyMap: Record<string, number> = {};
     filtered.forEach((p: any) => {
-      const date = (p.created_at || p.createdAt || '').slice(0, 10);
+      const date = (p.created_at || p.createdAt || p.updated_at || '').slice(0, 10);
       if (date) dailyMap[date] = (dailyMap[date] ?? 0) + 1;
     });
     const daily = Object.entries(dailyMap)
@@ -166,11 +132,22 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => a.date > b.date ? 1 : -1);
 
     // Aktuelle Pipeline-Werte
-    const activePipeline = filtered.filter((p: any) =>
-      (p.state ?? 'ACTIVE') === 'ACTIVE'
-    ).length;
+    const activePipeline = filtered.filter((p: any) => {
+      const state = p.state ?? 'ACTIVE';
+      return state === 'ACTIVE';
+    }).length;
+
+    // Debug: zeige ersten Purpose um Struktur zu verstehen
+    const debugSample = purposes.slice(0, 2).map((p: any) => ({
+      id: p.id,
+      state: p.state,
+      stage_id: p.stage_id,
+      created_at: p.created_at,
+      keys: Object.keys(p).slice(0, 15),
+    }));
 
     return NextResponse.json({
+      _debug: { totalPurposes: purposes.length, filtered: filtered.length, sample: debugSample },
       kpis: {
         totalLeads,
         activePipeline,
