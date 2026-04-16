@@ -96,8 +96,9 @@ export async function GET(req: NextRequest) {
 
     const filtered = purposes.filter((p: any) => {
       const raw = p.created_at || p.createdAt || '';
-      if (!raw) return true; // wenn kein Datum, mitnehmen
+      if (!raw) return true; // kein Datum -> immer mitnehmen
       const ts = new Date(raw).getTime();
+      if (isNaN(ts)) return true; // ungültiges Datum -> mitnehmen
       return ts >= fromTs && ts <= toTs;
     });
 
