@@ -18,11 +18,14 @@ export async function GET(req: NextRequest) {
   const accountId = process.env.META_AD_ACCOUNT_ID;
   const fields = 'spend,impressions,reach,frequency,clicks,actions,action_values,ctr,cpc';
 
+  // Immer from/to vom Frontend verwenden — nie serverseitig neu berechnen
+  // (Server läuft in UTC, Ad Account hat eigene Zeitzone → Datumsdiskrepanz)
   let since: string, until: string;
-  if (dateRange === 'custom' && from && to) {
+  if (from && to) {
     since = from;
     until = to;
   } else {
+    // Fallback falls Parameter fehlen
     const toDate = new Date();
     toDate.setDate(toDate.getDate() - 1);
     until = toDate.toISOString().slice(0, 10);
