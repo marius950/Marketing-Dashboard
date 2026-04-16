@@ -80,9 +80,9 @@ export async function GET(req: NextRequest) {
     const stages: any[] = stagesData.data ?? stagesData ?? [];
 
     // Alle Purposes laden
-    let purposesUrl = `${BASE}/purposes?per_page=100`;
-    if (from) purposesUrl += `&filter[created_at][gte]=${from}`;
-    if (to)   purposesUrl += `&filter[created_at][lte]=${to}T23:59:59`;
+    // Alle Purposes laden ohne Server-Filter (API unterstützt = Operator nicht)
+    // Zeitraum-Filter wird client-seitig angewendet
+    const purposesUrl = `${BASE}/purposes?per_page=100`;
 
     const purposes = await fetchAllPages(purposesUrl, headers);
 
