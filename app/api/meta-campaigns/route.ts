@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
   try {
     const campUrl =
       `${BASE}/act_${ACCOUNT}/campaigns` +
-      `?fields=id,name,status,daily_budget,insights.date_preset(last_30d){spend,impressions,clicks,actions,ctr,cpm}` +
+      `?fields=id,name,status,daily_budget,insights.time_range({"since":"${from}","until":"${to}"}){spend,impressions,clicks,actions,ctr,cpm}` +
       `&time_range={"since":"${from}","until":"${to}"}` +
       `&limit=50` +
       `&access_token=${TOKEN}`;
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
         try {
           const adsetUrl =
             `${BASE}/${camp.id}/adsets` +
-            `?fields=id,name,status,daily_budget,insights.date_preset(last_30d){spend,impressions,clicks,ctr}` +
+            `?fields=id,name,status,daily_budget,insights.time_range({"since":"${from}","until":"${to}"}){spend,impressions,clicks,ctr}` +
             `&time_range={"since":"${from}","until":"${to}"}` +
             `&limit=20` +
             `&access_token=${TOKEN}`;
@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
               try {
                 const adUrl =
                   `${BASE}/${adset.id}/ads` +
-                  `?fields=id,name,status,creative{thumbnail_url,object_story_spec},insights.date_preset(last_30d){spend,impressions,clicks,ctr,cpm}` +
+                  `?fields=id,name,status,creative{thumbnail_url,object_story_spec},insights.time_range({"since":"${from}","until":"${to}"}){spend,impressions,clicks,ctr,cpm}` +
                   `&time_range={"since":"${from}","until":"${to}"}` +
                   `&limit=20` +
                   `&access_token=${TOKEN}`;
