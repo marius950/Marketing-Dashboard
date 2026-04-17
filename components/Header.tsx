@@ -1,4 +1,5 @@
 'use client';
+import { signOut, useSession } from 'next-auth/react';
 import { Lang, DateRange } from '@/lib/types';
 import { t } from '@/lib/i18n';
 
@@ -99,6 +100,30 @@ export default function Header({
           {t(lang, 'apply')}
         </button>
       </div>
+
+      {/* User + Logout */}
+      {(() => {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const { data: session } = useSession();
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            {session?.user?.image && (
+              <img src={session.user.image} alt="" style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid rgba(255,255,255,.3)' }} />
+            )}
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>{session?.user?.email?.split('@')[0]}</span>
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              style={{
+                fontSize: 11, padding: '4px 10px', borderRadius: 8, cursor: 'pointer',
+                border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.1)',
+                color: 'rgba(255,255,255,.7)', fontWeight: 500,
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        );
+      })()}
 
       {/* Lang toggle */}
       <div style={{

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import Login from '@/components/Login';
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import OverviewTab from '@/components/OverviewTab';
 import GoogleTab from '@/components/GoogleTab';
@@ -23,7 +24,8 @@ function getDefaultDates() {
 }
 
 export default function Page() {
-  const [authed, setAuthed]       = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [lang, setLangState]      = useState<Lang>('de');
   const [tab, setTab]             = useState<Tab>('overview');
   const [dateRange, setDateRange] = useState<DateRange>('last_30d');
@@ -42,7 +44,7 @@ export default function Page() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const auth = sessionStorage.getItem('effi_auth');
-      setAuthed(auth === '1');
+      // auth handled by NextAuth session
       const savedLang = (sessionStorage.getItem('effi_lang') || 'de') as Lang;
       setLangState(savedLang);
     }
@@ -93,10 +95,10 @@ export default function Page() {
 
   // Load on auth
   useEffect(() => {
-    if (authed) loadData();
-  }, [authed, loadData]);
+    if (status === 'authenticated') loadData();
+  }, [status, loadData]);
 
-  if (!authed) return <Login lang={lang} onLogin={() => setAuthed(true)} />;
+
 
   const TAB_CONFIG: { key: Tab; label: string; color?: string }[] = [
     { key: 'overview', label: t(lang, 'tab-overview') },
