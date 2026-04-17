@@ -29,13 +29,9 @@ export default function LoginPage() {
         boxShadow: '0 8px 40px rgba(0,0,0,.10)', textAlign: 'center',
       }}>
         {/* effi Logo */}
-        <svg width="80" height="28" viewBox="0 0 117 40" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: 24 }}>
-          <path d="M0 20C0 8.954 8.954 0 20 0h77c11.046 0 20 8.954 20 20s-8.954 20-20 20H20C8.954 40 0 31.046 0 20Z" fill="#156949"/>
-          <path d="M22.5 13h-9v3.5h8v3h-8V23h9v3.5h-13V9.5h13V13Z" fill="white"/>
-          <path d="M35.5 13h-4v13.5h-4V13h-3V9.5h11V13Z" fill="white"/>
-          <path d="M48.5 13h-4v13.5h-4V13h-3V9.5h11V13Z" fill="white"/>
-          <path d="M58 9.5h4v17H58v-17Z" fill="white"/>
-        </svg>
+        <div style={{ background: '#111', borderRadius: 16, padding: '14px 24px', marginBottom: 28, display: 'inline-block' }}>
+          <img src="/effi-logo.png" alt="effi" style={{ width: 90, display: 'block' }} />
+        </div>
 
         <h1 style={{ fontSize: 22, fontWeight: 800, color: '#111', marginBottom: 6 }}>
           Marketing Dashboard
