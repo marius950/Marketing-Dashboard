@@ -66,14 +66,34 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
   const [revenuePerDeal, setRevenuePerDeal] = useState(3000);
 
   useEffect(() => {
+    const CACHE_KEY = 'baufi_data_cache';
+    // Session-Cache prüfen
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setData(parsed);
+        setLoading(false);
+        return;
+      }
+    } catch { /* sessionStorage nicht verfügbar */ }
+
     setLoading(true); setError(null);
     const effectiveFrom = '2025-01-01';
     const effectiveTo   = to && to > '2025-01-01' ? to : new Date().toISOString().slice(0, 10);
     fetch(`/api/fincrm?from=${effectiveFrom}&to=${effectiveTo}`)
       .then(r => r.json())
-      .then(d => { if (d.error) setError(d.error); else setData(d); setLoading(false); })
+      .then(d => {
+        if (d.error) {
+          setError(d.error);
+        } else {
+          setData(d);
+          try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(d)); } catch { /* ignore */ }
+        }
+        setLoading(false);
+      })
       .catch(e => { setError(e.message); setLoading(false); });
-  }, [from, to]);
+  }, []); // leeres Array = nur einmal laden, unabhängig von from/to
 
   const card = (extra?: React.CSSProperties): React.CSSProperties => ({
     background: '#fff', borderRadius: 12, padding: '18px 20px',
@@ -93,11 +113,41 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
   return (
     <div>
       {/* Meta */}
-      {data?.meta && (
-        <div style={{ fontSize: 11, color: 'var(--effi-neutral)', marginBottom: 12 }}>
-          {data.meta.filtered} Vorgänge geladen · {data.meta.totalPurposes} gesamt in finCRM
-        </div>
-      )}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        {data?.meta && (
+          <div style={{ fontSize: 11, color: 'var(--effi-neutral)' }}>
+            {data.meta.filtered} Vorgänge · {data.meta.totalPurposes} gesamt
+            {!loading && <span style={{ marginLeft: 8, color: '#16a34a' }}>✓ aus Session-Cache</span>}
+          </div>
+        )}
+        {loading && <div style={{ fontSize: 11, color: 'var(--effi-neutral)' }}>⏳ Lade Daten (einmalig)…</div>}
+        <button
+          onClick={() => {
+            try { sessionStorage.removeItem('baufi_data_cache'); } catch { /* ignore */ }
+            setData(null); setLoading(true); setError(null);
+            const effectiveFrom = '2025-01-01';
+            const effectiveTo = new Date().toISOString().slice(0, 10);
+            fetch(`/api/fincrm?from=${effectiveFrom}&to=${effectiveTo}`)
+              .then(r => r.json())
+              .then(d => {
+                if (d.error) setError(d.error);
+                else {
+                  setData(d);
+                  try { sessionStorage.setItem('baufi_data_cache', JSON.stringify(d)); } catch { /* ignore */ }
+                }
+                setLoading(false);
+              })
+              .catch(e => { setError(e.message); setLoading(false); });
+          }}
+          style={{
+            fontSize: 11, padding: '4px 10px', borderRadius: 8, cursor: 'pointer',
+            border: '1px solid var(--effi-border)', background: 'var(--effi-surface)',
+            color: 'var(--effi-text-sec)', display: 'flex', alignItems: 'center', gap: 4,
+          }}
+        >
+          🔄 Neu laden
+        </button>
+      </div>
 
       {/* KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, marginBottom: 16 }}>
