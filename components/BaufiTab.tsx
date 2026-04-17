@@ -11,7 +11,7 @@ interface FunnelStage {
 }
 interface OverviewStage { stage: string; label: string; category: string; count: number; avgVolume: number; avgDays: number; }
 interface Note { id: number; content: string; createdAt: string; author: string; }
-interface NotesEntry { purposeId: number; customerId: number; stageId: number; stageName: string; state: string; stateReason: string | null; createdAt: string; financialDemand: number | null; source: string; notes: Note[]; }
+interface NotesEntry { purposeId: number; customerId: number; stageId: number; stageName: string; state: string; stateReason: string | null; createdAt: string; financialDemand: number | null; source: string; quality: string | null; tags: string[]; notes: Note[]; }
 interface NeedsAttention { purposeId: number; stageName: string; daysSince: number; lastNote: string; lastNoteDate: string; }
 interface Source { source: string; count: number; wonCount: number; rate: number; }
 interface MonthData { month: string; count: number; }
@@ -29,6 +29,7 @@ interface BaufiData {
   notesList: NotesEntry[];
   needsAttention: NeedsAttention[];
   sources: Source[];
+  qualities: { quality: string; count: number }[];
   monthly: MonthData[];
   weeklyLeads: WeekData[];
   meta: { totalPurposes: number; filtered: number };
@@ -344,11 +345,24 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
       {/* ── QUELLEN TAB ── */}
       {subTab === 'Quellen' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          {/* Quellen aus Tags */}
           <div style={card()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>📡 Lead-Quellen</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>📡 Lead-Quellen (aus Tags)</div>
+            <div style={{ fontSize: 11, color: 'var(--effi-neutral)', marginBottom: 14 }}>Basierend auf den 30 neuesten Leads</div>
             {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> :
-              (data?.sources ?? []).length === 0
-                ? <div style={{ fontSize: 12, color: 'var(--effi-neutral)' }}>Keine Quellen-Daten (Notes werden geladen)</div>
+              (data?.sources ?? []).length === 0 || ((data?.sources ?? []).length === 1 && data?.sources[0]?.source === 'Sonstige')
+                ? (
+                  <div>
+                    <div style={{ fontSize: 12, color: 'var(--effi-neutral)', marginBottom: 12 }}>Keine Quellen-Tags gefunden.</div>
+                    {/* Alle Tags der neuesten Leads anzeigen */}
+                    <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Vorhandene Tags (neueste 30 Leads):</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {[...new Set((data?.notesList ?? []).flatMap((e: any) => e.tags ?? []))].map((tag: string) => (
+                        <span key={tag} style={{ fontSize: 11, background: '#eff6ff', color: '#2563eb', borderRadius: 12, padding: '2px 8px' }}>{tag}</span>
+                      ))}
+                    </div>
+                  </div>
+                )
                 : (data?.sources ?? []).map(s => {
                   const maxCount = Math.max(...(data?.sources ?? []).map(x => x.count), 1);
                   const pct = Math.round((s.count / maxCount) * 100);
@@ -358,7 +372,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
                         <span style={{ fontSize: 12, fontWeight: 500 }}>{s.source}</span>
                         <div style={{ display: 'flex', gap: 8, fontSize: 11 }}>
                           <span style={{ color: 'var(--effi-neutral)' }}>{s.count} Leads</span>
-                          {s.wonCount > 0 && <span style={{ color: '#16a34a', fontWeight: 600 }}>{s.wonCount} Abschlüsse</span>}
+                          {s.wonCount > 0 && <span style={{ color: '#16a34a', fontWeight: 600 }}>{s.wonCount} ✅</span>}
                           {s.rate > 0 && <span style={{ color: '#f59e0b', fontWeight: 600 }}>{s.rate}%</span>}
                         </div>
                       </div>
@@ -369,25 +383,59 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
                   );
                 })}
           </div>
+
+          {/* Lead-Qualität aus Tags */}
           <div style={card()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>💡 Quellen-Insights</div>
-            <div style={{ fontSize: 12, color: 'var(--effi-text-sec)', lineHeight: 1.8 }}>
-              {(data?.sources ?? []).length > 0 ? (
-                <>
-                  <p style={{ marginBottom: 8 }}><strong>Top-Quelle:</strong> {data?.sources[0]?.source} mit {data?.sources[0]?.count} Leads</p>
-                  {(data?.sources ?? []).find(s => s.wonCount > 0) && (
-                    <p style={{ marginBottom: 8 }}><strong>Beste Abschlussquelle:</strong> {
-                      [...(data?.sources ?? [])].sort((a, b) => b.rate - a.rate)[0]?.source
-                    } ({[...(data?.sources ?? [])].sort((a, b) => b.rate - a.rate)[0]?.rate}%)</p>
-                  )}
-                  <p style={{ fontSize: 10, color: 'var(--effi-neutral)', marginTop: 12 }}>
-                    Hinweis: Quellen werden aus den Notes der 30 neuesten Leads erkannt. Für vollständige Analyse alle Notes laden.
-                  </p>
-                </>
-              ) : (
-                <p>Quellen-Erkennung läuft über die Notes der neuesten Leads.</p>
-              )}
-            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>⭐ Lead-Qualität (aus Tags)</div>
+            <div style={{ fontSize: 11, color: 'var(--effi-neutral)', marginBottom: 14 }}>Basierend auf den 30 neuesten Leads</div>
+            {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> :
+              (data?.qualities ?? []).length === 0
+                ? <div style={{ fontSize: 12, color: 'var(--effi-neutral)' }}>Keine Qualitäts-Tags gefunden</div>
+                : (data?.qualities ?? []).map(q => {
+                  const maxCount = Math.max(...(data?.qualities ?? []).map(x => x.count), 1);
+                  const pct = Math.round((q.count / maxCount) * 100);
+                  const qColor = q.quality.toLowerCase().includes('premium') ? '#7c3aed'
+                    : q.quality.toLowerCase().includes('basic') ? '#f59e0b' : '#2563eb';
+                  return (
+                    <div key={q.quality} style={{ marginBottom: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: qColor }}>{q.quality}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700 }}>{q.count}</span>
+                      </div>
+                      <div style={{ background: 'var(--effi-surface2)', borderRadius: 4, height: 8, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', background: qColor, borderRadius: 4, width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+          </div>
+
+          {/* Alle Tags der neuesten Leads */}
+          <div style={{ ...card(), gridColumn: 'span 2' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>🏷️ Alle Tags — neueste 30 Leads</div>
+            {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> : (() => {
+              const allTags = (data?.notesList ?? []).flatMap((e: any) => e.tags ?? []);
+              const tagCounts: Record<string, number> = {};
+              allTags.forEach((t: string) => { tagCounts[t] = (tagCounts[t] ?? 0) + 1; });
+              const sorted = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+              return (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {sorted.length === 0
+                    ? <span style={{ fontSize: 12, color: 'var(--effi-neutral)' }}>Keine Tags vorhanden</span>
+                    : sorted.map(([tag, count]) => (
+                      <span key={tag} style={{
+                        fontSize: 11, padding: '3px 10px', borderRadius: 20,
+                        background: count >= 5 ? '#2563eb' : count >= 2 ? '#eff6ff' : '#f3f4f6',
+                        color: count >= 5 ? '#fff' : count >= 2 ? '#2563eb' : '#374151',
+                        fontWeight: count >= 5 ? 700 : 400,
+                      }}>
+                        {tag} {count > 1 ? `(${count})` : ''}
+                      </span>
+                    ))
+                  }
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -510,36 +558,43 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
         <div style={card()}>
           <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>💬 Letzte Aktivitäten — {data?.notesList.length ?? 0} neueste Leads</div>
           {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> :
-            (data?.notesList ?? []).map(entry => (
-              <div key={entry.purposeId} style={{
-                borderLeft: `3px solid ${entry.state === 'LOST' ? '#dc2626' : CAT_COLOR[STAGE_CONFIG_CLIENT[entry.stageId]?.cat ?? 'active']}`,
-                paddingLeft: 12, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--effi-surface)',
-              }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: CAT_BG[STAGE_CONFIG_CLIENT[entry.stageId]?.cat ?? 'active'], color: CAT_COLOR[STAGE_CONFIG_CLIENT[entry.stageId]?.cat ?? 'active'] }}>
-                    {entry.stageName}
-                  </span>
-                  {entry.source && entry.source !== 'Sonstige' && (
-                    <span style={{ fontSize: 10, background: '#f3f4f6', color: '#374151', borderRadius: 12, padding: '1px 7px' }}>{entry.source}</span>
-                  )}
-                  {entry.financialDemand && (
-                    <span style={{ fontSize: 10, background: '#ede9fe', color: '#7c3aed', borderRadius: 12, padding: '1px 7px', fontWeight: 600 }}>
-                      {fmtEur(Number(entry.financialDemand))}
+            (data?.notesList ?? []).map(entry => {
+              const catKey = STAGE_CONFIG_CLIENT[entry.stageId]?.cat ?? 'active';
+              return (
+                <div key={entry.purposeId} style={{
+                  borderLeft: `3px solid ${entry.state === 'LOST' ? '#dc2626' : CAT_COLOR[catKey]}`,
+                  paddingLeft: 12, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--effi-surface)',
+                }}>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: CAT_BG[catKey], color: CAT_COLOR[catKey] }}>
+                      {entry.stageName}
                     </span>
-                  )}
-                  <span style={{ fontSize: 10, color: 'var(--effi-neutral)' }}>Lead: {fmtDate(entry.createdAt)}</span>
-                </div>
-                {entry.notes.map(note => (
-                  <div key={note.id} style={{ background: 'var(--effi-surface)', borderRadius: 8, padding: '8px 10px', marginBottom: 6 }}>
-                    <div style={{ fontSize: 10, color: 'var(--effi-neutral)', marginBottom: 3 }}>
-                      👤 {note.author} · {fmtDate(note.createdAt)}
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--effi-black)', lineHeight: 1.5 }}
-                      dangerouslySetInnerHTML={{ __html: note.content }} />
+                    {/* Tags anzeigen */}
+                    {(entry.tags ?? []).filter((t: string) => t).slice(0, 4).map((tag: string) => (
+                      <span key={tag} style={{ fontSize: 10, background: '#f3f4f6', color: '#374151', borderRadius: 12, padding: '1px 7px' }}>{tag}</span>
+                    ))}
+                    {entry.financialDemand && Number(entry.financialDemand) > 0 && (
+                      <span style={{ fontSize: 10, background: '#ede9fe', color: '#7c3aed', borderRadius: 12, padding: '1px 7px', fontWeight: 600 }}>
+                        {fmtEur(Number(entry.financialDemand))}
+                      </span>
+                    )}
+                    <span style={{ fontSize: 10, color: 'var(--effi-neutral)', marginLeft: 'auto' }}>Lead: {fmtDate(entry.createdAt)}</span>
                   </div>
-                ))}
-              </div>
-            ))}
+                  {entry.notes.filter((note: any) => note.content?.trim()).map((note: any) => (
+                    <div key={note.id} style={{ background: 'var(--effi-surface)', borderRadius: 8, padding: '8px 10px', marginBottom: 6 }}>
+                      <div style={{ fontSize: 10, color: 'var(--effi-neutral)', marginBottom: 3 }}>
+                        👤 {note.author} · {fmtDate(note.createdAt)}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--effi-black)', lineHeight: 1.5 }}
+                        dangerouslySetInnerHTML={{ __html: note.content }} />
+                    </div>
+                  ))}
+                  {entry.notes.filter((note: any) => note.content?.trim()).length === 0 && (
+                    <div style={{ fontSize: 11, color: 'var(--effi-neutral)', fontStyle: 'italic' }}>Keine Kommentare vorhanden</div>
+                  )}
+                </div>
+              );
+            })}
         </div>
       )}
     </div>
