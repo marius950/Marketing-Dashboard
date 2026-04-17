@@ -2,32 +2,41 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const BASE = 'https://effi.fincrm.de/api/v1';
 
-const STAGE_CONFIG: Record<number, { label: string; category: 'active' | 'lost' | 'won' | 'inactive' }> = {
-  1:  { label: 'Neuer Lead',            category: 'active' },
-  9:  { label: 'Kontaktversuch / Mail', category: 'active' },
-  10: { label: 'Wiedervorlage',         category: 'active' },
-  16: { label: 'Immobiliensuche',       category: 'active' },
-  2:  { label: 'Beratung',             category: 'active' },
-  15: { label: 'Beratung Phase 2',     category: 'active' },
-  22: { label: 'Warten auf RM',        category: 'active' },
-  24: { label: 'Voranfrage',           category: 'active' },
-  4:  { label: 'Bank',                 category: 'active' },
-  5:  { label: 'Vertrag',              category: 'won' },
-  6:  { label: 'Parkplatz',            category: 'inactive' },
-  21: { label: 'Nicht finanzierbar',   category: 'lost' },
-  26: { label: 'Inaktiv',             category: 'inactive' },
+const STAGE_CONFIG: Record<number, { label: string; category: 'active' | 'lost' | 'won' | 'inactive'; order: number }> = {
+  1:  { label: 'Neuer Lead',            category: 'active',   order: 1 },
+  9:  { label: 'Kontaktversuch / Mail', category: 'active',   order: 2 },
+  10: { label: 'Wiedervorlage',         category: 'active',   order: 3 },
+  16: { label: 'Immobiliensuche',       category: 'active',   order: 4 },
+  2:  { label: 'Beratung',              category: 'active',   order: 5 },
+  15: { label: 'Beratung Phase 2',      category: 'active',   order: 6 },
+  22: { label: 'Warten auf RM',         category: 'active',   order: 7 },
+  24: { label: 'Voranfrage',            category: 'active',   order: 8 },
+  4:  { label: 'Bank',                  category: 'active',   order: 9 },
+  5:  { label: 'Vertrag',               category: 'won',      order: 10 },
+  6:  { label: 'Parkplatz',             category: 'inactive', order: 11 },
+  21: { label: 'Nicht finanzierbar',    category: 'lost',     order: 12 },
+  26: { label: 'Inaktiv',               category: 'inactive', order: 13 },
 };
 
-const FUNNEL_ORDER_IDS = [1, 9, 10, 16, 2, 15, 22, 24, 4, 5, 6, 21, 26];
+const FUNNEL_STAGES_IDS = [1, 9, 10, 16, 2, 15, 22, 24, 4, 5];
+const ALL_STAGE_IDS     = [1, 9, 10, 16, 2, 15, 22, 24, 4, 5, 6, 21, 26];
+
+function detectSource(notes: any[]): string {
+  for (const n of notes) {
+    const c = String(n.note ?? n.content ?? '');
+    if (c.includes('ImmoScout')) return 'ImmoScout';
+    if (c.includes('Abakus'))   return 'Abakus';
+    if (c.includes('calendly') || c.includes('Calendly')) return 'Calendly';
+    if (c.includes('Contact Form') || c.includes('Kontaktformular')) return 'Kontaktformular';
+    if (c.includes('callback')) return 'Callback';
+  }
+  return 'Sonstige';
+}
 
 async function getHeaders() {
   const token = process.env.FINCRM_ACCESS_TOKEN;
   if (!token) throw new Error('FINCRM_ACCESS_TOKEN not configured');
-  return {
-    'Authorization': `Bearer ${token}`,
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-  };
+  return { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json', 'Content-Type': 'application/json' };
 }
 
 async function fetchAllPages(url: string, headers: Record<string, string>): Promise<any[]> {
@@ -37,30 +46,17 @@ async function fetchAllPages(url: string, headers: Record<string, string>): Prom
   while (nextUrl && page < 50) {
     page++;
     const res: Response = await fetch(nextUrl, { headers });
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`finCRM API ${res.status}: ${text}`);
-    }
+    if (!res.ok) { const text = await res.text(); throw new Error(`finCRM API ${res.status}: ${text}`); }
     const data: any = await res.json();
     const items = data.data ?? data;
     if (Array.isArray(items)) results.push(...items);
     else if (Array.isArray(data)) results.push(...data);
-
-    // finCRM pagination: try different link fields
-    const next = data.links?.next
-      ?? data.meta?.next_page_url
-      ?? data.next_page_url
-      ?? null;
-
-    // If no next link but we got a full page, try page-based pagination
+    const next = data.links?.next ?? data.meta?.next_page_url ?? null;
     if (!next && Array.isArray(items) && items.length === 100) {
       const pageNum = page + 1;
-      const separator: string = nextUrl.includes('?') ? '&' : '?';
-      nextUrl = `${url}${separator}page=${pageNum}`;
-    } else {
-      nextUrl = next;
-    }
-
+      const sep: string = nextUrl.includes('?') ? '&' : '?';
+      nextUrl = `${url}${sep}page=${pageNum}`;
+    } else { nextUrl = next; }
     if (results.length > 10000) break;
   }
   return results;
@@ -73,141 +69,220 @@ export async function GET(req: NextRequest) {
 
   try {
     const headers = await getHeaders();
-
-    // Stages + Purposes parallel laden - neueste zuerst, alle Seiten
     const [stagesRes, purposes] = await Promise.all([
       fetch(`${BASE}/stages`, { headers }),
       fetchAllPages(`${BASE}/purposes?per_page=100`, headers),
     ]);
-
     const stagesData = stagesRes.ok ? await stagesRes.json() : { data: [] };
     const stages: any[] = stagesData.data ?? stagesData ?? [];
 
-    // Lokal nach created_at absteigend sortieren (neueste zuerst)
-    purposes.sort((a: any, b: any) => {
-      const ta = new Date(a.created_at || 0).getTime();
-      const tb = new Date(b.created_at || 0).getTime();
-      return tb - ta;
-    });
+    purposes.sort((a: any, b: any) =>
+      new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    );
 
-    // Zeitraum-Filter auf created_at
     const fromTs = from ? new Date(from).getTime() : 0;
     const toTs   = to   ? new Date(to).getTime() + 86400000 : Date.now();
+    const now    = Date.now();
 
     const filtered = purposes.filter((p: any) => {
-      const raw = p.created_at || p.createdAt || '';
-      if (!raw) return true; // kein Datum -> immer mitnehmen
+      const raw = p.created_at || '';
+      if (!raw) return true;
       const ts = new Date(raw).getTime();
-      if (isNaN(ts)) return true; // ungültiges Datum -> mitnehmen
+      if (isNaN(ts)) return true;
       return ts >= fromTs && ts <= toTs;
     });
 
-    // Nach Stage-ID gruppieren
+    // Basis-Gruppierung
     const byStageId: Record<number, any[]> = {};
-    const byState: Record<string, number> = { ACTIVE: 0, WON: 0, LOST: 0, ON_HOLD: 0 };
     const lossReasons: Record<string, number> = {};
-
     filtered.forEach((p: any) => {
-      const stageId = Number(p.stage_id ?? p.stageId ?? 0);
-      if (!byStageId[stageId]) byStageId[stageId] = [];
-      byStageId[stageId].push(p);
-
+      const sid = Number(p.stage_id ?? 0);
+      if (!byStageId[sid]) byStageId[sid] = [];
+      byStageId[sid].push(p);
       const state = p.state ?? 'ACTIVE';
-      byState[state] = (byState[state] ?? 0) + 1;
-
-      // state_reason oder state_note als Nicht-Abschluss-Grund
-      if ((state === 'LOST' || stageId === 21) && (p.state_reason || p.state_note)) {
-        const reason = p.state_reason || p.state_note;
-        lossReasons[reason] = (lossReasons[reason] ?? 0) + 1;
+      if ((state === 'LOST' || sid === 21) && (p.state_reason || p.state_note)) {
+        const r = p.state_reason || p.state_note;
+        lossReasons[r] = (lossReasons[r] ?? 0) + 1;
       }
     });
 
-    // Notes für LOST/Parkplatz Purposes laden (max 20 um API nicht zu überlasten)
-    // Neueste 30 Purposes für Notes laden (sortiert nach created_at desc da API so liefert)
-    const purposesForNotes = filtered.slice(0, 30);
+    const wonCount   = byStageId[5]?.length ?? 0;
+    const lostCount  = byStageId[21]?.length ?? 0;
+    const totalLeads = filtered.length;
+    const activePipeline = filtered.filter((p: any) => (p.state ?? 'ACTIVE') === 'ACTIVE').length;
 
+    // Notes für 30 neueste
     const notesResults = await Promise.allSettled(
-      purposesForNotes.map(async (p: any) => {
+      filtered.slice(0, 30).map(async (p: any) => {
         if (!p.customer_id) return null;
         try {
-          const res: Response = await fetch(
-            `${BASE}/customers/${p.customer_id}/notes?per_page=5&sort=-created_at`,
-            { headers }
-          );
+          const res: Response = await fetch(`${BASE}/customers/${p.customer_id}/notes?per_page=5&sort=-created_at`, { headers });
           if (!res.ok) return null;
           const data: any = await res.json();
           const notes: any[] = data.data ?? data ?? [];
           return {
-            purposeId:  p.id,
-            customerId: p.customer_id,
-            stageName:  STAGE_CONFIG[Number(p.stage_id)]?.label ?? String(p.stage_id),
-            state:      p.state,
-            stateReason: p.state_reason ?? p.state_note ?? null,
+            purposeId: p.id, customerId: p.customer_id,
+            stageId: Number(p.stage_id ?? 0),
+            stageName: STAGE_CONFIG[Number(p.stage_id)]?.label ?? String(p.stage_id),
+            state: p.state ?? 'ACTIVE',
+            stateReason: p.state_reason ?? null,
+            createdAt: p.created_at ?? '',
+            financialDemand: p.financial_demand ?? null,
+            source: detectSource(notes),
             notes: notes.slice(0, 3).map((n: any) => ({
-              id:        n.id,
-              content:   n.note ?? n.content ?? n.body ?? n.text ?? String(n),
-              createdAt: n.created_at ?? n.createdAt ?? '',
-              author:    n.user?.name ?? n.author ?? n.created_by ?? 'BaufiExpertin',
+              id: n.id,
+              content: n.note ?? n.content ?? n.body ?? '',
+              createdAt: n.created_at ?? '',
+              author: typeof n.user?.name === 'string' ? n.user.name : (typeof n.author === 'string' ? n.author : 'Berater'),
             })),
           };
-        } catch {
-          return null;
-        }
+        } catch { return null; }
       })
     );
-
     const notesList = notesResults
       .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled' && r.value !== null)
-      .map(r => r.value)
-      .filter(v => v.notes.length > 0);
+      .map(r => r.value).filter(v => v.notes.length > 0);
 
-    // Funnel
-    const funnel = FUNNEL_ORDER_IDS.map(stageId => {
-      const config = STAGE_CONFIG[stageId] ?? { label: String(stageId), category: 'active' as const };
-      return { stage: String(stageId), label: config.label, category: config.category, count: byStageId[stageId]?.length ?? 0 };
+    // Volumen + Durchlaufzeit pro Stage
+    const volumeByStage: Record<number, { total: number; count: number }> = {};
+    const daysInStage:   Record<number, number[]>                          = {};
+    filtered.forEach((p: any) => {
+      const sid  = Number(p.stage_id ?? 0);
+      const vol  = Number(p.financial_demand ?? 0);
+      const days = Math.round((now - new Date(p.created_at || 0).getTime()) / 86400000);
+      if (!volumeByStage[sid]) volumeByStage[sid] = { total: 0, count: 0 };
+      if (vol > 0) { volumeByStage[sid].total += vol; volumeByStage[sid].count++; }
+      if (!daysInStage[sid]) daysInStage[sid] = [];
+      if (days >= 0) daysInStage[sid].push(days);
+    });
+    const avgDaysInStage: Record<number, number> = {};
+    Object.entries(daysInStage).forEach(([sid, days]) => {
+      avgDaysInStage[Number(sid)] = Math.round(days.reduce((a, b) => a + b, 0) / days.length);
     });
 
-    // Unbekannte Stages auch anzeigen
-    Object.keys(byStageId).forEach(sid => {
-      const id = Number(sid);
-      if (!FUNNEL_ORDER_IDS.includes(id)) {
-        const config = STAGE_CONFIG[id] ?? { label: `Stage ${id}`, category: 'active' as const };
-        funnel.push({ stage: sid, label: config.label, category: config.category, count: byStageId[id].length });
+    // Conversion-Funnel
+    const closeProbability: Record<number, number> = {
+      1: 0.05, 9: 0.08, 10: 0.10, 16: 0.15,
+      2: 0.25, 15: 0.35, 22: 0.45, 24: 0.60, 4: 0.75, 5: 1.0,
+    };
+    const funnelStages = FUNNEL_STAGES_IDS.map(sid => ({
+      stageId:  sid,
+      label:    STAGE_CONFIG[sid]?.label ?? String(sid),
+      category: STAGE_CONFIG[sid]?.category ?? ('active' as const),
+      count:    byStageId[sid]?.length ?? 0,
+      avgVolume: volumeByStage[sid]?.count ? Math.round(volumeByStage[sid].total / volumeByStage[sid].count) : 0,
+      avgDays:  avgDaysInStage[sid] ?? 0,
+      conversionToNext: 0,
+    }));
+    for (let i = 0; i < funnelStages.length - 1; i++) {
+      const cur = funnelStages[i].count;
+      const nxt = funnelStages[i + 1].count;
+      funnelStages[i].conversionToNext = cur > 0 ? Math.round((nxt / cur) * 1000) / 10 : 0;
+    }
+
+    const funnel = ALL_STAGE_IDS.map(sid => ({
+      stage: String(sid),
+      label: STAGE_CONFIG[sid]?.label ?? String(sid),
+      category: STAGE_CONFIG[sid]?.category ?? ('active' as const),
+      count: byStageId[sid]?.length ?? 0,
+      avgVolume: volumeByStage[sid]?.count ? Math.round(volumeByStage[sid].total / volumeByStage[sid].count) : 0,
+      avgDays: avgDaysInStage[sid] ?? 0,
+    }));
+
+    // Monats + Daily
+    const monthlyMap: Record<string, number> = {};
+    const dailyMap:   Record<string, number> = {};
+    filtered.forEach((p: any) => {
+      const d = (p.created_at || '').slice(0, 10);
+      if (!d) return;
+      monthlyMap[d.slice(0, 7)] = (monthlyMap[d.slice(0, 7)] ?? 0) + 1;
+      dailyMap[d] = (dailyMap[d] ?? 0) + 1;
+    });
+    const monthly = Object.entries(monthlyMap).map(([month, count]) => ({ month, count })).sort((a, b) => a.month > b.month ? 1 : -1);
+    const daily   = Object.entries(dailyMap).map(([date, count]) => ({ date, count })).sort((a, b) => a.date > b.date ? 1 : -1);
+
+    // Pipeline-Wert
+    let pipelineValue = 0;
+    filtered.forEach((p: any) => {
+      const sid  = Number(p.stage_id ?? 0);
+      const vol  = Number(p.financial_demand ?? 0);
+      const prob = closeProbability[sid] ?? 0;
+      pipelineValue += vol * prob * 0.01;
+    });
+
+    // Quellen
+    const sourceMap: Record<string, { count: number; wonCount: number }> = {};
+    notesList.forEach((e: any) => {
+      const src = e.source || 'Sonstige';
+      if (!sourceMap[src]) sourceMap[src] = { count: 0, wonCount: 0 };
+      sourceMap[src].count++;
+      if (e.stageId === 5) sourceMap[src].wonCount++;
+    });
+    const sources = Object.entries(sourceMap).map(([source, d]) => ({
+      source, count: d.count, wonCount: d.wonCount,
+      rate: d.count > 0 ? Math.round((d.wonCount / d.count) * 1000) / 10 : 0,
+    })).sort((a, b) => b.count - a.count);
+
+    // Needs Attention
+    const needsAttention: any[] = [];
+    notesList.forEach((e: any) => {
+      if (e.state !== 'ACTIVE') return;
+      if ([6, 21, 26].includes(e.stageId)) return;
+      const lastNote = e.notes[0];
+      if (!lastNote?.createdAt) return;
+      const daysSince = Math.round((now - new Date(lastNote.createdAt).getTime()) / 86400000);
+      if (daysSince >= 14) {
+        needsAttention.push({
+          purposeId: e.purposeId, stageName: e.stageName, daysSince,
+          lastNote: lastNote.content, lastNoteDate: lastNote.createdAt,
+        });
       }
     });
+    needsAttention.sort((a, b) => b.daysSince - a.daysSince);
 
-    const wonCount  = byStageId[5]?.length ?? 0;
-    const lostCount = (byStageId[21]?.length ?? 0) + (byState['LOST'] ?? 0);
-    const totalLeads = filtered.length;
-
-    // Daily chart
-    const dailyMap: Record<string, number> = {};
+    // BaufiExpertin Performance
+    const weeklyMap: Record<string, number> = {};
     filtered.forEach((p: any) => {
-      const date = (p.created_at || '').slice(0, 10);
-      if (date) dailyMap[date] = (dailyMap[date] ?? 0) + 1;
+      const d = new Date(p.created_at || 0);
+      const dow = d.getDay() || 7;
+      const mon = new Date(d); mon.setDate(d.getDate() - dow + 1);
+      const week = mon.toISOString().slice(0, 10);
+      weeklyMap[week] = (weeklyMap[week] ?? 0) + 1;
     });
-    const daily = Object.entries(dailyMap)
-      .map(([date, count]) => ({ date, count }))
-      .sort((a, b) => a.date > b.date ? 1 : -1);
+    const weeklyLeads = Object.entries(weeklyMap)
+      .map(([week, count]) => ({ week, count }))
+      .sort((a, b) => a.week > b.week ? 1 : -1).slice(-12);
 
-    const activePipeline = filtered.filter((p: any) => (p.state ?? 'ACTIVE') === 'ACTIVE').length;
+    const responseTimes: number[] = [];
+    notesList.forEach((e: any) => {
+      const created = new Date(e.createdAt || 0).getTime();
+      if (!created) return;
+      const first = [...e.notes]
+        .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        .find((n: any) => new Date(n.createdAt).getTime() > created);
+      if (!first) return;
+      const hrs = (new Date(first.createdAt).getTime() - created) / 3600000;
+      if (hrs > 0 && hrs < 168) responseTimes.push(hrs);
+    });
+    const avgResponseHours = responseTimes.length > 0
+      ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length * 10) / 10
+      : null;
+
+    const totalVolume = filtered.reduce((s: number, p: any) => s + Number(p.financial_demand ?? 0), 0);
+    const avgVolume   = totalLeads > 0 ? Math.round(totalVolume / totalLeads) : 0;
 
     return NextResponse.json({
       kpis: {
-        totalLeads,
-        activePipeline,
-        wonCount,
-        lostCount,
-        totalRevenue: 0,
-        revenuePerDeal: 3000,
+        totalLeads, activePipeline, wonCount, lostCount,
         conversionRate: totalLeads > 0 ? Math.round((wonCount / totalLeads) * 1000) / 10 : 0,
+        revenuePerDeal: 3000, totalVolume, avgVolume,
+        pipelineValue: Math.round(pipelineValue),
+        avgResponseHours, needsAttentionCount: needsAttention.length,
       },
-      funnel,
-      lossReasons: Object.entries(lossReasons)
-        .map(([reason, count]) => ({ reason, count }))
-        .sort((a, b) => b.count - a.count),
-      notesList, // Kommentare der BaufiExpertin
-      daily,
+      funnelStages, funnel,
+      lossReasons: Object.entries(lossReasons).map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count),
+      notesList, needsAttention: needsAttention.slice(0, 15),
+      sources, monthly, daily, weeklyLeads,
       stages: stages.map((s: any) => ({ id: s.id, name: s.name ?? s.title })),
       meta: { totalPurposes: purposes.length, filtered: filtered.length },
     });
