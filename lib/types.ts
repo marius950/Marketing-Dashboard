@@ -1,6 +1,6 @@
 export type DateRange = 'last_7d' | 'last_30d' | 'last_90d' | 'last_180d' | 'last_year' | 'custom';
 export type Lang = 'de' | 'en';
-export type Tab = 'overview' | 'google' | 'meta' | 'budget' | 'sanierung' | 'baufi';
+export type Tab = 'overview' | 'google' | 'meta' | 'budget' | 'sanierung' | 'baufi' | 'zinsbid' | 'dp_board';
 
 export interface MetaSummary {
   spend: number;

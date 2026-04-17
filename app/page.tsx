@@ -2,7 +2,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Header from '@/components/Header';
+import Header, { Product } from '@/components/Header';
+import ZinsbidTab from '@/components/ZinsbidTab';
+import DigitalPracticesTab from '@/components/DigitalPracticesTab';
 import OverviewTab from '@/components/OverviewTab';
 import GoogleTab from '@/components/GoogleTab';
 import MetaTab from '@/components/MetaTab';
@@ -28,6 +30,15 @@ export default function Page() {
   const router = useRouter();
   const [lang, setLangState]      = useState<Lang>('de');
   const [tab, setTab]             = useState<Tab>('overview');
+  const [product, setProduct]     = useState<Product>('effi');
+
+  // Bei Produkt-Wechsel: Tab auf ersten setzen
+  function handleSetProduct(p: Product) {
+    setProduct(p);
+    if (p === 'effi')    setTab('overview');
+    if (p === 'zinsbid') setTab('zinsbid');
+    if (p === 'uhub')    setTab('dp_board');
+  }
   const [dateRange, setDateRange] = useState<DateRange>('last_30d');
   const defaults = getDefaultDates();
   const [customFrom, setCustomFrom] = useState(defaults.from);
@@ -100,6 +111,21 @@ export default function Page() {
 
 
 
+  const EFFI_TABS: { key: Tab; label: string }[] = [
+    { key: 'overview',   label: t(lang, 'overview') },
+    { key: 'google',     label: '📊 Google Ads' },
+    { key: 'meta',       label: '📘 Meta Ads' },
+    { key: 'budget',     label: '💰 Budget' },
+    { key: 'sanierung',  label: '🟢 Sanierung' },
+    { key: 'baufi',      label: '🔵 Baufi Sales' },
+  ];
+  const ZINSBID_TABS: { key: Tab; label: string }[] = [
+    { key: 'zinsbid',   label: '🏦 Zinsbid Dashboard' },
+  ];
+  const UHUB_TABS: { key: Tab; label: string }[] = [
+    { key: 'dp_board',  label: '⚡ Digital Practices' },
+  ];
+
   const TAB_CONFIG: { key: Tab; label: string; color?: string }[] = [
     { key: 'overview', label: t(lang, 'tab-overview') },
     { key: 'google',   label: t(lang, 'tab-google'),   color: 'var(--google)' },
@@ -113,14 +139,16 @@ export default function Page() {
     <>
       <Header
         lang={lang}
-        setLang={setLang}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-        customFrom={customFrom}
-        customTo={customTo}
-        setCustomFrom={setCustomFrom}
-        setCustomTo={setCustomTo}
-        onLoad={loadData}
+        setLang={setLangState}
+        tab={tab}
+        setTab={setTab}
+        from={customFrom}
+        to={customTo}
+        setFrom={setCustomFrom}
+        setTo={setCustomTo}
+        tabs={product === 'effi' ? EFFI_TABS : product === 'zinsbid' ? ZINSBID_TABS : UHUB_TABS}
+        product={product}
+        setProduct={handleSetProduct}
       />
 
       <main style={{ padding: '28px 32px', maxWidth: 1400, margin: '0 auto' }}>
@@ -172,6 +200,12 @@ export default function Page() {
         )}
         {tab === 'baufi' && (
           <BaufiTab lang={lang} from={customFrom} to={customTo} />
+        )}
+        {tab === 'zinsbid' && (
+          <ZinsbidTab lang={lang} from={customFrom} to={customTo} />
+        )}
+        {tab === 'dp_board' && (
+          <DigitalPracticesTab lang={lang} from={customFrom} to={customTo} />
         )}
       </main>
     </>

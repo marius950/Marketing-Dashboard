@@ -28,13 +28,11 @@ export default function LoginPage() {
         background: '#fff', borderRadius: 20, padding: '48px 40px', width: 380,
         boxShadow: '0 8px 40px rgba(0,0,0,.10)', textAlign: 'center',
       }}>
-        {/* effi Logo */}
-        <div style={{ background: '#111', borderRadius: 16, padding: '14px 24px', marginBottom: 28, display: 'inline-block' }}>
-          <img src="/effi-logo.png" alt="effi" style={{ width: 90, display: 'block' }} />
-        </div>
+        {/* Überseehub Logo */}
+        <img src="/uhub-logo.svg" alt="Überseehub" style={{ width: 180, marginBottom: 28 }} />
 
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#111', marginBottom: 6 }}>
-          Marketing Dashboard
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#011640', marginBottom: 6 }}>
+          Business Dashboard
         </h1>
         <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 32, lineHeight: 1.5 }}>
           Melde dich mit deinem<br />
