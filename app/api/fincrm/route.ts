@@ -23,7 +23,7 @@ const ALL_STAGE_IDS     = [1, 9, 10, 16, 2, 15, 22, 24, 4, 5, 6, 21, 26];
 
 function detectSource(notes: any[]): string {
   for (const n of notes) {
-    const c = String(n.note ?? n.content ?? '');
+    const c = String(n.text ?? n.note ?? n.content ?? '');
     if (c.includes('ImmoScout')) return 'ImmoScout';
     if (c.includes('Abakus'))   return 'Abakus';
     if (c.includes('calendly') || c.includes('Calendly')) return 'Calendly';
@@ -129,12 +129,21 @@ export async function GET(req: NextRequest) {
             createdAt: p.created_at ?? '',
             financialDemand: p.financial_demand ?? null,
             source: detectSource(notes),
-            notes: notes.slice(0, 3).map((n: any) => ({
-              id: n.id,
-              content: n.note ?? n.content ?? n.body ?? '',
-              createdAt: n.created_at ?? '',
-              author: typeof n.user?.name === 'string' ? n.user.name : (typeof n.author === 'string' ? n.author : 'Berater'),
-            })),
+            notes: (() => {
+              // n.text ist das korrekte finCRM Feld (laut API Debug)
+              const mapped = notes.map((n: any) => ({
+                id: n.id,
+                content: n.text ?? n.note ?? n.content ?? '',
+                createdAt: n.created_at ?? '',
+                author: typeof n.user?.name === 'string' ? n.user.name : (typeof n.created_by === 'number' ? 'Natascha' : 'Berater'),
+              }));
+              // Neueste zuerst sortieren
+              mapped.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+              // Notes mit echtem Text priorisieren, dann leere
+              const withText    = mapped.filter((n: any) => n.content?.trim());
+              const withoutText = mapped.filter((n: any) => !n.content?.trim());
+              return [...withText, ...withoutText].slice(0, 5);
+            })(),
           };
         } catch { return null; }
       })
