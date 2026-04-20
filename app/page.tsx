@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Header, { Product } from '@/components/Header';
 import ZinsbidTab from '@/components/ZinsbidTab';
 import DigitalPracticesTab from '@/components/DigitalPracticesTab';
+import UHubHomeTab from '@/components/UHubHomeTab';
+import DigitalPracticesAgencyTab from '@/components/DigitalPracticesAgencyTab';
 import OverviewTab from '@/components/OverviewTab';
 import GoogleTab from '@/components/GoogleTab';
 import MetaTab from '@/components/MetaTab';
@@ -37,7 +39,7 @@ export default function Page() {
     setProduct(p);
     if (p === 'effi')    setTab('overview');
     if (p === 'zinsbid') setTab('zinsbid');
-    if (p === 'uhub')    setTab('dp_board');
+    if (p === 'uhub')    setTab('uhub_home');
   }
 
   function handleApplyDates(from: string, to: string) {
@@ -138,7 +140,8 @@ export default function Page() {
     { key: 'zinsbid',   label: 'Zinsbid Dashboard' },
   ];
   const UHUB_TABS: { key: Tab; label: string }[] = [
-    { key: 'dp_board',  label: 'Digital Practices' },
+    { key: 'uhub_home',  label: 'Revenue Übersicht' },
+    { key: 'dp_agency',  label: 'Digital Practices' },
   ];
 
   const TAB_CONFIG: { key: Tab; label: string; color?: string }[] = [
@@ -192,6 +195,12 @@ export default function Page() {
         )}
         {tab === 'dp_board' && (
           <DigitalPracticesTab lang={lang} from={customFrom} to={customTo} />
+        )}
+        {tab === 'uhub_home' && (
+          <UHubHomeTab lang={lang} from={customFrom} to={customTo} />
+        )}
+        {tab === 'dp_agency' && (
+          <DigitalPracticesAgencyTab lang={lang} from={customFrom} to={customTo} />
         )}
       </main>
     </>
