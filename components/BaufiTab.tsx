@@ -580,17 +580,25 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
                     )}
                     <span style={{ fontSize: 10, color: 'var(--effi-neutral)', marginLeft: 'auto' }}>Lead: {fmtDate(entry.createdAt)}</span>
                   </div>
-                  {entry.notes.filter((note: any) => note.content?.trim()).map((note: any) => (
+                  {entry.notes.map((note: any) => (
                     <div key={note.id} style={{ background: 'var(--effi-surface)', borderRadius: 8, padding: '8px 10px', marginBottom: 6 }}>
                       <div style={{ fontSize: 10, color: 'var(--effi-neutral)', marginBottom: 3 }}>
                         👤 {note.author} · {fmtDate(note.createdAt)}
                       </div>
+                      {note.content?.trim() ? (
                       <div style={{ fontSize: 12, color: 'var(--effi-black)', lineHeight: 1.5 }}
                         dangerouslySetInnerHTML={{ __html: note.content }} />
+                    ) : (
+                      <div style={{ fontSize: 11, color: 'var(--effi-neutral)', fontStyle: 'italic' }}>
+                        Auto-Note (kein manueller Text)
+                      </div>
+                    )}
                     </div>
                   ))}
                   {entry.notes.filter((note: any) => note.content?.trim()).length === 0 && (
-                    <div style={{ fontSize: 11, color: 'var(--effi-neutral)', fontStyle: 'italic' }}>Keine Kommentare vorhanden</div>
+                    <div style={{ fontSize: 11, color: 'var(--effi-neutral)', fontStyle: 'italic' }}>
+                      {entry.notes.length > 0 ? `${entry.notes.length} automatische Aktivität(en) ohne manuellen Kommentar` : 'Keine Aktivitäten vorhanden'}
+                    </div>
                   )}
                 </div>
               );
