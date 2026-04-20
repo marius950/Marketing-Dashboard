@@ -15,6 +15,7 @@ interface HeaderProps {
   to:          string;
   setFrom:     (v: string) => void;
   setTo:       (v: string) => void;
+  onApply?:    (from: string, to: string) => void;
   tabs:        { key: Tab; label: string }[];
   product:     Product;
   setProduct:  (p: Product) => void;
@@ -23,10 +24,10 @@ interface HeaderProps {
 const PRODUCTS: { key: Product; label: string; color: string }[] = [
   { key: 'effi',    label: 'effi',    color: '#156949' },
   { key: 'zinsbid', label: 'Zinsbid', color: '#00008B' },
-  { key: 'uhub',    label: '⚡ Digital Practices', color: '#E83434' },
+  { key: 'uhub',    label: 'Digital Practices', color: '#E83434' },
 ];
 
-export default function Header({ lang, setLang, tab, setTab, from, to, setFrom, setTo, tabs, product, setProduct }: HeaderProps) {
+export default function Header({ lang, setLang, tab, setTab, from, to, setFrom, setTo, onApply, tabs, product, setProduct }: HeaderProps) {
   const [localFrom, setLocalFrom] = useState(from);
   const [localTo,   setLocalTo]   = useState(to);
   const { data: session } = useSession();
@@ -35,6 +36,7 @@ export default function Header({ lang, setLang, tab, setTab, from, to, setFrom, 
     if (localFrom && localTo && localFrom <= localTo) {
       setFrom(localFrom);
       setTo(localTo);
+      onApply?.(localFrom, localTo);
     }
   }
 
@@ -77,7 +79,7 @@ export default function Header({ lang, setLang, tab, setTab, from, to, setFrom, 
             >
               {p.key === 'zinsbid' ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <img src="/zinsbid-logo.png" alt="" style={{ height: 14, filter: product === p.key ? 'brightness(0) invert(1)' : 'brightness(0) invert(.6)' }} />
+                  <img src="/zinsbid-logo.svg" alt="Zinsbid" style={{ height: 13 }} />
                 </span>
               ) : p.label}
             </button>

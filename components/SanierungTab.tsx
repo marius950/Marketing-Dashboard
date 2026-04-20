@@ -189,7 +189,7 @@ export default function SanierungTab({ lang, from, to }: SanierungTabProps) {
 
         {/* Revenue-Rechner */}
         <div style={card()}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>💰 Revenue-Prognose</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Revenue-Prognose</div>
           {[
             ['Weitervermittelte Leads', fmt(data?.kpis.totalForwarded ?? 0)],
             ['Revenue / Lead', fmtEur(revenuePerLead)],

@@ -39,6 +39,21 @@ export default function Page() {
     if (p === 'zinsbid') setTab('zinsbid');
     if (p === 'uhub')    setTab('dp_board');
   }
+
+  function handleApplyDates(from: string, to: string) {
+    setCustomFrom(from);
+    setCustomTo(to);
+    setDateRange('custom');
+    // Re-fetch Google + Meta with new dates
+    setLoadingMeta(true);
+    setLoadingGoogle(true);
+    fetch(`/api/meta?dateRange=custom&from=${from}&to=${to}`)
+      .then(r => r.json()).then(d => { setMetaData(d); setLoadingMeta(false); }).catch(() => setLoadingMeta(false));
+    fetch(`/api/meta-campaigns?from=${from}&to=${to}`)
+      .then(r => r.json()).then(d => setMetaCampaigns(d)).catch(() => {});
+    fetch(`/api/google?from=${from}&to=${to}`)
+      .then(r => r.json()).then(d => { setGoogleData(d); setLoadingGoogle(false); }).catch(() => setLoadingGoogle(false));
+  }
   const [dateRange, setDateRange] = useState<DateRange>('last_30d');
   const defaults = getDefaultDates();
   const [customFrom, setCustomFrom] = useState(defaults.from);
@@ -113,17 +128,17 @@ export default function Page() {
 
   const EFFI_TABS: { key: Tab; label: string }[] = [
     { key: 'overview',   label: t(lang, 'overview') },
-    { key: 'google',     label: '📊 Google Ads' },
-    { key: 'meta',       label: '📘 Meta Ads' },
-    { key: 'budget',     label: '💰 Budget' },
-    { key: 'sanierung',  label: '🟢 Sanierung' },
-    { key: 'baufi',      label: '🔵 Baufi Sales' },
+    { key: 'google',     label: 'Google Ads' },
+    { key: 'meta',       label: 'Meta Ads' },
+    { key: 'budget',     label: 'Budget' },
+    { key: 'sanierung',  label: 'Sanierung' },
+    { key: 'baufi',      label: 'Baufi Sales' },
   ];
   const ZINSBID_TABS: { key: Tab; label: string }[] = [
-    { key: 'zinsbid',   label: '🏦 Zinsbid Dashboard' },
+    { key: 'zinsbid',   label: 'Zinsbid Dashboard' },
   ];
   const UHUB_TABS: { key: Tab; label: string }[] = [
-    { key: 'dp_board',  label: '⚡ Digital Practices' },
+    { key: 'dp_board',  label: 'Digital Practices' },
   ];
 
   const TAB_CONFIG: { key: Tab; label: string; color?: string }[] = [
@@ -131,8 +146,8 @@ export default function Page() {
     { key: 'google',   label: t(lang, 'tab-google'),   color: 'var(--google)' },
     { key: 'meta',     label: t(lang, 'tab-meta'),     color: 'var(--meta)' },
     { key: 'budget',   label: t(lang, 'tab-budget') },
-    { key: 'sanierung', label: '🟢 Sanierung' },
-    { key: 'baufi',     label: '🔵 Baufi Sales' },
+    { key: 'sanierung', label: 'Sanierung' },
+    { key: 'baufi',     label: 'Baufi Sales' },
   ];
 
   return (
@@ -146,42 +161,13 @@ export default function Page() {
         to={customTo}
         setFrom={setCustomFrom}
         setTo={setCustomTo}
+        onApply={handleApplyDates}
         tabs={product === 'effi' ? EFFI_TABS : product === 'zinsbid' ? ZINSBID_TABS : UHUB_TABS}
         product={product}
         setProduct={handleSetProduct}
       />
 
       <main style={{ padding: '28px 32px', maxWidth: 1400, margin: '0 auto' }}>
-        {/* Tabs */}
-        <div style={{
-          display: 'flex', gap: 4, marginBottom: 24,
-          background: '#fff', padding: 4, borderRadius: 10,
-          width: 'fit-content', border: '1px solid var(--effi-border)',
-          boxShadow: '0 1px 4px rgba(0,0,0,.06)',
-        }}>
-          {TAB_CONFIG.map(tc => {
-            const isActive = tab === tc.key;
-            const activeBg = tc.color ?? 'var(--effi-primary)';
-            return (
-              <button
-                key={tc.key}
-                onClick={() => setTab(tc.key)}
-                style={{
-                  padding: '7px 18px', borderRadius: 7, fontSize: 13,
-                  fontWeight: isActive ? 600 : 500,
-                  cursor: 'pointer', border: 'none',
-                  background: isActive ? activeBg : 'transparent',
-                  color: isActive ? (tc.color ? '#fff' : 'var(--effi-accent)') : 'var(--effi-text-sec)',
-                  transition: 'all .15s',
-                  letterSpacing: isActive ? '0.01em' : 'normal',
-                }}
-              >
-                {tc.label}
-              </button>
-            );
-          })}
-        </div>
-
         {/* Tab panels */}
         {tab === 'overview' && (
           <OverviewTab lang={lang} meta={metaData} google={googleData} loading={loadingMeta || loadingGoogle} />

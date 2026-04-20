@@ -79,9 +79,7 @@ export default function ZinsbidTab({ lang, from, to }: ZinsbidTabProps) {
     <div>
       {/* Zinsbid Logo + Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <div style={{ background: '#000010', borderRadius: 10, padding: '8px 16px' }}>
-          <img src="/zinsbid-logo.png" alt="Zinsbid" style={{ height: 28 }} />
-        </div>
+        <img src="/zinsbid-logo.svg" alt="Zinsbid" style={{ height: 36 }} />
         <div>
           <div style={{ fontSize: 18, fontWeight: 800, color: '#00008B' }}>Zinsbid Dashboard</div>
           <div style={{ fontSize: 12, color: 'var(--effi-neutral)' }}>Baufinanzierungs-Leads aus finCRM · {loading ? '…' : `${data?.meta?.filtered ?? 0} Vorgänge`}</div>
@@ -128,7 +126,7 @@ export default function ZinsbidTab({ lang, from, to }: ZinsbidTabProps) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {/* Monats-Chart */}
           <div style={CARD()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>📅 Leads pro Monat</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Leads pro Monat</div>
             {loading ? <div style={{ color: 'var(--effi-neutral)', fontSize: 13 }}>Lade…</div> : (
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 120, overflowX: 'auto' }}>
                 {monthly.map((m: any) => {
@@ -148,7 +146,7 @@ export default function ZinsbidTab({ lang, from, to }: ZinsbidTabProps) {
 
           {/* Pipeline-Wert */}
           <div style={CARD()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>💰 Pipeline-Wert</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Pipeline-Wert</div>
             {[
               ['Gesamtvolumen',    fmtEur(kpi?.totalVolume ?? 0),    '#00008B'],
               ['Pipeline-Wert',   fmtEur(kpi?.pipelineValue ?? 0),  '#7c3aed'],
@@ -168,7 +166,7 @@ export default function ZinsbidTab({ lang, from, to }: ZinsbidTabProps) {
       {/* FUNNEL */}
       {subTab === 'Funnel' && (
         <div style={CARD()}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 20 }}>🏗️ Lead Funnel — Conversion zwischen Stages</div>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 20 }}>Lead Funnel — Conversion zwischen Stages</div>
           {loading ? <div style={{ color: 'var(--effi-neutral)', fontSize: 13 }}>Lade…</div> :
             funnel.map((stage: any, i: number) => {
               const maxC = Math.max(...funnel.map((s: any) => s.count), 1);
@@ -202,7 +200,7 @@ export default function ZinsbidTab({ lang, from, to }: ZinsbidTabProps) {
       {subTab === 'Quellen' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <div style={CARD()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>📡 Lead-Quellen</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Lead-Quellen</div>
             <div style={{ fontSize: 12, color: 'var(--effi-neutral)', marginBottom: 12 }}>
               Quellen werden aus den Tags der neuesten Leads erkannt.
             </div>
@@ -223,7 +221,7 @@ export default function ZinsbidTab({ lang, from, to }: ZinsbidTabProps) {
             </div>
           </div>
           <div style={CARD()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>⭐ Lead-Qualität</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Lead-Qualität</div>
             {(data?.qualities ?? []).length === 0
               ? <div style={{ fontSize: 12, color: 'var(--effi-neutral)' }}>Keine Qualitäts-Tags gefunden</div>
               : (data?.qualities ?? []).map((q: any) => {
@@ -249,7 +247,7 @@ export default function ZinsbidTab({ lang, from, to }: ZinsbidTabProps) {
       {subTab === 'Revenue' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <div style={CARD({ borderTop: '3px solid #16a34a' })}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>💰 Revenue-Analyse</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Revenue-Analyse</div>
             <div style={{ fontSize: 11, color: 'var(--effi-neutral)', marginBottom: 16 }}>
               Zinsbid-Provision basiert auf Finanzierungsvolumen
             </div>
@@ -266,7 +264,7 @@ export default function ZinsbidTab({ lang, from, to }: ZinsbidTabProps) {
             ))}
           </div>
           <div style={CARD()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>📊 Nicht-Abschluss Gründe</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Nicht-Abschluss Gründe</div>
             {(data?.lossReasons ?? []).length === 0
               ? <div style={{ fontSize: 12, color: 'var(--effi-neutral)' }}>Keine Verlust-Gründe erfasst</div>
               : (data?.lossReasons ?? []).map((lr: any) => (

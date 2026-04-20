@@ -207,7 +207,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
         <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16 }}>
           {/* Conversion Funnel */}
           <div style={card()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 18 }}>🏗️ Conversion Funnel</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 18 }}>Conversion Funnel</div>
             {loading ? <div style={{ color: 'var(--effi-neutral)', fontSize: 13 }}>Lade...</div> : (
               (data?.funnelStages ?? []).map((stage, i) => {
                 const maxCount = Math.max(...(data?.funnelStages ?? []).map(s => s.count), 1);
@@ -241,7 +241,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
           {/* Alle Stages + Loss Reasons */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={card()}>
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>📊 Alle Stages</div>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Alle Stages</div>
               {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> : (
                 (data?.funnel ?? []).map(s => (
                   <div key={s.stage} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--effi-surface)' }}>
@@ -255,7 +255,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
               )}
             </div>
             <div style={card()}>
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>❌ Gründe Nicht-Abschluss</div>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Nicht-Abschluss Gründe</div>
               {(data?.lossReasons ?? []).length === 0
                 ? <div style={{ fontSize: 12, color: 'var(--effi-neutral)' }}>Keine Verlust-Gründe erfasst</div>
                 : (data?.lossReasons ?? []).map(lr => (
@@ -274,7 +274,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {/* Monats-Chart */}
           <div style={card()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>📅 Leads pro Monat</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Leads pro Monat</div>
             {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> : (() => {
               const monthly = data?.monthly ?? [];
               const maxC = Math.max(...monthly.map(m => m.count), 1);
@@ -298,7 +298,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
 
           {/* Pipeline-Wert nach Stage */}
           <div style={card()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>💰 Pipeline-Wert nach Stage</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Pipeline-Wert nach Stage</div>
             {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> : (
               (data?.funnelStages ?? []).filter(s => s.avgVolume > 0).map(s => {
                 const prob: Record<number, number> = { 1: 0.05, 9: 0.08, 10: 0.10, 16: 0.15, 2: 0.25, 15: 0.35, 22: 0.45, 24: 0.60, 4: 0.75, 5: 1.0 };
@@ -322,7 +322,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
 
           {/* Provision Rechner */}
           <div style={{ ...card(), borderTop: '3px solid #16a34a', gridColumn: 'span 2' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>🧮 Revenue-Rechner</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Revenue-Rechner</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto 1fr auto', gap: 16, alignItems: 'center' }}>
               <span style={{ fontSize: 12, color: 'var(--effi-text-sec)' }}>Abschlüsse</span>
               <span style={{ fontSize: 20, fontWeight: 800 }}>{fmt(kpi?.wonCount ?? 0)}</span>
@@ -347,7 +347,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {/* Quellen aus Tags */}
           <div style={card()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>📡 Lead-Quellen (aus Tags)</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Lead-Quellen (aus Tags)</div>
             <div style={{ fontSize: 11, color: 'var(--effi-neutral)', marginBottom: 14 }}>Basierend auf den 30 neuesten Leads</div>
             {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> :
               (data?.sources ?? []).length === 0 || ((data?.sources ?? []).length === 1 && data?.sources[0]?.source === 'Sonstige')
@@ -386,7 +386,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
 
           {/* Lead-Qualität aus Tags */}
           <div style={card()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>⭐ Lead-Qualität (aus Tags)</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Lead-Qualität (aus Tags)</div>
             <div style={{ fontSize: 11, color: 'var(--effi-neutral)', marginBottom: 14 }}>Basierend auf den 30 neuesten Leads</div>
             {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> :
               (data?.qualities ?? []).length === 0
@@ -412,7 +412,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
 
           {/* Alle Tags der neuesten Leads */}
           <div style={{ ...card(), gridColumn: 'span 2' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>🏷️ Alle Tags — neueste 30 Leads</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Alle Tags — neueste 30 Leads</div>
             {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> : (() => {
               const allTags = (data?.notesList ?? []).flatMap((e: any) => e.tags ?? []);
               const tagCounts: Record<string, number> = {};
@@ -444,7 +444,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
       {subTab === 'Attention' && (
         <div style={card()}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>⚠️ Needs Attention — kein Kontakt seit 14+ Tagen</div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>Needs Attention — kein Kontakt seit 14+ Tagen</div>
             <span style={{ fontSize: 12, background: '#fee2e2', color: '#dc2626', borderRadius: 20, padding: '2px 10px', fontWeight: 600 }}>
               {data?.needsAttention.length ?? 0} Leads
             </span>
@@ -483,7 +483,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {/* Wöchentliche Leads */}
           <div style={card()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>📈 Leads pro Woche (letzte 12)</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Leads pro Woche (letzte 12)</div>
             {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> : (() => {
               const weeks = data?.weeklyLeads ?? [];
               const maxC  = Math.max(...weeks.map(w => w.count), 1);
@@ -510,7 +510,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
 
           {/* BaufiExpertin KPIs */}
           <div style={card()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>👤 BaufiExpertin Performance</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>BaufiExpertin Performance</div>
             {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> : (() => {
               const weeks = data?.weeklyLeads ?? [];
               const avgPerWeek = weeks.length > 0 ? Math.round(weeks.reduce((s, w) => s + w.count, 0) / weeks.length) : 0;
@@ -537,7 +537,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
 
           {/* Durchlaufzeiten */}
           <div style={{ ...card(), gridColumn: 'span 2' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>⏱️ Ø Verweildauer nach Stage</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Ø Verweildauer nach Stage</div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> :
                 (data?.funnelStages ?? []).filter(s => s.avgDays > 0).map(s => (
@@ -556,7 +556,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
       {/* ── AKTIVITÄTEN TAB ── */}
       {subTab === 'Aktivitäten' && (
         <div style={card()}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>💬 Letzte Aktivitäten — {data?.notesList.length ?? 0} neueste Leads</div>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Letzte Aktivitäten — {data?.notesList.length ?? 0} neueste Leads</div>
           {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> :
             (data?.notesList ?? []).map(entry => {
               const catKey = STAGE_CONFIG_CLIENT[entry.stageId]?.cat ?? 'active';

@@ -64,7 +64,7 @@ export default function DigitalPracticesTab({ lang, from, to }: DigitalPractices
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
         <img src="/uhub-logo.svg" alt="ÜHub" style={{ height: 28 }} />
         <div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#E83434' }}>⚡ Digital Practices Board</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#E83434' }}>Digital Practices Board</div>
           <div style={{ fontSize: 12, color: 'var(--effi-neutral)' }}>Überblick aller Überseehub Geschäftsbereiche</div>
         </div>
       </div>
@@ -103,7 +103,7 @@ export default function DigitalPracticesTab({ lang, from, to }: DigitalPractices
 
       {/* Business Plan Ziele */}
       <div style={CARD({ borderTop: '3px solid #E83434' })}>
-        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>🎯 Business Plan — Ziele vs. Ist-Zustand</div>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Business Plan — Ziele vs. Ist-Zustand</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           {[
             { label: 'Jahresumsatz Ziel',    ziel: '500.000 €', ist: '–', pct: 0 },
@@ -136,7 +136,7 @@ export default function DigitalPracticesTab({ lang, from, to }: DigitalPractices
 
       {/* Roadmap */}
       <div style={{ ...CARD({ marginTop: 16 }) }}>
-        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>🗺️ Dashboard-Roadmap</div>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Dashboard-Roadmap</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[
             { done: true,  label: 'effi Marketing Dashboard (Google Ads, Meta)',    detail: 'Live ✅' },
