@@ -4,13 +4,13 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Header, { Product } from '@/components/Header';
 import ZinsbidTab from '@/components/ZinsbidTab';
-import DigitalPracticesTab from '@/components/DigitalPracticesTab';
 import UHubHomeTab from '@/components/UHubHomeTab';
+import WhitelabelTab from '@/components/WhitelabelTab';
+import MarketingPlanTab from '@/components/MarketingPlanTab';
 import DigitalPracticesAgencyTab from '@/components/DigitalPracticesAgencyTab';
 import OverviewTab from '@/components/OverviewTab';
 import GoogleTab from '@/components/GoogleTab';
 import MetaTab from '@/components/MetaTab';
-import BudgetTab from '@/components/BudgetTab';
 import SanierungTab from '@/components/SanierungTab';
 import BaufiTab from '@/components/BaufiTab';
 import { Lang, Tab, DateRange, MetaData, GoogleData, MetaCampaignsData } from '@/lib/types';
@@ -132,9 +132,10 @@ export default function Page() {
     { key: 'overview',   label: t(lang, 'overview') },
     { key: 'google',     label: 'Google Ads' },
     { key: 'meta',       label: 'Meta Ads' },
-    { key: 'budget',     label: 'Budget' },
+    { key: 'marketing',  label: 'Marketing Planung' },
     { key: 'sanierung',  label: 'Sanierung' },
     { key: 'baufi',      label: 'Baufi Sales' },
+    { key: 'whitelabel', label: 'Whitelabel' },
   ];
   const ZINSBID_TABS: { key: Tab; label: string }[] = [
     { key: 'zinsbid',   label: 'Zinsbid Dashboard' },
@@ -144,14 +145,7 @@ export default function Page() {
     { key: 'dp_agency',  label: 'Digital Practices' },
   ];
 
-  const TAB_CONFIG: { key: Tab; label: string; color?: string }[] = [
-    { key: 'overview', label: t(lang, 'tab-overview') },
-    { key: 'google',   label: t(lang, 'tab-google'),   color: 'var(--google)' },
-    { key: 'meta',     label: t(lang, 'tab-meta'),     color: 'var(--meta)' },
-    { key: 'budget',   label: t(lang, 'tab-budget') },
-    { key: 'sanierung', label: 'Sanierung' },
-    { key: 'baufi',     label: 'Baufi Sales' },
-  ];
+
 
   return (
     <>
@@ -173,7 +167,7 @@ export default function Page() {
       <main style={{ padding: '28px 32px', maxWidth: 1400, margin: '0 auto' }}>
         {/* Tab panels */}
         {tab === 'overview' && (
-          <OverviewTab lang={lang} meta={metaData} google={googleData} loading={loadingMeta || loadingGoogle} />
+          <OverviewTab lang={lang} meta={metaData} google={googleData} loading={loadingMeta || loadingGoogle} from={customFrom} to={customTo} />
         )}
         {tab === 'google' && (
           <GoogleTab lang={lang} data={googleData} loading={loadingGoogle} />
@@ -181,20 +175,20 @@ export default function Page() {
         {tab === 'meta' && (
           <MetaTab lang={lang} data={metaData} campaigns={metaCampaigns} loading={loadingMeta} />
         )}
-        {tab === 'budget' && (
-          <BudgetTab lang={lang} meta={metaData} google={googleData} />
-        )}
         {tab === 'sanierung' && (
           <SanierungTab lang={lang} from={customFrom} to={customTo} />
         )}
         {tab === 'baufi' && (
           <BaufiTab lang={lang} from={customFrom} to={customTo} />
         )}
+        {tab === 'marketing' && (
+          <MarketingPlanTab lang={lang} from={customFrom} to={customTo} />
+        )}
+        {tab === 'whitelabel' && (
+          <WhitelabelTab lang={lang} from={customFrom} to={customTo} />
+        )}
         {tab === 'zinsbid' && (
           <ZinsbidTab lang={lang} from={customFrom} to={customTo} />
-        )}
-        {tab === 'dp_board' && (
-          <DigitalPracticesTab lang={lang} from={customFrom} to={customTo} />
         )}
         {tab === 'uhub_home' && (
           <UHubHomeTab lang={lang} from={customFrom} to={customTo} />

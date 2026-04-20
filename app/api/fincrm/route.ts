@@ -171,7 +171,7 @@ export async function GET(req: NextRequest) {
 
     // Conversion-Funnel
     const closeProbability: Record<number, number> = {
-      1: 0.05, 9: 0.08, 10: 0.10, 16: 0.15,
+      1: 0.05, 9: 0.00, 10: 0.10, 16: 0.15,  // 9=Kontaktversuch nicht in Pipeline
       2: 0.25, 15: 0.35, 22: 0.45, 24: 0.60, 4: 0.75, 5: 1.0,
     };
     const funnelStages = FUNNEL_STAGES_IDS.map(sid => ({

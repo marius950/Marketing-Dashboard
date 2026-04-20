@@ -510,7 +510,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
 
           {/* BaufiExpertin KPIs */}
           <div style={card()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>BaufiExpertin Performance</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Beratungsqualität</div>
             {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> : (() => {
               const weeks = data?.weeklyLeads ?? [];
               const avgPerWeek = weeks.length > 0 ? Math.round(weeks.reduce((s, w) => s + w.count, 0) / weeks.length) : 0;

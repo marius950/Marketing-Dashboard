@@ -60,7 +60,12 @@ export default function Header({ lang, setLang, tab, setTab, from, to, setFrom, 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0 8px', borderBottom: '1px solid rgba(255,255,255,.15)' }}>
 
         {/* ÜHub Logo */}
-        <img src="/uhub-logo.svg" alt="Überseehub" style={{ height: 22, filter: 'brightness(0) invert(1)', flexShrink: 0 }} />
+        <img
+          src="/uhub-logo.svg" alt="Überseehub"
+          onClick={() => { setProduct('uhub'); setTab('uhub_home' as any); }}
+          style={{ height: 22, filter: 'brightness(0) invert(1)', flexShrink: 0, cursor: 'pointer' }}
+          title="Revenue Übersicht"
+        />
 
         <span style={{ color: 'rgba(255,255,255,.3)', fontSize: 16 }}>|</span>
 
