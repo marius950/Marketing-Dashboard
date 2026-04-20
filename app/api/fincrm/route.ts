@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
       filtered.slice(0, 30).map(async (p: any) => {
         if (!p.customer_id) return null;
         try {
-          const res: Response = await fetch(`${BASE}/customers/${p.customer_id}/notes?per_page=5&sort=-created_at`, { headers });
+          const res: Response = await fetch(`${BASE}/customers/${p.customer_id}/notes?per_page=20`, { headers });
           if (!res.ok) return null;
           const data: any = await res.json();
           const notes: any[] = data.data ?? data ?? [];
