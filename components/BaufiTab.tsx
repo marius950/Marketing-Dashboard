@@ -29,6 +29,7 @@ interface BaufiData {
   notesList: NotesEntry[];
   needsAttention: NeedsAttention[];
   sources: Source[];
+  allNotesList?: NotesEntry[];  // alle Pipeline-Leads für Analyse
   qualities: { quality: string; count: number }[];
   monthly: MonthData[];
   weeklyLeads: WeekData[];
@@ -68,6 +69,58 @@ const PROVISION_DATA = [
   { datum: '28.10.2025', quelle: 'effi',          volumen: 218000, provision: 2333.40,  natascha: 186.67,  zahlungseingang: '09.12.2025', ausgezahlt: '15.01.2026' },
   { datum: '24.11.2025', quelle: 'ImmoScout/Jona', volumen: 366870, provision: 5503.05, natascha: 440.24,  zahlungseingang: '08.01.2026', ausgezahlt: '15.02.2026' },
 ];
+
+// Abbruchgründe-Kategorien
+const ABBRUCH_KATEGORIEN: { label: string; color: string; keywords: string[] }[] = [
+  { label: 'Nicht erreicht', color: '#ef4444',
+    keywords: ['nicht erreicht','kein kontakt','mailbox','geht nicht ran','antwortet nicht',
+               'meldet sich nicht','keine antwort','nicht erreichbar','falsche telefonnummer',
+               'falsche nr','nummer falsch','nicht zurückgerufen','kein rückruf'] },
+  { label: 'Versetzt / Kein Erscheinen', color: '#f97316',
+    keywords: ['versetzt','nicht erschienen','termin abgesagt','abgesagt',
+               'nicht zum termin','no show','termin vergessen'] },
+  { label: 'Hat schon Finanzierung', color: '#8b5cf6',
+    keywords: ['hat schon','bereits finanzierung','finanzierung gefunden','andere bank',
+               'woanders','andere finanzierung','schon bank','hat bereits','anderweitig',
+               'hat angebot'] },
+  { label: 'Sucht noch / Erst Besichtigung', color: '#3b82f6',
+    keywords: ['besichtigung','makler','erst besichtigung','sucht noch','noch kein objekt',
+               'kein objekt','noch am suchen','möchte erst','zuerst besichtigen'] },
+  { label: 'Nicht finanzierbar', color: '#dc2626',
+    keywords: ['nicht finanzierbar','schufa','bonitätsprüfung','kein eigenkapital',
+               'eigenkapital fehlt','zu wenig einkommen','ablehnung','nicht qualifiziert'] },
+  { label: 'Kein Interesse mehr', color: '#6b7280',
+    keywords: ['kein interesse','möchte nicht mehr','hat sich entschieden',
+               'will nicht mehr','projekt gestoppt','pausiert','kauf abgebrochen'] },
+  { label: 'Reaktionszeit / Anderer schneller', color: '#f59e0b',
+    keywords: ['zu spät','zu lange gewartet','war zu langsam','schneller','anderer berater'] },
+];
+
+function analyzeNotes(notesList: any[]): { label: string; color: string; count: number; examples: string[] }[] {
+  const counts: Record<string, { count: number; examples: string[] }> = {};
+  ABBRUCH_KATEGORIEN.forEach(k => { counts[k.label] = { count: 0, examples: [] }; });
+  notesList.forEach((entry: any) => {
+    (entry.notes ?? []).forEach((note: any) => {
+      const text = (note.content ?? '').toLowerCase();
+      if (!text.trim()) return;
+      ABBRUCH_KATEGORIEN.forEach(cat => {
+        if (cat.keywords.some((kw: string) => text.includes(kw))) {
+          counts[cat.label].count++;
+          if (counts[cat.label].examples.length < 3) {
+            const snippet = (note.content ?? '').replace(/<[^>]+>/g, '').trim().slice(0, 80);
+            if (snippet && !counts[cat.label].examples.includes(snippet)) {
+              counts[cat.label].examples.push(snippet);
+            }
+          }
+        }
+      });
+    });
+  });
+  return ABBRUCH_KATEGORIEN.map(k => ({
+    label: k.label, color: k.color,
+    count: counts[k.label].count, examples: counts[k.label].examples,
+  })).sort((a, b) => b.count - a.count);
+}
 
 // ── Component ─────────────────────────────────────────────────
 export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string; to: string }) {
@@ -188,9 +241,9 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
         </div>
         {/* Revenue */}
         <div style={{ ...card(), borderTop: '3px solid #16a34a' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--effi-text-sec)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>Revenue (Abschlüsse)</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: '#16a34a' }}>{loading ? '–' : fmtEur(effectiveRevenue)}</div>
-          <div style={{ fontSize: 10, color: 'var(--effi-neutral)', marginTop: 2 }}>{fmt(kpi?.wonCount ?? 0)} × {fmtEur(revenuePerDeal)}</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--effi-text-sec)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>Provision Gesamt (Sheet)</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#16a34a' }}>{fmtEur(PROVISION_DATA.reduce((s, p) => s + p.provision, 0))}</div>
+          <div style={{ fontSize: 10, color: 'var(--effi-neutral)', marginTop: 2 }}>{fmt(PROVISION_DATA.length)} Abschlüsse · Natascha: {fmtEur(PROVISION_DATA.reduce((s, p) => s + p.natascha, 0))}</div>
         </div>
         {/* Reaktionszeit */}
         <div style={{ ...card(), borderTop: '3px solid #f59e0b' }}>
@@ -412,7 +465,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
                 )}
               </div>
               {(() => {
-                const filtered = (data?.notesList ?? []).filter((e: any) =>
+                const filtered = (data?.allNotesList ?? data?.notesList ?? []).filter((e: any) =>
                   sourceFilter === 'Alle' || e.source === sourceFilter
                 );
                 const stageCount: Record<string, number> = {};
@@ -438,16 +491,16 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
                 });
               })()}
               <div style={{ marginTop: 14, fontSize: 10, color: 'var(--effi-neutral)', fontStyle: 'italic' }}>
-                Basiert auf den 30 neuesten Leads. Klicke eine Quelle an um zu filtern.
+                Basiert auf allen Pipeline-Leads. Klicke eine Quelle an um zu filtern.
               </div>
             </div>
           </div>
 
           {/* Tag Cloud */}
           <div style={{ ...card({ marginTop: 16 }) }}>
-            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Alle Tags — neueste 30 Leads</div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Alle Tags — alle Pipeline-Leads</div>
             {loading ? null : (() => {
-              const allTags = (data?.notesList ?? []).flatMap((e: any) => e.tags ?? []);
+              const allTags = (data?.allNotesList ?? data?.notesList ?? []).flatMap((e: any) => e.tags ?? []);
               const tagCounts: Record<string, number> = {};
               allTags.forEach((t: string) => { tagCounts[t] = (tagCounts[t] ?? 0) + 1; });
               const sorted = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
@@ -605,6 +658,79 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
                   </div>
                 ))}
             </div>
+          </div>
+
+          {/* ── Abbruchgründe-Analyse ── */}
+          <div style={{ ...card({ gridColumn: 'span 2', marginTop: 0 }) }}>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Abbruchgründe-Analyse</div>
+            <div style={{ fontSize: 11, color: 'var(--effi-neutral)', marginBottom: 16 }}>
+              Automatische Auswertung der Kommentare nach Schlagwörtern · {(data?.allNotesList ?? data?.notesList ?? []).length} analysierte Leads
+            </div>
+            {(() => {
+              const results = analyzeNotes(data?.allNotesList ?? data?.notesList ?? []);
+              const total   = results.reduce((s, r) => s + r.count, 0);
+              const hasData = total > 0;
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+                    {results.slice(0, 4).map(r => (
+                      <div key={r.label} style={{ background: 'var(--effi-surface)', borderRadius: 10, padding: '12px 14px', borderLeft: `3px solid ${r.color}` }}>
+                        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--effi-text-sec)', marginBottom: 4 }}>{r.label}</div>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: r.color }}>{r.count}</div>
+                        {hasData && total > 0 && (
+                          <div style={{ fontSize: 10, color: 'var(--effi-neutral)' }}>{Math.round((r.count / total) * 100)}% aller Abbrüche</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    {/* Balkendiagramm */}
+                    <div>
+                      {results.map(r => {
+                        const max = Math.max(...results.map(x => x.count), 1);
+                        const pct = Math.round((r.count / max) * 100);
+                        return (
+                          <div key={r.label} style={{ marginBottom: 10, opacity: r.count === 0 ? 0.3 : 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                              <span style={{ fontSize: 12 }}>{r.label}</span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: r.color }}>{r.count}</span>
+                            </div>
+                            <div style={{ background: 'var(--effi-surface2)', borderRadius: 4, height: 8 }}>
+                              <div style={{ height: '100%', background: r.color, borderRadius: 4, width: `${pct}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {!hasData && (
+                        <div style={{ fontSize: 12, color: 'var(--effi-neutral)', fontStyle: 'italic' }}>
+                          Noch keine Abbruch-Schlagwörter in den Kommentaren gefunden.<br />
+                          Lade mehr Daten oder prüfe ob Kommentare vorhanden sind.
+                        </div>
+                      )}
+                    </div>
+                    {/* Beispiel-Kommentare */}
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 10 }}>Beispiel-Kommentare</div>
+                      {results.filter(r => r.examples.length > 0).slice(0, 4).map(r => (
+                        <div key={r.label} style={{ marginBottom: 10 }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: r.color, marginBottom: 4 }}>{r.label}</div>
+                          {r.examples.map((ex, i) => (
+                            <div key={i} style={{ fontSize: 11, color: 'var(--effi-text-sec)', background: 'var(--effi-surface)', borderRadius: 6, padding: '4px 8px', marginBottom: 3, borderLeft: `2px solid ${r.color}` }}>
+                              "{ex}{ex.length >= 80 ? '…' : ''}"
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                      {!hasData && (
+                        <div style={{ fontSize: 11, color: 'var(--effi-neutral)', fontStyle: 'italic' }}>
+                          Sobald Natascha Kommentare einträgt werden diese hier automatisch ausgewertet.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

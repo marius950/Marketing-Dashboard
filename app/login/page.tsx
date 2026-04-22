@@ -75,7 +75,7 @@ export default function LoginPage() {
         </button>
 
         <p style={{ fontSize: 11, color: '#9ca3af', marginTop: 24 }}>
-          Nur für effi GmbH Mitarbeiter
+          Nur für Überseehub GmbH Mitarbeiter
         </p>
       </div>
     </div>

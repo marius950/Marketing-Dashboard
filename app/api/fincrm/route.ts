@@ -116,9 +116,25 @@ export async function GET(req: NextRequest) {
     const totalLeads = filtered.length;
     const activePipeline = filtered.filter((p: any) => (p.state ?? 'ACTIVE') === 'ACTIVE').length;
 
-    // Notes für 30 neueste
-    const notesResults = await Promise.allSettled(
-      filtered.slice(0, 30).map(async (p: any) => {
+    // Notes für ALLE aktiven Pipeline-Leads (nicht nur 30)
+    // Pipeline-Stages: alle ausser Inaktiv (26) und Nicht finanzierbar (21) - keine gelöschten
+    const NOTES_LOAD_STAGES = new Set([1, 9, 10, 16, 2, 15, 22, 24, 4, 5, 6]); // inkl. Parkplatz + Vertrag für Quellen
+    const leadsForNotes = filtered.filter((p: any) => NOTES_LOAD_STAGES.has(Number(p.stage_id ?? 0)));
+
+    // Rate-Limiting: max 5 gleichzeitige Requests, in Batches von 10
+    async function batchFetch<T>(items: any[], fn: (item: any) => Promise<T>, batchSize = 10): Promise<T[]> {
+      const results: T[] = [];
+      for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
+        const batchResults = await Promise.allSettled(batch.map(fn));
+        batchResults.forEach(r => {
+          if (r.status === 'fulfilled') results.push(r.value);
+        });
+      }
+      return results;
+    }
+
+    const notesResults = await batchFetch(leadsForNotes, async (p: any) => {
         if (!p.customer_id) return null;
         try {
           const res: Response = await fetch(`${BASE}/customers/${p.customer_id}/notes?per_page=20`, { headers });
@@ -151,11 +167,10 @@ export async function GET(req: NextRequest) {
             })(),
           };
         } catch { return null; }
-      })
-    );
+    });
     const notesList = notesResults
-      .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled' && r.value !== null)
-      .map(r => r.value).filter(v => v.notes.length > 0);
+      .filter((v): v is NonNullable<typeof v> => v !== null && v !== undefined)
+      .filter(v => v.notes.length > 0);
 
     // Volumen + Durchlaufzeit pro Stage
     const volumeByStage: Record<number, { total: number; count: number }> = {};
@@ -230,9 +245,9 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Quellen
+    // Quellen aus ALLEN Pipeline-Leads (nicht nur Aktivitäten-Tab-Limit)
     const sourceMap: Record<string, { count: number; wonCount: number }> = {};
-    notesList.forEach((e: any) => {
+    notesList.forEach((e: any) => {  // notesList = alle Pipeline-Leads
       const src = e.source || 'Sonstige';
       if (!sourceMap[src]) sourceMap[src] = { count: 0, wonCount: 0 };
       sourceMap[src].count++;
