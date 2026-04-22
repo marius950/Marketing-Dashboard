@@ -4,7 +4,7 @@ const BASE = 'https://effi.fincrm.de/api/v1';
 
 const STAGE_CONFIG: Record<number, { label: string; category: 'active' | 'lost' | 'won' | 'inactive'; order: number }> = {
   1:  { label: 'Neuer Lead',            category: 'active',   order: 1 },
-  9:  { label: 'Kontaktversuch / Mail', category: 'active',   order: 2 },
+  9:  { label: 'Kontaktversuch / Mail', category: 'active',   order: 99 },  // wird nach unten sortiert
   10: { label: 'Wiedervorlage',         category: 'active',   order: 3 },
   16: { label: 'Immobiliensuche',       category: 'active',   order: 4 },
   2:  { label: 'Beratung',              category: 'active',   order: 5 },
@@ -18,7 +18,7 @@ const STAGE_CONFIG: Record<number, { label: string; category: 'active' | 'lost' 
   26: { label: 'Inaktiv',               category: 'inactive', order: 13 },
 };
 
-const FUNNEL_STAGES_IDS = [1, 9, 10, 16, 2, 15, 22, 24, 4, 5];
+const FUNNEL_STAGES_IDS = [1, 10, 16, 2, 15, 22, 24, 4, 5, 9];  // Kontaktversuch nach unten
 const ALL_STAGE_IDS     = [1, 9, 10, 16, 2, 15, 22, 24, 4, 5, 6, 21, 26];
 
 function detectSource(notes: any[]): string {
@@ -84,7 +84,12 @@ export async function GET(req: NextRequest) {
     const toTs   = to   ? new Date(to).getTime() + 86400000 : Date.now();
     const now    = Date.now();
 
+    // Bekannte Tester-IDs herausfiltern (Familie Tester / interne Tests)
+    const TESTER_CUSTOMER_IDS = new Set([1, 2, 3, 4, 5]); // erste IDs = interne Tests
+
     const filtered = purposes.filter((p: any) => {
+      // Tester herausfiltern
+      if (TESTER_CUSTOMER_IDS.has(Number(p.customer_id))) return false;
       const raw = p.created_at || '';
       if (!raw) return true;
       const ts = new Date(raw).getTime();
@@ -211,12 +216,18 @@ export async function GET(req: NextRequest) {
     const daily   = Object.entries(dailyMap).map(([date, count]) => ({ date, count })).sort((a, b) => a.date > b.date ? 1 : -1);
 
     // Pipeline-Wert
+    // Aktive Pipeline: nur echte Qualifizierungs-Stages (nicht Kontaktversuch, Parkplatz, Inaktiv, Vertrag)
+    const PIPELINE_STAGES = new Set([10, 16, 2, 15, 22, 24, 4]); // Wiedervorlage bis Bank
     let pipelineValue = 0;
+    let activePipelineVolume = 0; // Gesamtvolumen aktiver Pipeline
     filtered.forEach((p: any) => {
       const sid  = Number(p.stage_id ?? 0);
       const vol  = Number(p.financial_demand ?? 0);
-      const prob = closeProbability[sid] ?? 0;
-      pipelineValue += vol * prob * 0.01;
+      if (PIPELINE_STAGES.has(sid) && vol > 0) {
+        const prob = closeProbability[sid] ?? 0;
+        pipelineValue += vol * prob * 0.01;
+        activePipelineVolume += vol;
+      }
     });
 
     // Quellen

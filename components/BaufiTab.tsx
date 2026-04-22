@@ -55,8 +55,19 @@ function fmtMio(n: number) {
   return String(n);
 }
 
-const TABS = ['Funnel', 'Pipeline', 'Quellen', 'Attention', 'Performance', 'Aktivitäten'] as const;
+const TABS = ['Funnel', 'Pipeline', 'Quellen', 'Provision', 'Beratungsqualität', 'Aktivitäten'] as const;
 type SubTab = typeof TABS[number];
+
+// Provision-Daten aus Google Sheet
+const PROVISION_DATA = [
+  { datum: '12.06.2025', quelle: 'effi',          volumen: 360000, provision: 4140.00,  natascha: 331.20,  zahlungseingang: '01.08.2025', ausgezahlt: '15.09.2025' },
+  { datum: '19.06.2025', quelle: 'effi',          volumen: 131200, provision: 2099.20,  natascha: 167.94,  zahlungseingang: '17.07.2025', ausgezahlt: '15.09.2025' },
+  { datum: '14.07.2025', quelle: 'ImmoScout',     volumen: 170000, provision: 1717.00,  natascha: 137.36,  zahlungseingang: '02.09.2025', ausgezahlt: '15.09.2025' },
+  { datum: '18.07.2025', quelle: 'effi',          volumen: 338200, provision: 3382.00,  natascha: 270.56,  zahlungseingang: '08.09.2025', ausgezahlt: '15.10.2025' },
+  { datum: '24.10.2025', quelle: 'ImmoScout',     volumen: 105000, provision: 1155.00,  natascha: 92.40,   zahlungseingang: '14.11.2025', ausgezahlt: '15.12.2025' },
+  { datum: '28.10.2025', quelle: 'effi',          volumen: 218000, provision: 2333.40,  natascha: 186.67,  zahlungseingang: '09.12.2025', ausgezahlt: '15.01.2026' },
+  { datum: '24.11.2025', quelle: 'ImmoScout/Jona', volumen: 366870, provision: 5503.05, natascha: 440.24,  zahlungseingang: '08.01.2026', ausgezahlt: '15.02.2026' },
+];
 
 // ── Component ─────────────────────────────────────────────────
 export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string; to: string }) {
@@ -64,6 +75,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
   const [subTab, setSubTab]   = useState<SubTab>('Funnel');
+  const [sourceFilter, setSourceFilter] = useState<string>('Alle');
   const [revenuePerDeal, setRevenuePerDeal] = useState(3000);
 
   useEffect(() => {
@@ -157,7 +169,7 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
         <KpiCard label="Abschlüsse ✅"    value={loading ? '–' : fmt(kpi?.wonCount ?? 0)}       loading={loading} variant="san" />
         <KpiCard label="Abschlussquote"   value={loading ? '–' : `${kpi?.conversionRate ?? 0}%`} loading={loading} />
         <KpiCard label="Ø Finanzierung"   value={loading ? '–' : fmtEur(kpi?.avgVolume ?? 0)}  loading={loading} variant="budget" />
-        <KpiCard label="⚠️ Needs Attention" value={loading ? '–' : fmt(kpi?.needsAttentionCount ?? 0)} loading={loading} />
+        <KpiCard label="Pipeline-Volumen"  value={loading ? '–' : fmtMio((kpi as any)?.activePipelineVolume ?? 0)} loading={loading} variant="budget" />
       </div>
 
       {/* Second KPI Row */}
@@ -166,13 +178,13 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
         <div style={{ ...card(), borderTop: '3px solid #2563eb' }}>
           <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--effi-text-sec)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>Pipeline-Wert (est.)</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: '#2563eb' }}>{loading ? '–' : fmtEur(kpi?.pipelineValue ?? 0)}</div>
-          <div style={{ fontSize: 10, color: 'var(--effi-neutral)', marginTop: 2 }}>Volumen × Abschlusswahrscheinlichkeit × 1%</div>
+          <div style={{ fontSize: 10, color: 'var(--effi-neutral)', marginTop: 2 }}>Gewichtetes Volumen nach Abschlusswahrsch.</div>
         </div>
         {/* Gesamtvolumen */}
         <div style={{ ...card(), borderTop: '3px solid #7c3aed' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--effi-text-sec)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>Gesamtvolumen Pipeline</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: '#7c3aed' }}>{loading ? '–' : fmtMio(kpi?.totalVolume ?? 0)}</div>
-          <div style={{ fontSize: 10, color: 'var(--effi-neutral)', marginTop: 2 }}>Ø {loading ? '–' : fmtEur(kpi?.avgVolume ?? 0)} / Lead</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--effi-text-sec)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>Aktive Pipeline-Volumen</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#7c3aed' }}>{loading ? '–' : fmtMio((kpi as any)?.activePipelineVolume ?? 0)}</div>
+          <div style={{ fontSize: 10, color: 'var(--effi-neutral)', marginTop: 2 }}>Stages: Wiedervorlage bis Bank</div>
         </div>
         {/* Revenue */}
         <div style={{ ...card(), borderTop: '3px solid #16a34a' }}>
@@ -344,32 +356,37 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
 
       {/* ── QUELLEN TAB ── */}
       {subTab === 'Quellen' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          {/* Quellen aus Tags */}
-          <div style={card()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Lead-Quellen (aus Tags)</div>
-            <div style={{ fontSize: 11, color: 'var(--effi-neutral)', marginBottom: 14 }}>Basierend auf den 30 neuesten Leads</div>
-            {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> :
-              (data?.sources ?? []).length === 0 || ((data?.sources ?? []).length === 1 && data?.sources[0]?.source === 'Sonstige')
-                ? (
-                  <div>
-                    <div style={{ fontSize: 12, color: 'var(--effi-neutral)', marginBottom: 12 }}>Keine Quellen-Tags gefunden.</div>
-                    {/* Alle Tags der neuesten Leads anzeigen */}
-                    <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Vorhandene Tags (neueste 30 Leads):</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {[...new Set((data?.notesList ?? []).flatMap((e: any) => e.tags ?? []))].map((tag: string) => (
-                        <span key={tag} style={{ fontSize: 11, background: '#eff6ff', color: '#2563eb', borderRadius: 12, padding: '2px 8px' }}>{tag}</span>
-                      ))}
-                    </div>
-                  </div>
-                )
-                : (data?.sources ?? []).map(s => {
-                  const maxCount = Math.max(...(data?.sources ?? []).map(x => x.count), 1);
-                  const pct = Math.round((s.count / maxCount) * 100);
+        <div>
+          {/* Quellen Summary */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+            {(data?.sources ?? []).slice(0, 4).map(s => (
+              <div key={s.source}
+                onClick={() => setSourceFilter(sourceFilter === s.source ? 'Alle' : s.source)}
+                style={{ ...card({ borderTop: `3px solid ${s.source === 'ImmoScout' ? '#2563eb' : s.source === 'effi' ? '#156949' : s.source === 'Abakus' ? '#7c3aed' : '#9ca3af'}` }), cursor: 'pointer', outline: sourceFilter === s.source ? '2px solid #2563eb' : 'none' }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--effi-text-sec)', textTransform: 'uppercase', marginBottom: 4 }}>{s.source}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#374151' }}>{fmt(s.count)}</div>
+                <div style={{ fontSize: 10, color: 'var(--effi-neutral)' }}>Leads · {s.wonCount} Abschlüsse</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            {/* Quellen Balken */}
+            <div style={card()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>Lead-Quellen (Gesamtzahl)</div>
+                <div style={{ fontSize: 11, color: 'var(--effi-neutral)' }}>Alle {loading ? '...' : (data?.meta as any)?.filtered ?? 0} Leads</div>
+              </div>
+              {loading ? <div style={{ color: 'var(--effi-neutral)', fontSize: 13 }}>Lade...</div> :
+                (data?.sources ?? []).map(s => {
+                  const maxC = Math.max(...(data?.sources ?? []).map((x: any) => x.count), 1);
+                  const pct  = Math.round((s.count / maxC) * 100);
+                  const isSelected = sourceFilter === s.source;
                   return (
-                    <div key={s.source} style={{ marginBottom: 12 }}>
+                    <div key={s.source} style={{ marginBottom: 12, cursor: 'pointer', opacity: sourceFilter !== 'Alle' && !isSelected ? 0.4 : 1 }}
+                      onClick={() => setSourceFilter(isSelected ? 'Alle' : s.source)}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <span style={{ fontSize: 12, fontWeight: 500 }}>{s.source}</span>
+                        <span style={{ fontSize: 12, fontWeight: isSelected ? 700 : 400 }}>{s.source}</span>
                         <div style={{ display: 'flex', gap: 8, fontSize: 11 }}>
                           <span style={{ color: 'var(--effi-neutral)' }}>{s.count} Leads</span>
                           {s.wonCount > 0 && <span style={{ color: '#16a34a', fontWeight: 600 }}>{s.wonCount} ✅</span>}
@@ -377,43 +394,59 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
                         </div>
                       </div>
                       <div style={{ background: 'var(--effi-surface2)', borderRadius: 4, height: 8, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', background: '#2563eb', borderRadius: 4, width: `${pct}%` }} />
+                        <div style={{ height: '100%', background: isSelected ? '#2563eb' : '#93c5fd', borderRadius: 4, width: `${pct}%` }} />
                       </div>
                     </div>
                   );
                 })}
-          </div>
+            </div>
 
-          {/* Lead-Qualität aus Tags */}
-          <div style={card()}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Lead-Qualität (aus Tags)</div>
-            <div style={{ fontSize: 11, color: 'var(--effi-neutral)', marginBottom: 14 }}>Basierend auf den 30 neuesten Leads</div>
-            {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> :
-              (data?.qualities ?? []).length === 0
-                ? <div style={{ fontSize: 12, color: 'var(--effi-neutral)' }}>Keine Qualitäts-Tags gefunden</div>
-                : (data?.qualities ?? []).map(q => {
-                  const maxCount = Math.max(...(data?.qualities ?? []).map(x => x.count), 1);
-                  const pct = Math.round((q.count / maxCount) * 100);
-                  const qColor = q.quality.toLowerCase().includes('premium') ? '#7c3aed'
-                    : q.quality.toLowerCase().includes('basic') ? '#f59e0b' : '#2563eb';
+            {/* Pipeline nach Quelle */}
+            <div style={card()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>Pipeline nach Quelle</div>
+                {sourceFilter !== 'Alle' && (
+                  <button onClick={() => setSourceFilter('Alle')} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 12, border: '1px solid #2563eb', background: '#eff6ff', color: '#2563eb', cursor: 'pointer' }}>
+                    ✕ {sourceFilter}
+                  </button>
+                )}
+              </div>
+              {(() => {
+                const filtered = (data?.notesList ?? []).filter((e: any) =>
+                  sourceFilter === 'Alle' || e.source === sourceFilter
+                );
+                const stageCount: Record<string, number> = {};
+                filtered.forEach((e: any) => {
+                  const name = e.stageName;
+                  stageCount[name] = (stageCount[name] ?? 0) + 1;
+                });
+                const entries = Object.entries(stageCount).sort((a, b) => b[1] - a[1]);
+                if (!entries.length) return <div style={{ fontSize: 12, color: 'var(--effi-neutral)' }}>Keine Leads für diese Quelle</div>;
+                return entries.map(([stage, count]) => {
+                  const maxC = Math.max(...entries.map(e => e[1]), 1);
                   return (
-                    <div key={q.quality} style={{ marginBottom: 12 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: qColor }}>{q.quality}</span>
-                        <span style={{ fontSize: 12, fontWeight: 700 }}>{q.count}</span>
+                    <div key={stage} style={{ marginBottom: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                        <span style={{ fontSize: 12 }}>{stage}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700 }}>{count}</span>
                       </div>
-                      <div style={{ background: 'var(--effi-surface2)', borderRadius: 4, height: 8, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', background: qColor, borderRadius: 4, width: `${pct}%` }} />
+                      <div style={{ background: 'var(--effi-surface2)', borderRadius: 4, height: 6 }}>
+                        <div style={{ height: '100%', background: '#2563eb', borderRadius: 4, width: `${Math.round((count / maxC) * 100)}%` }} />
                       </div>
                     </div>
                   );
-                })}
+                });
+              })()}
+              <div style={{ marginTop: 14, fontSize: 10, color: 'var(--effi-neutral)', fontStyle: 'italic' }}>
+                Basiert auf den 30 neuesten Leads. Klicke eine Quelle an um zu filtern.
+              </div>
+            </div>
           </div>
 
-          {/* Alle Tags der neuesten Leads */}
-          <div style={{ ...card(), gridColumn: 'span 2' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Alle Tags — neueste 30 Leads</div>
-            {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> : (() => {
+          {/* Tag Cloud */}
+          <div style={{ ...card({ marginTop: 16 }) }}>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Alle Tags — neueste 30 Leads</div>
+            {loading ? null : (() => {
               const allTags = (data?.notesList ?? []).flatMap((e: any) => e.tags ?? []);
               const tagCounts: Record<string, number> = {};
               allTags.forEach((t: string) => { tagCounts[t] = (tagCounts[t] ?? 0) + 1; });
@@ -440,46 +473,70 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
         </div>
       )}
 
-      {/* ── NEEDS ATTENTION TAB ── */}
-      {subTab === 'Attention' && (
-        <div style={card()}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>Needs Attention — kein Kontakt seit 14+ Tagen</div>
-            <span style={{ fontSize: 12, background: '#fee2e2', color: '#dc2626', borderRadius: 20, padding: '2px 10px', fontWeight: 600 }}>
-              {data?.needsAttention.length ?? 0} Leads
-            </span>
+            {subTab === 'Provision' && (
+        <div>
+          {/* Summary Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+            {[
+              { label: 'Abschlüsse gesamt',   value: fmt(PROVISION_DATA.length),                                                   color: '#16a34a' },
+              { label: 'Provision gesamt',    value: fmtEur(PROVISION_DATA.reduce((s, p) => s + p.provision, 0)),                  color: '#2563eb' },
+              { label: 'Provision Natascha',  value: fmtEur(PROVISION_DATA.reduce((s, p) => s + p.natascha, 0)),                   color: '#7c3aed' },
+              { label: 'Ø Finanzierungsvolumen', value: fmtEur(PROVISION_DATA.reduce((s, p) => s + p.volumen, 0) / PROVISION_DATA.length), color: '#f59e0b' },
+            ].map(k => (
+              <div key={k.label} style={{ ...card(), borderTop: `3px solid ${k.color}` }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--effi-text-sec)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{k.label}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: k.color }}>{k.value}</div>
+              </div>
+            ))}
           </div>
-          {loading ? <div style={{ fontSize: 13, color: 'var(--effi-neutral)' }}>Lade...</div> :
-            (data?.needsAttention ?? []).length === 0
-              ? <div style={{ fontSize: 12, color: 'var(--effi-neutral)' }}>✅ Alle Leads sind aktuell kontaktiert!</div>
-              : (data?.needsAttention ?? []).map(a => (
-                <div key={a.purposeId} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 12,
-                  padding: '10px 0', borderBottom: '1px solid var(--effi-surface)',
-                }}>
-                  <div style={{
-                    minWidth: 44, textAlign: 'center', fontSize: 13, fontWeight: 800,
-                    color: a.daysSince >= 30 ? '#dc2626' : '#f59e0b',
-                    background: a.daysSince >= 30 ? '#fee2e2' : '#fef9c3',
-                    borderRadius: 8, padding: '4px 6px',
-                  }}>
-                    {a.daysSince}d
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, background: '#eff6ff', color: '#2563eb', borderRadius: 12, padding: '1px 7px' }}>{a.stageName}</span>
-                      <span style={{ fontSize: 10, color: 'var(--effi-neutral)' }}>Letzte Aktivität: {fmtDate(a.lastNoteDate)}</span>
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--effi-black)', lineHeight: 1.5 }}
-                      dangerouslySetInnerHTML={{ __html: a.lastNote.length > 200 ? a.lastNote.slice(0, 200) + '…' : a.lastNote }} />
-                  </div>
-                </div>
-              ))}
+          {/* Provision Tabelle */}
+          <div style={card()}>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 14 }}>Provisionszahlungen (Natascha)</div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr style={{ background: 'var(--effi-surface)', borderBottom: '2px solid var(--effi-border)' }}>
+                    {['Datum', 'Quelle', 'Finanzierungsvolumen', 'Provision (gesamt)', 'Provision (Natascha)', 'Zahlungseingang', 'Ausgezahlt'].map(h => (
+                      <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--effi-text-sec)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '.06em' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {PROVISION_DATA.map((p, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid var(--effi-surface)', background: i % 2 === 0 ? '#fff' : 'var(--effi-surface)' }}>
+                      <td style={{ padding: '8px 12px', fontWeight: 500 }}>{p.datum}</td>
+                      <td style={{ padding: '8px 12px' }}>
+                        <span style={{ fontSize: 10, background: p.quelle.includes('Immo') ? '#eff6ff' : '#f0fdf4', color: p.quelle.includes('Immo') ? '#2563eb' : '#16a34a', borderRadius: 12, padding: '2px 8px', fontWeight: 600 }}>{p.quelle}</span>
+                      </td>
+                      <td style={{ padding: '8px 12px', fontWeight: 600 }}>{fmtEur(p.volumen)}</td>
+                      <td style={{ padding: '8px 12px', fontWeight: 700, color: '#2563eb' }}>{fmtEur(p.provision)}</td>
+                      <td style={{ padding: '8px 12px', fontWeight: 700, color: '#7c3aed' }}>{fmtEur(p.natascha)}</td>
+                      <td style={{ padding: '8px 12px', color: 'var(--effi-text-sec)' }}>{p.zahlungseingang}</td>
+                      <td style={{ padding: '8px 12px' }}>
+                        <span style={{ fontSize: 10, background: '#f0fdf4', color: '#16a34a', borderRadius: 12, padding: '2px 8px', fontWeight: 600 }}>✅ {p.ausgezahlt}</span>
+                      </td>
+                    </tr>
+                  ))}
+                  {/* Summenzeile */}
+                  <tr style={{ borderTop: '2px solid var(--effi-border)', background: 'var(--effi-surface)', fontWeight: 700 }}>
+                    <td style={{ padding: '10px 12px', fontWeight: 700 }}>Gesamt</td>
+                    <td style={{ padding: '10px 12px' }}></td>
+                    <td style={{ padding: '10px 12px', fontWeight: 700 }}>{fmtEur(PROVISION_DATA.reduce((s, p) => s + p.volumen, 0))}</td>
+                    <td style={{ padding: '10px 12px', fontWeight: 700, color: '#2563eb' }}>{fmtEur(PROVISION_DATA.reduce((s, p) => s + p.provision, 0))}</td>
+                    <td style={{ padding: '10px 12px', fontWeight: 700, color: '#7c3aed' }}>{fmtEur(PROVISION_DATA.reduce((s, p) => s + p.natascha, 0))}</td>
+                    <td colSpan={2}></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div style={{ marginTop: 12, fontSize: 11, color: 'var(--effi-neutral)' }}>
+              Quelle: Provisionszahlungen_Natascha · Daten werden manuell aktualisiert. Neue Abschlüsse hier direkt eintragen.
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ── PERFORMANCE TAB ── */}
-      {subTab === 'Performance' && (
+            {subTab === 'Beratungsqualität' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {/* Wöchentliche Leads */}
           <div style={card()}>
@@ -520,7 +577,6 @@ export default function BaufiTab({ lang, from, to }: { lang: Lang; from: string;
                 ['Abschlüsse',          fmt(kpi?.wonCount ?? 0),                  '#16a34a'],
                 ['Abschlussquote',      `${kpi?.conversionRate ?? 0}%`,           '#16a34a'],
                 ['Aktive Leads',        fmt(kpi?.activePipeline ?? 0),            '#2563eb'],
-                ['Needs Attention',     fmt(kpi?.needsAttentionCount ?? 0),       '#dc2626'],
               ];
               return (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
