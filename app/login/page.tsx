@@ -9,10 +9,14 @@ export default function LoginPage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (status === 'authenticated') router.replace('/');
+    if (status === 'authenticated') {
+      router.replace('/');
+      return;
+    }
     // URL-Param ?error= von NextAuth
-    if (typeof window !== 'undefined' && window.location.search.includes('error')) {
-      setError(true);
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('error')) setError(true);
     }
   }, [status, router]);
 

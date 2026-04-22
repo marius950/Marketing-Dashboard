@@ -68,11 +68,9 @@ export default function Page() {
   const [loadingMeta, setLoadingMeta]     = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
 
-  // Auth check on mount
+  // Lang aus sessionStorage wiederherstellen
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const auth = sessionStorage.getItem('effi_auth');
-      // auth handled by NextAuth session
       const savedLang = (sessionStorage.getItem('effi_lang') || 'de') as Lang;
       setLangState(savedLang);
     }
@@ -122,6 +120,14 @@ export default function Page() {
   }, [buildParams]);
 
   // Load on auth
+  // Auth Guard: redirect to login if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.replace('/login');
+    }
+  }, [status, router]);
+
+  // Load data once authenticated
   useEffect(() => {
     if (status === 'authenticated') loadData();
   }, [status, loadData]);
@@ -146,6 +152,14 @@ export default function Page() {
   ];
 
 
+
+  // Block render until auth is resolved
+  if (status === 'loading') return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif', color: '#9ca3af', fontSize: 14 }}>
+      Lädt...
+    </div>
+  );
+  if (status === 'unauthenticated') return null;
 
   return (
     <>
