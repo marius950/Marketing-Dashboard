@@ -1,3 +1,4 @@
+'use server';
 import { NextRequest, NextResponse } from 'next/server';
 
 // In-Memory Cache
@@ -51,8 +52,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(cache.data);
   }
 
-  const TOKEN = process.env.META_ACCESS_TOKEN;
-  const RAW_ACCOUNT = process.env.META_AD_ACCOUNT_ID || '';
+  const TOKEN = (process.env.NEXT_PUBLIC_META_ACCESS_TOKEN ?? process.env.META_ACCESS_TOKEN);
+  const RAW_ACCOUNT = (process.env.NEXT_PUBLIC_META_AD_ACCOUNT_ID ?? process.env.META_AD_ACCOUNT_ID) || '';
   const ACCOUNT = RAW_ACCOUNT.replace(/^act_/, '');
   const BASE = 'https://graph.facebook.com/v25.0';
 

@@ -1,0 +1,32 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        # Schreibe alle Secrets in .env.production BEVOR next build läuft
+        # Das ist die korrekte AWS Amplify Methode für Next.js SSR
+        # (KEIN NEXT_PUBLIC_ Präfix nötig — Variablen bleiben serverseitig)
+        - env | grep -e META_ACCESS_TOKEN       >> .env.production
+        - env | grep -e META_AD_ACCOUNT_ID      >> .env.production
+        - env | grep -e GOOGLE_CLIENT_ID        >> .env.production
+        - env | grep -e GOOGLE_CLIENT_SECRET    >> .env.production
+        - env | grep -e GOOGLE_DEVELOPER_TOKEN  >> .env.production
+        - env | grep -e GOOGLE_REFRESH_TOKEN    >> .env.production
+        - env | grep -e GOOGLE_ADS_CUSTOMER_ID  >> .env.production
+        - env | grep -e GOOGLE_LOGIN_CUSTOMER_ID >> .env.production
+        - env | grep -e FINCRM_ACCESS_TOKEN     >> .env.production
+        - env | grep -e NEXTAUTH_SECRET         >> .env.production
+        - env | grep -e NEXTAUTH_URL            >> .env.production
+        - env | grep -e RETOOL_WORKFLOW_KEY     >> .env.production
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*

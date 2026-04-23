@@ -1,3 +1,4 @@
+'use server';
 import { NextRequest, NextResponse } from 'next/server';
 
 const BASE = 'https://effi.fincrm.de/api/v1';
@@ -34,7 +35,7 @@ function detectSource(notes: any[]): string {
 }
 
 async function getHeaders() {
-  const token = process.env.FINCRM_ACCESS_TOKEN;
+  const token = (process.env.NEXT_PUBLIC_FINCRM_ACCESS_TOKEN ?? process.env.FINCRM_ACCESS_TOKEN);
   if (!token) throw new Error('FINCRM_ACCESS_TOKEN not configured');
   return { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json', 'Content-Type': 'application/json' };
 }

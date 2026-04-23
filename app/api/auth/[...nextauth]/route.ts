@@ -1,3 +1,4 @@
+'use server';
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 
@@ -6,8 +7,8 @@ const ALLOWED_DOMAIN = 'ueberseehub.de';
 const handler = NextAuth({
   providers: [
     GoogleProvider({
-      clientId:     process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId:     (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? process.env.GOOGLE_CLIENT_ID)!,
+      clientSecret: (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET ?? process.env.GOOGLE_CLIENT_SECRET)!,
     }),
   ],
   callbacks: {
@@ -25,7 +26,7 @@ const handler = NextAuth({
     signIn:  '/login',
     error:   '/login',
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: (process.env.NEXT_PUBLIC_NEXTAUTH_SECRET ?? process.env.NEXTAUTH_SECRET),
 });
 
 export { handler as GET, handler as POST };

@@ -1,3 +1,4 @@
+'use server';
 import { NextRequest, NextResponse } from 'next/server';
 
 // In-Memory Cache – 30 Minuten TTL
@@ -18,9 +19,9 @@ async function getAccessToken() {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_id:     process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      refresh_token: process.env.GOOGLE_REFRESH_TOKEN!,
+      client_id:     (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? process.env.GOOGLE_CLIENT_ID)!,
+      client_secret: (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET ?? process.env.GOOGLE_CLIENT_SECRET)!,
+      refresh_token: (process.env.NEXT_PUBLIC_GOOGLE_REFRESH_TOKEN ?? process.env.GOOGLE_REFRESH_TOKEN)!,
       grant_type:    'refresh_token',
     }),
   });
@@ -42,9 +43,9 @@ export async function GET(req: NextRequest) {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
-          client_id: process.env.GOOGLE_CLIENT_ID!,
-          client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-          refresh_token: process.env.GOOGLE_REFRESH_TOKEN!,
+          client_id: (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? process.env.GOOGLE_CLIENT_ID)!,
+          client_secret: (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET ?? process.env.GOOGLE_CLIENT_SECRET)!,
+          refresh_token: (process.env.NEXT_PUBLIC_GOOGLE_REFRESH_TOKEN ?? process.env.GOOGLE_REFRESH_TOKEN)!,
           grant_type: 'refresh_token',
         }),
       });
@@ -54,8 +55,8 @@ export async function GET(req: NextRequest) {
         has_access_token: !!d.access_token,
         error: d.error || null,
         env_check: {
-          customer_id: process.env.GOOGLE_ADS_CUSTOMER_ID,
-          login_id: process.env.GOOGLE_LOGIN_CUSTOMER_ID,
+          customer_id: (process.env.NEXT_PUBLIC_GOOGLE_ADS_CUSTOMER_ID ?? process.env.GOOGLE_ADS_CUSTOMER_ID),
+          login_id: (process.env.NEXT_PUBLIC_GOOGLE_LOGIN_CUSTOMER_ID ?? process.env.GOOGLE_LOGIN_CUSTOMER_ID),
         },
       });
     } catch (e: any) {
@@ -75,11 +76,11 @@ export async function GET(req: NextRequest) {
 
   try {
     const accessToken = await getAccessToken();
-    const customerId = process.env.GOOGLE_ADS_CUSTOMER_ID?.replace(/-/g, '');
-    const loginId = process.env.GOOGLE_LOGIN_CUSTOMER_ID?.replace(/-/g, '');
+    const customerId = (process.env.NEXT_PUBLIC_GOOGLE_ADS_CUSTOMER_ID ?? process.env.GOOGLE_ADS_CUSTOMER_ID)?.replace(/-/g, '');
+    const loginId = (process.env.NEXT_PUBLIC_GOOGLE_LOGIN_CUSTOMER_ID ?? process.env.GOOGLE_LOGIN_CUSTOMER_ID)?.replace(/-/g, '');
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${accessToken}`,
-      'developer-token': process.env.GOOGLE_DEVELOPER_TOKEN!,
+      'developer-token': (process.env.NEXT_PUBLIC_GOOGLE_DEVELOPER_TOKEN ?? process.env.GOOGLE_DEVELOPER_TOKEN)!,
       'Content-Type': 'application/json',
       ...(loginId ? { 'login-customer-id': loginId } : {}),
     };

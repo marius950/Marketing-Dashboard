@@ -1,3 +1,4 @@
+'use server';
 import { NextRequest, NextResponse } from 'next/server';
 
 const WORKFLOW_UUID = 'b5ac8b79-ee14-4fa8-9457-00db9281f480';
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'from and to required' }, { status: 400 });
   }
 
-  const apiKey = process.env.RETOOL_WORKFLOW_KEY;
+  const apiKey = (process.env.NEXT_PUBLIC_RETOOL_WORKFLOW_KEY ?? process.env.RETOOL_WORKFLOW_KEY);
   if (!apiKey) {
     return NextResponse.json({ error: 'RETOOL_WORKFLOW_KEY not configured' }, { status: 500 });
   }

@@ -1,3 +1,4 @@
+'use server';
 import { NextRequest, NextResponse } from 'next/server';
 
 const BASE = 'https://effi.fincrm.de/api/v1';
@@ -6,7 +7,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const customerId = searchParams.get('customer_id') ?? '107';
 
-  const token = process.env.FINCRM_ACCESS_TOKEN;
+  const token = (process.env.NEXT_PUBLIC_FINCRM_ACCESS_TOKEN ?? process.env.FINCRM_ACCESS_TOKEN);
   if (!token) return NextResponse.json({ error: 'no token' }, { status: 500 });
 
   const headers = { Authorization: `Bearer ${token}`, Accept: 'application/json' } as const;

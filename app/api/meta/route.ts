@@ -1,3 +1,4 @@
+'use server';
 import { NextRequest, NextResponse } from 'next/server';
 
 const getAction = (actions: any[], type: string) =>
@@ -14,8 +15,8 @@ export async function GET(req: NextRequest) {
   const from = searchParams.get('from');
   const to = searchParams.get('to');
 
-  const token = process.env.META_ACCESS_TOKEN;
-  const accountId = process.env.META_AD_ACCOUNT_ID;
+  const token = (process.env.NEXT_PUBLIC_META_ACCESS_TOKEN ?? process.env.META_ACCESS_TOKEN);
+  const accountId = (process.env.NEXT_PUBLIC_META_AD_ACCOUNT_ID ?? process.env.META_AD_ACCOUNT_ID);
   const fields = 'spend,impressions,reach,frequency,clicks,actions,action_values,ctr,cpc';
 
   // Immer from/to vom Frontend verwenden — nie serverseitig neu berechnen
